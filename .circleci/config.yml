@@ -1,0 +1,46 @@
+version: 2.1
+
+lein_image: &lein_image
+  image: circleci/clojure-service:java11-0.10-dev
+  auth:
+    username: $DOCKER_HUB_USER
+    password: $DOCKER_HUB_PASSWORD
+
+jobs:
+  test:
+    docker:
+      - *lein_image
+    steps:
+      - checkout
+      - run: lein test
+
+  deploy-jar:
+    docker:
+      - *lein_image
+    steps:
+      - checkout
+      - run:
+          name: Compute version
+          command: |
+            set -o errexit
+            set -o nounset
+            version="1.0.<<pipeline.number>>-${CIRCLE_SHA1:0:7}"
+            echo "export VERSION=\"${version}\"" >> ${CIRCLE_SHELL_ENV}
+            echo $version
+      - run: lein jar
+      - run: lein with-profile +deploy deploy circle-s3
+
+workflows:
+  build-and-deploy:
+    jobs:
+      - test:
+          context: org-global
+      - deploy-jar:
+          context:
+            - org-global
+            - circle-jars-publisher
+          requires:
+            - test
+          filters:
+            branches:
+              only: main

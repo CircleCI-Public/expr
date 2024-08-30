@@ -1,0 +1,228 @@
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to
+; deal in the Software without restriction, including without limitation the
+; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+; sell copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in
+; all copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+; IN THE SOFTWARE.
+(ns expr.core-test
+  (:require [clojure.test :refer (deftest is testing)]
+            [clojure.string :as string]
+            [expr.util :as util]
+            [expr.core :as expr])
+  (:import (com.circleci.expr Interpreter$Error
+                              Parser$ParseError
+                              Scanner$ScanError)))
+
+(deftest build-error-message
+  (testing "Pinpoints errors in single-line expressions"
+    (is (= (string/join \newline ["Preamble message:"
+                                  "some.number > baz or true"
+                                  "              ^^^"])
+           (#'expr/build-error-message "Preamble message:"
+                                       "some.number > baz or true"
+                                       14
+                                       3))))
+
+  (testing "Pinpoints errors in multi-line expressions"
+    (is (= (string/join \newline ["Preamble message:"
+                                  "some.number > baz or true"
+                                  "              ^^^"])
+           (#'expr/build-error-message "Preamble message:"
+                                       (string/join \newline ["foo.bar == \"main\" and"
+                                                              "some.number > baz or true"])
+                                       36
+                                       3))))
+
+  (testing "Error is on the end of a line"
+    (is (= (string/join \newline ["Preamble message:"
+                                  "some.number > baz or t"
+                                  "                     ^"])
+           (#'expr/build-error-message "Preamble message:"
+                                       (string/join \newline ["foo.bar == \"main\" and"
+                                                              "some.number > baz or t"
+                                                              "1 <= 15"])
+                                       43
+                                       1))))
+
+  (testing "Error is after the end of a line"
+    (is (= (string/join \newline ["Preamble message:"
+                                  "foo.bar.baz == (1 > 5"
+                                  "                     ^"])
+           (#'expr/build-error-message "Preamble message:"
+                                       "foo.bar.baz == (1 > 5"
+                                       21
+                                       1)))))
+
+(deftest pretty-scan-error
+  (testing "Unexpected characters"
+    (let [expression "2 > 5 && false"
+          e (is (thrown-with-msg? Scanner$ScanError #"Unexpected character\."
+                                  (util/scan expression)))]
+      (is (= (string/join \newline ["Unexpected character '&':"
+                                    "2 > 5 && false"
+                                    "      ^"])
+             (#'expr/pretty-scan-error e expression)))))
+
+  (testing "Incomplete tokens"
+    (let [expression "foo = 58"
+          e (is (thrown-with-msg? Scanner$ScanError #"Incomplete token, expected \"==\"\."
+                                  (util/scan expression)))]
+      (is (= (string/join \newline ["Incomplete token, expected \"==\", found ' ':"
+                                    "foo = 58"
+                                    "     ^"])
+             (#'expr/pretty-scan-error e expression)))))
+
+  (testing "Unterminated strings"
+    (let [expression "foo == \"an unterminated string"
+          e (is (thrown-with-msg? Scanner$ScanError #"Unterminated string\."
+                                  (util/scan expression)))]
+      (is (= (string/join \newline ["Unterminated string starting here:"
+                                    "foo == \"an unterminated string"
+                                    "       ^"])
+             (#'expr/pretty-scan-error e expression))))))
+
+(deftest pretty-parse-error
+  (testing "Unexpected additional input"
+    (let [expression "5 > 4 foo"
+          e (is (thrown-with-msg? Parser$ParseError #"Unexpected additional input\."
+                                  (util/parse (util/scan expression))))]
+      (is (= (string/join \newline ["Unexpected additional input, found \"foo\", expected EOF:"
+                                    "5 > 4 foo"
+                                    "      ^^^"])
+             (#'expr/pretty-parse-error e expression)))))
+
+  (testing "Expected an expression"
+    (let [expression "foo and ) bar"
+          e (is (thrown-with-msg? Parser$ParseError #"Expected expression\."
+                                  (util/parse (util/scan expression))))]
+      (is (= (string/join \newline ["Expected expression, found \")\":"
+                                    "foo and ) bar"
+                                    "        ^"])
+             (#'expr/pretty-parse-error e expression)))))
+
+  (testing "Expected a right parenthesis"
+    (let [expression "foo and (bar > 3"
+          e (is (thrown-with-msg? Parser$ParseError #"Expected '\)' after expression\."
+                                  (util/parse (util/scan expression))))]
+      (is (= (string/join \newline ["Expected ')' after expression:"
+                                    "foo and (bar > 3"
+                                    "                ^"])
+             (#'expr/pretty-parse-error e expression))))))
+
+(deftest pretty-interpreter-error
+  (testing "Expected a numeric operand"
+    (let [expression "foo <= true or false"
+          e (is (thrown-with-msg? Interpreter$Error #"Expected numeric value\."
+                                  (->> (util/scan expression)
+                                       (util/parse)
+                                       (util/interpret {"foo" 5}))))]
+      (is (= (string/join \newline ["Expected numeric operands to \"<=\" operator:"
+                                    "foo <= true or false"
+                                    "    ^^"])
+             (#'expr/pretty-interpreter-error e expression)))))
+
+  (testing "Expected a string operand"
+    (let [expression "foo starts-with \"api\""
+          e (is (thrown-with-msg? Interpreter$Error #"Expected string value\."
+                                  (->> (util/scan expression)
+                                       (util/parse)
+                                       (util/interpret {"foo" 5}))))]
+      (is (= (string/join \newline ["Expected string operands to \"starts-with\" operator:"
+                                    "foo starts-with \"api\""
+                                    "    ^^^^^^^^^^^"])
+             (#'expr/pretty-interpreter-error e expression)))))
+
+  (testing "Unknown variable")
+    (let [expression "1 > 1 or \"main\" != foo and false"
+          e (is (thrown-with-msg? Interpreter$Error #"Referred to a variable that is not set\."
+                                  (->> (util/scan expression)
+                                       (util/parse)
+                                       (util/interpret {}))))]
+      ;; The escaped quotes in the expression is why the error indicator
+      ;; appears to be offset, it's really in the correct place.
+      (is (= (string/join \newline ["Referred to a variable \"foo\" that does not exist:"
+                                    "1 > 1 or \"main\" != foo and false"
+                                    "                   ^^^"])
+             (#'expr/pretty-interpreter-error e expression)))))
+
+(deftest parse-can-parse
+  (testing "no errors"
+    (is (= {:result true}
+           (expr/parse "foo >= bar"))))
+
+  (testing "scanner error"
+    (is (= {:errors [(string/join \newline ["Unexpected character '&':"
+                                            "2 > 5 && false"
+                                            "      ^"])]}
+           (expr/parse "2 > 5 && false"))))
+
+  (testing "parser error"
+    (is (= {:errors [(string/join \newline ["Expected ')' after expression:"
+                                            "foo and (bar > 3"
+                                            "                ^"])]}
+           (expr/parse "foo and (bar > 3")))))
+
+(deftest analyse-can-analyse
+  (testing "no errors"
+    (is (= {:result true
+            :variables []}
+           (expr/analyse "2 > 5 or true")))
+
+    (is (= {:result true
+            :variables [{:name "foo" :pos 0}
+                        {:name "bar" :pos 6}
+                        {:name "baz" :pos 13}]}
+           (expr/analyse "foo > bar or baz")))
+
+    (testing "every use of a variable is reported"
+      (is (= {:result true
+              :variables [{:name "foo" :pos 0}
+                          {:name "foo" :pos 6}
+                          {:name "foo" :pos 13}]}
+             (expr/analyse "foo > foo or foo")))))
+
+  (testing "scanner error"
+    (is (= {:errors [(string/join \newline ["Unexpected character '&':"
+                                            "2 > 5 && false"
+                                            "      ^"])]}
+           (expr/analyse "2 > 5 && false"))))
+
+  (testing "parser error"
+    (is (= {:errors [(string/join \newline ["Expected ')' after expression:"
+                                            "foo and (bar > 3"
+                                            "                ^"])]}
+           (expr/analyse "foo and (bar > 3")))))
+
+(deftest interpret-can-interpret
+  (testing "no errors"
+    (is (= {:result true}
+           (expr/interpret "15 < 3 or not (true == false)" {}))))
+
+  (testing "scanner error"
+    (is (= {:errors [(string/join \newline ["Unexpected character '&':"
+                                            "2 > 5 && false"
+                                            "      ^"])]}
+           (expr/interpret "2 > 5 && false" {}))))
+
+  (testing "parser error"
+    (is (= {:errors [(string/join \newline ["Expected ')' after expression:"
+                                            "foo and (bar > 3"
+                                            "                ^"])]}
+           (expr/interpret "foo and (bar > 3" {}))))
+
+  (testing "interpreter error"
+    (is (= {:errors [(string/join \newline ["Referred to a variable \"bar\" that does not exist:"
+                                            "foo >= bar"
+                                            "       ^^^"])]}
+           (expr/interpret "foo >= bar" {"foo" 3})))))
