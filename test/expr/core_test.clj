@@ -124,9 +124,9 @@
   (testing "Expected a numeric operand"
     (let [expression "foo <= true or false"
           e (is (thrown-with-msg? Interpreter$Error #"Expected numeric value\."
-                                  (->> (util/scan expression)
-                                       (util/parse)
-                                       (util/interpret {"foo" 5}))))]
+                                  (-> (util/scan expression)
+                                      (util/parse)
+                                      (util/interpret {"foo" 5}))))]
       (is (= (string/join \newline ["Expected numeric operands to \"<=\" operator:"
                                     "foo <= true or false"
                                     "    ^^"])
@@ -135,9 +135,9 @@
   (testing "Expected a string operand"
     (let [expression "foo starts-with \"api\""
           e (is (thrown-with-msg? Interpreter$Error #"Expected string value\."
-                                  (->> (util/scan expression)
-                                       (util/parse)
-                                       (util/interpret {"foo" 5}))))]
+                                  (-> (util/scan expression)
+                                      (util/parse)
+                                      (util/interpret {"foo" 5}))))]
       (is (= (string/join \newline ["Expected string operands to \"starts-with\" operator:"
                                     "foo starts-with \"api\""
                                     "    ^^^^^^^^^^^"])
@@ -146,9 +146,9 @@
   (testing "Unknown variable")
     (let [expression "1 > 1 or \"main\" != foo and false"
           e (is (thrown-with-msg? Interpreter$Error #"Referred to a variable that is not set\."
-                                  (->> (util/scan expression)
-                                       (util/parse)
-                                       (util/interpret {}))))]
+                                  (-> (util/scan expression)
+                                      (util/parse)
+                                      (util/interpret {}))))]
       ;; The escaped quotes in the expression is why the error indicator
       ;; appears to be offset, it's really in the correct place.
       (is (= (string/join \newline ["Referred to a variable \"foo\" that does not exist:"

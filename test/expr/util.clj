@@ -81,5 +81,5 @@
   (.gatherVariables (VariableAnalyser.) expr))
 
 (defn interpret
-  [environment ^Expr expr]
+  [^Expr expr environment]
   (.interpret (Interpreter. environment) expr))
