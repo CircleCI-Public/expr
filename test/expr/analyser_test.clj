@@ -28,23 +28,23 @@
 (deftest gathers-variables
   (are [expression expected] (= expected (map (fn [t] (.-lexeme t))
                                               (analyse expression)))
-       ;; literals
-       "1" []
-       "true" []
-       "\"a string\"" []
-       "foo" ["foo"]
+    ;; literals
+    "1" []
+    "true" []
+    "\"a string\"" []
+    "foo" ["foo"]
 
-       ;; binary expressions
-       "foo and bar" ["foo" "bar"]
-       "foo or bar" ["foo" "bar"]
-       "1 == foo" ["foo"]
-       "foo != 1" ["foo"]
-       "foo > bar >= baz" ["foo" "bar" "baz"]
+    ;; binary expressions
+    "foo and bar" ["foo" "bar"]
+    "foo or bar" ["foo" "bar"]
+    "1 == foo" ["foo"]
+    "foo != 1" ["foo"]
+    "foo > bar >= baz" ["foo" "bar" "baz"]
 
-       ;; unary
-       "not foo" ["foo"]
-       "!bar" ["bar"]
+    ;; unary
+    "not foo" ["foo"]
+    "!bar" ["bar"]
 
-       ;; grouping
-       "true and (false or foo)" ["foo"]
-       "true and (false and not foo)" ["foo"]))
+    ;; grouping
+    "true and (false or foo)" ["foo"]
+    "true and (false and not foo)" ["foo"]))

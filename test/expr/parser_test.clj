@@ -30,35 +30,35 @@
 
 (deftest literals
   (are [expression expected] (= expected (parse expression))
-       "foo" '(identifier "foo")
-       "14" '(literal 14)
-       "true" '(literal true)
-       "false" '(literal false)
-       "\"a string\"" '(literal "a string")
-       "\"a \\\"str\\\\ing\"" '(literal "a \"str\\ing")))
+    "foo" '(identifier "foo")
+    "14" '(literal 14)
+    "true" '(literal true)
+    "false" '(literal false)
+    "\"a string\"" '(literal "a string")
+    "\"a \\\"str\\\\ing\"" '(literal "a \"str\\ing")))
 
 (deftest logical-expressions
   (are [expression expected] (= expected (parse expression))
-       "true or false" '(or (literal true)
+    "true or false" '(or (literal true)
+                         (literal false))
+    "false and false" '(and (literal false)
                             (literal false))
-       "false and false" '(and (literal false)
-                               (literal false))
-       "14 and true or \"hello\"" '(or (and (literal 14)
-                                            (literal true))
-                                       (literal "hello"))))
+    "14 and true or \"hello\"" '(or (and (literal 14)
+                                         (literal true))
+                                    (literal "hello"))))
 
 (deftest binary-expressions
   (are [expression expected] (= expected (parse expression))
-       "\"str\" == 14" '(== (literal "str")
-                            (literal 14))
-       "3 != 14" '(!= (literal 3)
-                      (literal 14))
-       "4 > 3 < 2" '(< (> (literal 4)
-                          (literal 3))
-                       (literal 2))
-       "18 >= 10 <= 16" '(<= (>= (literal 18)
-                                 (literal 10))
-                             (literal 16))))
+    "\"str\" == 14" '(== (literal "str")
+                         (literal 14))
+    "3 != 14" '(!= (literal 3)
+                   (literal 14))
+    "4 > 3 < 2" '(< (> (literal 4)
+                       (literal 3))
+                    (literal 2))
+    "18 >= 10 <= 16" '(<= (>= (literal 18)
+                              (literal 10))
+                          (literal 16))))
 
 (deftest grouping
   (is (= '(>= (literal 18)
@@ -76,9 +76,9 @@
          (parse "foo.bar == \"main\" and 1 <= 4 or 5 < baz")))
 
   (is (= '(and (grouping
-                 (or (< (literal 5)
-                        (literal 4))
-                     (not (identifier "foo"))))
+                (or (< (literal 5)
+                       (literal 4))
+                    (not (identifier "foo"))))
                (!= (literal "s")
                    (literal 42)))
          (parse "(5 < 4 or not foo) and \"s\" != 42"))))
@@ -86,7 +86,7 @@
 (deftest parse-errors
   (testing "requires expressions"
     (let [e (is (thrown-with-msg? Parser$ParseError #"Expected expression"
-                                  (parse "and")))]
+                  (parse "and")))]
       (is (= {:type TokenType/AND
               :lexeme "and"
               :pos 0
@@ -97,7 +97,7 @@
 
   (testing "Additional input is an error"
     (let [e (is (thrown-with-msg? Parser$ParseError #"Unexpected additional input\."
-                                  (parse "foo and bar baz")))]
+                  (parse "foo and bar baz")))]
       (is (= {:type TokenType/IDENTIFIER
               :lexeme "baz"
               :pos 12
@@ -108,7 +108,7 @@
 
   (testing "Grouping parens must be balanced"
     (let [e (is (thrown-with-msg? Parser$ParseError #"Expected '\)' after expression\."
-                                  (parse "(1 > 2 3")))]
+                  (parse "(1 > 2 3")))]
       (is (= {:type TokenType/NUMBER
               :lexeme "3"
               :pos 7
@@ -118,7 +118,7 @@
              (.-type e))))
 
     (let [e (is (thrown-with-msg? Parser$ParseError #"Unexpected additional input\."
-                                  (parse "1 > 2) < 3")))]
+                  (parse "1 > 2) < 3")))]
       (is (= {:type TokenType/RIGHT_PAREN
               :lexeme ")"
               :pos 5}
@@ -127,19 +127,19 @@
              (.-type e))))
 
     (are [expression] (thrown-with-msg? Parser$ParseError #"Expected '\)' after expression\."
-                                        (parse expression))
-         "((foo and bar)"
-         "0 <= (1 > (2 < 3) >= 5"))
+                        (parse expression))
+      "((foo and bar)"
+      "0 <= (1 > (2 < 3) >= 5"))
 
   (testing "Expressions must be well-formed"
     (are [input] (thrown-with-msg? Parser$ParseError #"Expected expression\."
-                                   (parse input))
-         ""
-         "and"
-         "foo or"
-         "and foo"
-         "!"
-         "5 <"
-         ">= 4"
-         "("
-         "foo and (")))
+                   (parse input))
+      ""
+      "and"
+      "foo or"
+      "and foo"
+      "!"
+      "5 <"
+      ">= 4"
+      "("
+      "foo and (")))
