@@ -99,6 +99,45 @@ The precedence table, from weakest to strongest binding:
 +-------------+---------------+
 ```
 
+## Variables
+The interpreter looks in the environment mapping identifiers to values when it
+encounters an identifier.
+
+If the identifier is found in the environment the value is used. It is an error
+to refer to a variable that isn't found in the environment.
+
+If the variable is found but the value is `null` then the variable is treated
+as being declared but not defined and is given the special `undefined` value.
+
+This has the following behaviour:
+* `undefined` isn't a value, so it is neither equal, nor not-equal with
+  `undefined`.
+  * `foo == foo` is false
+  * `foo != foo` is false
+* If an equality or comparison operator has one or more `undefined` operands
+  then the result of the comparison is `undefined`. All of the following
+  (non-exhaustive) list will evaluate `undefined` when `foo` isn't defined:
+  * `1 == foo`
+  * `foo != 1`
+  * `foo == foo`
+  * `foo != foo`
+  * `foo > 3`
+  * `"hello" starts-with foo`
+* `undefined` is treated as `false` in a truthiness context, such as logical
+  operators or when the interpreter needs to determine the final truthiness of
+  an expression:
+  * If a logical operator has an `undefined` operand then the `undefined` operand
+    will be treated as though it had the value `false`, but the `undefined` value
+    will be preserved. This allows you to deal with possibly undefined variables
+    and provide alternatives:
+    * `foo or 12` evaluates to `12`
+    * `12 or foo` evaluates to `12`
+    * `foo and "hello"` evaluates to `undefined`
+    * `"hello" and foo` evaluates to `undefined`
+    * `not foo` evaluates to `true`
+  * If an expression ultimately evaluates to `undefined` the interpreter will
+    return `false`.
+
 ## Building
 Build the Java sources with `lein javac`
 
