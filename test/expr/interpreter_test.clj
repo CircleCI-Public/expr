@@ -24,9 +24,9 @@
 
 (deftest interprets-literals
   (are [expression expected] (= expected
-                                (->> (util/scan expression)
-                                     (util/parse)
-                                     (util/interpret {"ident" 5})))
+                                (-> (util/scan expression)
+                                    (util/parse)
+                                    (util/interpret {"ident" 5})))
        ;; All literals are true
        "0" true
        "1" true
@@ -38,9 +38,9 @@
 
 (deftest logical-expressions
   (are [expression environment expected] (= expected
-                                            (->> (util/scan expression)
-                                                 (util/parse)
-                                                 (util/interpret environment)))
+                                            (-> (util/scan expression)
+                                                (util/parse)
+                                                (util/interpret environment)))
        ;; ===
        ;; and
        ;; ===
@@ -95,9 +95,9 @@
 
 (deftest binary-expressions
   (are [expression environment expected] (= expected
-                                            (->> (util/scan expression)
-                                                 (util/parse)
-                                                 (util/interpret environment)))
+                                            (-> (util/scan expression)
+                                                (util/parse)
+                                                (util/interpret environment)))
        ;; ========
        ;; equality
        ;; ========
@@ -188,9 +188,9 @@
 
 (deftest comparison-expressions-require-numeric-operands
   (are [expression environment] (thrown-with-msg? Interpreter$Error #"Expected numeric value\."
-                                                  (->> (util/scan expression)
-                                                       (util/parse)
-                                                       (util/interpret environment)))
+                                                  (-> (util/scan expression)
+                                                      (util/parse)
+                                                      (util/interpret environment)))
        "5 > true" {}
        "false > 3" {}
        "\"hi\" > \"hi\"" {}
@@ -217,9 +217,9 @@
 
   (testing "exception highlights the error"
     (let [e (is (thrown-with-msg? Interpreter$Error #"Expected numeric value\."
-                                  (->> (util/scan "42 <= \"hello\"")
-                                       (util/parse)
-                                       (util/interpret {}))))]
+                                  (-> (util/scan "42 <= \"hello\"")
+                                      (util/parse)
+                                      (util/interpret {}))))]
       (is (= {:type TokenType/LESS_EQUAL
               :lexeme "<="
               :pos 3}
@@ -229,9 +229,9 @@
 
 (deftest starts-with-requires-string-operands
   (are [expression environment] (thrown-with-msg? Interpreter$Error #"Expected string value\."
-                                                  (->> (util/scan expression)
-                                                       (util/parse)
-                                                       (util/interpret environment)))
+                                                  (-> (util/scan expression)
+                                                      (util/parse)
+                                                      (util/interpret environment)))
        "\"string\" starts-with 5" {}
        "false starts-with \"string\"" {}
        "55 starts-with 5" {}
@@ -240,9 +240,9 @@
 
   (testing "exception highlights the error"
     (let [e (is (thrown-with-msg? Interpreter$Error #"Expected string value\."
-                                  (->> (util/scan "42 starts-with \"hello\"")
-                                       (util/parse)
-                                       (util/interpret {}))))]
+                                  (-> (util/scan "42 starts-with \"hello\"")
+                                      (util/parse)
+                                      (util/interpret {}))))]
       (is (= {:type TokenType/STARTS_WITH
               :lexeme "starts-with"
               :literal "starts-with"
@@ -253,9 +253,9 @@
 
 (deftest throws-when-variable-lookup-fails
   (let [e (is (thrown-with-msg? Interpreter$Error #"Referred to a variable that is not set\."
-                                (->> (util/scan "foo > 5")
-                                     (util/parse)
-                                     (util/interpret {}))))]
+                                (-> (util/scan "foo > 5")
+                                    (util/parse)
+                                    (util/interpret {}))))]
     (is (= {:type TokenType/IDENTIFIER
             :lexeme "foo"
             :pos 0
@@ -266,9 +266,9 @@
 
 (deftest interprets-complex-expressions
   (are [expression environment expected] (= expected
-                                            (->> (util/scan expression)
-                                                 (util/parse)
-                                                 (util/interpret environment)))
+                                            (-> (util/scan expression)
+                                                (util/parse)
+                                                (util/interpret environment)))
        "branch == \"main\" and project == \"my-project\" or always_run"
        {"branch" "main"
         "project" "my-project"
