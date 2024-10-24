@@ -304,3 +304,137 @@
         "number" 5
         "project" "another-project"}
        true))
+
+(deftest undefined-variable-handling
+  (are [expression environment expected] (= expected
+                                            (-> (util/scan expression)
+                                                (util/parse)
+                                                (util/interpret environment)))
+       ;; ========
+       ;; equality
+       ;; ========
+       "1 == foo" {"foo" nil} false
+       "foo == 2" {"foo" nil} false
+       "\"hi\" == foo" {"foo" nil} false
+       "foo == \"bye\"" {"foo" nil} false
+       "foo == foo" {"foo" nil} false
+       "foo == foo" {"foo" nil, "bar" "\"hello\""} false
+       "foo == bar" {"foo" 1, "bar" nil} false
+       "foo == bar" {"foo" nil, "bar" 1} false
+
+       "1 != foo" {"foo" nil} false
+       "foo != 2" {"foo" nil} false
+       "\"hi\" != foo" {"foo" nil} false
+       "foo != \"bye\"" {"foo" nil} false
+       "foo != true" {"foo" nil} false
+       "false != foo" {"foo" nil} false
+       "foo != foo" {"foo" nil} false
+       "foo != foo" {"foo" nil, "bar" "\"hello\""} false
+       "foo != bar" {"foo" 1, "bar" nil} false
+       "foo != bar" {"foo" nil, "bar" 5} false
+
+       ;; ============
+       ;; greater than
+       ;; ============
+       "1 > foo" {"foo" nil} false
+       "foo > 3" {"foo" nil} false
+       "foo > foo" {"foo" nil} false
+
+       ;; ==================
+       ;; greater than equal
+       ;; ==================
+       "1 >= foo" {"foo" nil} false
+       "foo >= 3" {"foo" nil} false
+       "foo >= foo" {"foo" nil} false
+
+       ;; =========
+       ;; less than
+       ;; =========
+       "1 < foo" {"foo" nil} false
+       "foo < 3" {"foo" nil} false
+       "foo < foo" {"foo" nil} false
+
+       ;; ===============
+       ;; less than equal
+       ;; ===============
+       "1 <= foo" {"foo" nil} false
+       "foo <= 3" {"foo" nil} false
+       "foo <= foo" {"foo" nil} false
+
+       ;; ===========
+       ;; starts-with
+       ;; ===========
+       "\"hello world\" starts-with foo" {"foo" nil} false
+       "foo starts-with \"hello\"" {"foo" nil} false
+
+       ;; ===
+       ;; and
+       ;; ===
+       "true and foo" {"foo" nil} false
+       "foo and true" {"foo" nil} false
+       "12 and foo" {"foo" nil} false
+       "foo and 12" {"foo" nil} false
+       "\"hello world\" and foo" {"foo" nil} false
+       "foo and \"hello world\"" {"foo" nil} false
+
+       "false and foo" {"foo" nil} false
+       "foo and false" {"foo" nil} false
+       "foo and foo" {"foo" nil} false
+
+       ;; ==
+       ;; or
+       ;; ==
+       "true or foo" {"foo" nil} true
+       "foo or true" {"foo" nil} true
+       "12 or foo" {"foo" nil} true
+       "foo or 12" {"foo" nil} true
+       "\"hello world\" or foo" {"foo" nil} true
+       "foo or \"hello world\"" {"foo" nil} true
+
+       "false or foo" {"foo" nil} false
+       "foo or false" {"foo" nil} false
+       "foo or foo" {"foo" nil} false
+
+       ;; ===
+       ;; not
+       ;; ===
+       "!foo" {"foo" nil} true
+       ;; not is an alias for !
+       "not foo" {"foo" nil} true
+
+       ;; complex expressions
+       "branch == \"main\" and project == \"my-project\" or always_run"
+       {"branch" nil
+        "project" "my-project"
+        "always_run" true}
+       true
+
+       "branch == \"main\" and project == \"my-project\" or always_run"
+       {"branch" "main"
+        "project" nil
+        "always_run" true}
+       true
+
+       "branch == \"main\" and project == \"my-project\" or always_run"
+       {"branch" "main"
+        "project" "my-project"
+        "always_run" nil}
+       true
+
+       "branch == \"main\" or project == \"my-project\" and always_run"
+       {"branch" nil
+        "project" "my-project"
+        "always_run" true}
+       true
+
+       "branch == \"main\" or project == \"my-project\" and always_run"
+       {"branch" "main"
+        "project" nil
+        "always_run" false}
+       true
+
+       "branch == \"main\" or project == \"my-project\" and always_run"
+       {"branch" "main"
+        "project" "my-project"
+        "always_run" nil}
+       true))

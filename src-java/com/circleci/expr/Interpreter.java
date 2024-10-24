@@ -92,6 +92,14 @@ public class Interpreter implements Expr.Visitor<Object> {
     Object left = evaluate(expr.left);
     Object right = evaluate(expr.right);
 
+    // This implementation uses `null` for undefined variables. Undefined
+    // variables "infect" binary expressions, if either operand is undefined
+    // then the result of the operator is undefined, no matter what the
+    // operator is.
+    if (left == null || right == null) {
+      return null;
+    }
+
     switch (expr.operator.type) {
       case EQUAL:
         return isEqual(left, right);
@@ -135,12 +143,11 @@ public class Interpreter implements Expr.Visitor<Object> {
 
   @Override
   public Object visitIdentifierExpr(Expr.Identifier expr) {
-    Object value = environment.get(expr.name.lexeme);
-    if (value == null) {
+    if (!environment.containsKey(expr.name.lexeme)) {
       throw new Error(expr.name, Error.Type.UNKNOWN_VARIABLE);
     }
 
-    return value;
+    return environment.get(expr.name.lexeme);
   }
 
   @Override
@@ -153,7 +160,7 @@ public class Interpreter implements Expr.Visitor<Object> {
   }
 
   private boolean isTruthy(Object val) {
-    if (Boolean.FALSE.equals(val)) return false;
+    if (Boolean.FALSE.equals(val) || val == null) return false;
     return true;
   }
 
