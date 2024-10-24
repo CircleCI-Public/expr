@@ -24,56 +24,56 @@
 
 (deftest scans-keywords
   (are [expression expected] (= expected (map util/token->map (util/scan expression)))
-       "and" [{:type TokenType/AND :lexeme "and" :pos 0 :literal "and"}
-              {:type TokenType/EOF :lexeme "" :pos 3}]
-       "AND" [{:type TokenType/AND :lexeme "AND" :pos 0 :literal "AND"}
-              {:type TokenType/EOF :lexeme "" :pos 3}]
+    "and" [{:type TokenType/AND :lexeme "and" :pos 0 :literal "and"}
+           {:type TokenType/EOF :lexeme "" :pos 3}]
+    "AND" [{:type TokenType/AND :lexeme "AND" :pos 0 :literal "AND"}
+           {:type TokenType/EOF :lexeme "" :pos 3}]
 
-       "or" [{:type TokenType/OR :lexeme "or" :pos 0 :literal "or"}
-             {:type TokenType/EOF :lexeme "" :pos 2}]
-       "OR" [{:type TokenType/OR :lexeme "OR" :pos 0 :literal "OR"}
-             {:type TokenType/EOF :lexeme "" :pos 2}]
+    "or" [{:type TokenType/OR :lexeme "or" :pos 0 :literal "or"}
+          {:type TokenType/EOF :lexeme "" :pos 2}]
+    "OR" [{:type TokenType/OR :lexeme "OR" :pos 0 :literal "OR"}
+          {:type TokenType/EOF :lexeme "" :pos 2}]
 
-       "not"[{:type TokenType/NOT :lexeme "not" :pos 0 :literal "not"} {:type TokenType/EOF :lexeme "" :pos 3}]
-       "NOT" [{:type TokenType/NOT :lexeme "NOT" :pos 0 :literal "NOT"}
-              {:type TokenType/EOF :lexeme "" :pos 3}]
+    "not" [{:type TokenType/NOT :lexeme "not" :pos 0 :literal "not"} {:type TokenType/EOF :lexeme "" :pos 3}]
+    "NOT" [{:type TokenType/NOT :lexeme "NOT" :pos 0 :literal "NOT"}
+           {:type TokenType/EOF :lexeme "" :pos 3}]
 
-       "true" [{:type TokenType/TRUE :lexeme "true" :pos 0 :literal "true"}
-               {:type TokenType/EOF :lexeme "" :pos 4}]
-       "TRUE" [{:type TokenType/TRUE :lexeme "TRUE" :pos 0 :literal "TRUE"}
-               {:type TokenType/EOF :lexeme "" :pos 4}]
+    "true" [{:type TokenType/TRUE :lexeme "true" :pos 0 :literal "true"}
+            {:type TokenType/EOF :lexeme "" :pos 4}]
+    "TRUE" [{:type TokenType/TRUE :lexeme "TRUE" :pos 0 :literal "TRUE"}
+            {:type TokenType/EOF :lexeme "" :pos 4}]
 
-       "false" [{:type TokenType/FALSE :lexeme "false" :pos 0 :literal "false"}
-                {:type TokenType/EOF :lexeme "" :pos 5}]
-       "FALSE" [{:type TokenType/FALSE :lexeme "FALSE" :pos 0 :literal "FALSE"}
-                {:type TokenType/EOF :lexeme "" :pos 5}]
+    "false" [{:type TokenType/FALSE :lexeme "false" :pos 0 :literal "false"}
+             {:type TokenType/EOF :lexeme "" :pos 5}]
+    "FALSE" [{:type TokenType/FALSE :lexeme "FALSE" :pos 0 :literal "FALSE"}
+             {:type TokenType/EOF :lexeme "" :pos 5}]
 
-       "starts-with" [{:type TokenType/STARTS_WITH :lexeme "starts-with" :pos 0 :literal "starts-with"}
-                      {:type TokenType/EOF :lexeme "" :pos 11}]
-       "STARTS-WITH" [{:type TokenType/STARTS_WITH :lexeme "STARTS-WITH" :pos 0 :literal "STARTS-WITH"}
-                      {:type TokenType/EOF :lexeme "" :pos 11}]))
+    "starts-with" [{:type TokenType/STARTS_WITH :lexeme "starts-with" :pos 0 :literal "starts-with"}
+                   {:type TokenType/EOF :lexeme "" :pos 11}]
+    "STARTS-WITH" [{:type TokenType/STARTS_WITH :lexeme "STARTS-WITH" :pos 0 :literal "STARTS-WITH"}
+                   {:type TokenType/EOF :lexeme "" :pos 11}]))
 
 (deftest scans-operators
   (testing "well-formed operators"
     (are [expression expected] (= expected (map util/token->map (util/scan expression)))
-         "()" [{:type TokenType/LEFT_PAREN :lexeme "(" :pos 0}
-               {:type TokenType/RIGHT_PAREN :lexeme ")" :pos 1}
-               {:type TokenType/EOF :lexeme "" :pos 2}]
+      "()" [{:type TokenType/LEFT_PAREN :lexeme "(" :pos 0}
+            {:type TokenType/RIGHT_PAREN :lexeme ")" :pos 1}
+            {:type TokenType/EOF :lexeme "" :pos 2}]
 
-         "!" [{:type TokenType/NOT :lexeme "!" :pos 0}
-              {:type TokenType/EOF :lexeme "" :pos 1}]
+      "!" [{:type TokenType/NOT :lexeme "!" :pos 0}
+           {:type TokenType/EOF :lexeme "" :pos 1}]
 
-         "!= ==" [{:type TokenType/NOT_EQUAL :lexeme "!=" :pos 0}
-                  {:type TokenType/EQUAL :lexeme "==" :pos 3}
-                  {:type TokenType/EOF :lexeme "" :pos 5}]
+      "!= ==" [{:type TokenType/NOT_EQUAL :lexeme "!=" :pos 0}
+               {:type TokenType/EQUAL :lexeme "==" :pos 3}
+               {:type TokenType/EOF :lexeme "" :pos 5}]
 
-         "> >=" [{:type TokenType/GREATER :lexeme ">" :pos 0}
-                 {:type TokenType/GREATER_EQUAL :lexeme ">=" :pos 2}
-                 {:type TokenType/EOF :lexeme "" :pos 4}]
+      "> >=" [{:type TokenType/GREATER :lexeme ">" :pos 0}
+              {:type TokenType/GREATER_EQUAL :lexeme ">=" :pos 2}
+              {:type TokenType/EOF :lexeme "" :pos 4}]
 
-         "< <=" [{:type TokenType/LESS :lexeme "<" :pos 0}
-                 {:type TokenType/LESS_EQUAL :lexeme "<=" :pos 2}
-                 {:type TokenType/EOF :lexeme "" :pos 4}]))
+      "< <=" [{:type TokenType/LESS :lexeme "<" :pos 0}
+              {:type TokenType/LESS_EQUAL :lexeme "<=" :pos 2}
+              {:type TokenType/EOF :lexeme "" :pos 4}]))
 
   (testing "improperly-formed operators"
     (let [e (is (thrown-with-msg? Scanner$ScanError #"Incomplete token, expected \"==\"\."
@@ -86,17 +86,17 @@
 (deftest scans-strings
   (testing "well-formed strings"
     (are [expression expected] (= expected (map util/token->map (util/scan expression)))
-         "\"\"" [{:type TokenType/STRING :lexeme "\"\"" :pos 0 :literal ""}
-                 {:type TokenType/EOF :lexeme "" :pos 2}]
+      "\"\"" [{:type TokenType/STRING :lexeme "\"\"" :pos 0 :literal ""}
+              {:type TokenType/EOF :lexeme "" :pos 2}]
 
-         "\"a string\"" [{:type TokenType/STRING :lexeme "\"a string\"" :pos 0 :literal "a string"}
-                         {:type TokenType/EOF :lexeme "" :pos 10}]
+      "\"a string\"" [{:type TokenType/STRING :lexeme "\"a string\"" :pos 0 :literal "a string"}
+                      {:type TokenType/EOF :lexeme "" :pos 10}]
 
-         "\"an \\\"escaped\\\" string\"" [{:type TokenType/STRING :lexeme "\"an \\\"escaped\\\" string\"" :pos 0 :literal "an \"escaped\" string"}
-                                          {:type TokenType/EOF :lexeme "" :pos 23}]
+      "\"an \\\"escaped\\\" string\"" [{:type TokenType/STRING :lexeme "\"an \\\"escaped\\\" string\"" :pos 0 :literal "an \"escaped\" string"}
+                                       {:type TokenType/EOF :lexeme "" :pos 23}]
 
-         "\"backslash \\\\escapes\"" [{:type TokenType/STRING :lexeme "\"backslash \\\\escapes\"" :pos 0 :literal "backslash \\escapes"}
-                                      {:type TokenType/EOF :lexeme "" :pos 21}]))
+      "\"backslash \\\\escapes\"" [{:type TokenType/STRING :lexeme "\"backslash \\\\escapes\"" :pos 0 :literal "backslash \\escapes"}
+                                   {:type TokenType/EOF :lexeme "" :pos 21}]))
 
   (testing "unterminated string"
     (let [e (is (thrown-with-msg? Scanner$ScanError #"Unterminated string\."
@@ -126,7 +126,7 @@
 
   (testing "identifiers cannot contain strings of '.'s"
     (let [e (is (thrown-with-msg? Scanner$ScanError #"Unexpected character\."
-                                  (util/scan "foo..bar")))]
+                  (util/scan "foo..bar")))]
       (is (= Scanner$ScanError$Type/UNEXPECTED_CHARACTER
              (.-type e)))
       (is (= \. (.-errorChar e)))
@@ -134,7 +134,7 @@
 
   (testing "identifiers cannot contain start with '.'"
     (let [e (is (thrown-with-msg? Scanner$ScanError #"Unexpected character\."
-                                  (util/scan ".foo")))]
+                  (util/scan ".foo")))]
       (is (= Scanner$ScanError$Type/UNEXPECTED_CHARACTER
              (.-type e)))
       (is (= \. (.-errorChar e)))
@@ -142,7 +142,7 @@
 
   (testing "identifiers cannot contain start with '-'"
     (let [e (is (thrown-with-msg? Scanner$ScanError #"Unexpected character\."
-                                  (util/scan "-foo")))]
+                  (util/scan "-foo")))]
       (is (= Scanner$ScanError$Type/UNEXPECTED_CHARACTER
              (.-type e)))
       (is (= \- (.-errorChar e)))
@@ -150,7 +150,7 @@
 
   (testing "identifiers cannot contain start with '_'"
     (let [e (is (thrown-with-msg? Scanner$ScanError #"Unexpected character\."
-                                  (util/scan "_foo")))]
+                  (util/scan "_foo")))]
       (is (= Scanner$ScanError$Type/UNEXPECTED_CHARACTER
              (.-type e)))
       (is (= \_ (.-errorChar e)))
@@ -159,7 +159,7 @@
 (deftest throws-for-unexpected-characters
   (doseq [c "&*^%$£?/#~:;@'"]
     (let [e (is (thrown-with-msg? Scanner$ScanError #"Unexpected character\."
-                                  (util/scan (str c))))]
+                  (util/scan (str c))))]
       (is (= Scanner$ScanError$Type/UNEXPECTED_CHARACTER
              (.-type e)))
       (is (= c (.-errorChar e)))

@@ -1,0 +1,5 @@
+{:paths ["src"
+         "test"]
+ :extra-indents {thrown? [[:inner 0]]
+                 thrown-with-msg? [[:inner 0]]
+                 letfn [[:block 1] [:inner 2]]}}

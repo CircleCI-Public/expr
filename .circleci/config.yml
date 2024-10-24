@@ -13,6 +13,7 @@ jobs:
     steps:
       - checkout
       - run: lein test
+      - run: lein with-profile +cljfmt cljfmt check
 
   deploy-jar:
     docker:

@@ -68,7 +68,7 @@
   (testing "Unexpected characters"
     (let [expression "2 > 5 && false"
           e (is (thrown-with-msg? Scanner$ScanError #"Unexpected character\."
-                                  (util/scan expression)))]
+                  (util/scan expression)))]
       (is (= (string/join \newline ["Unexpected character '&':"
                                     "2 > 5 && false"
                                     "      ^"])
@@ -77,7 +77,7 @@
   (testing "Incomplete tokens"
     (let [expression "foo = 58"
           e (is (thrown-with-msg? Scanner$ScanError #"Incomplete token, expected \"==\"\."
-                                  (util/scan expression)))]
+                  (util/scan expression)))]
       (is (= (string/join \newline ["Incomplete token, expected \"==\", found ' ':"
                                     "foo = 58"
                                     "     ^"])
@@ -86,7 +86,7 @@
   (testing "Unterminated strings"
     (let [expression "foo == \"an unterminated string"
           e (is (thrown-with-msg? Scanner$ScanError #"Unterminated string\."
-                                  (util/scan expression)))]
+                  (util/scan expression)))]
       (is (= (string/join \newline ["Unterminated string starting here:"
                                     "foo == \"an unterminated string"
                                     "       ^"])
@@ -96,7 +96,7 @@
   (testing "Unexpected additional input"
     (let [expression "5 > 4 foo"
           e (is (thrown-with-msg? Parser$ParseError #"Unexpected additional input\."
-                                  (util/parse (util/scan expression))))]
+                  (util/parse (util/scan expression))))]
       (is (= (string/join \newline ["Unexpected additional input, found \"foo\", expected EOF:"
                                     "5 > 4 foo"
                                     "      ^^^"])
@@ -105,7 +105,7 @@
   (testing "Expected an expression"
     (let [expression "foo and ) bar"
           e (is (thrown-with-msg? Parser$ParseError #"Expected expression\."
-                                  (util/parse (util/scan expression))))]
+                  (util/parse (util/scan expression))))]
       (is (= (string/join \newline ["Expected expression, found \")\":"
                                     "foo and ) bar"
                                     "        ^"])
@@ -114,7 +114,7 @@
   (testing "Expected a right parenthesis"
     (let [expression "foo and (bar > 3"
           e (is (thrown-with-msg? Parser$ParseError #"Expected '\)' after expression\."
-                                  (util/parse (util/scan expression))))]
+                  (util/parse (util/scan expression))))]
       (is (= (string/join \newline ["Expected ')' after expression:"
                                     "foo and (bar > 3"
                                     "                ^"])
@@ -124,9 +124,9 @@
   (testing "Expected a numeric operand"
     (let [expression "foo <= true or false"
           e (is (thrown-with-msg? Interpreter$Error #"Expected numeric value\."
-                                  (-> (util/scan expression)
-                                      (util/parse)
-                                      (util/interpret {"foo" 5}))))]
+                  (-> (util/scan expression)
+                      (util/parse)
+                      (util/interpret {"foo" 5}))))]
       (is (= (string/join \newline ["Expected numeric operands to \"<=\" operator:"
                                     "foo <= true or false"
                                     "    ^^"])
@@ -135,26 +135,26 @@
   (testing "Expected a string operand"
     (let [expression "foo starts-with \"api\""
           e (is (thrown-with-msg? Interpreter$Error #"Expected string value\."
-                                  (-> (util/scan expression)
-                                      (util/parse)
-                                      (util/interpret {"foo" 5}))))]
+                  (-> (util/scan expression)
+                      (util/parse)
+                      (util/interpret {"foo" 5}))))]
       (is (= (string/join \newline ["Expected string operands to \"starts-with\" operator:"
                                     "foo starts-with \"api\""
                                     "    ^^^^^^^^^^^"])
              (#'expr/pretty-interpreter-error e expression)))))
 
-  (testing "Unknown variable")
+  (testing "Unknown variable"
     (let [expression "1 > 1 or \"main\" != foo and false"
           e (is (thrown-with-msg? Interpreter$Error #"Referred to a variable that is not set\."
-                                  (-> (util/scan expression)
-                                      (util/parse)
-                                      (util/interpret {}))))]
+                  (-> (util/scan expression)
+                      (util/parse)
+                      (util/interpret {}))))]
       ;; The escaped quotes in the expression is why the error indicator
       ;; appears to be offset, it's really in the correct place.
       (is (= (string/join \newline ["Referred to a variable \"foo\" that does not exist:"
                                     "1 > 1 or \"main\" != foo and false"
                                     "                   ^^^"])
-             (#'expr/pretty-interpreter-error e expression)))))
+             (#'expr/pretty-interpreter-error e expression))))))
 
 (deftest parse-can-parse
   (testing "no errors"
