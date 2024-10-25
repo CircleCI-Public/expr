@@ -100,8 +100,8 @@ The precedence table, from weakest to strongest binding:
 ```
 
 ## Variables
-The interpreter looks in the environment mapping identifiers to values when it
-encounters an identifier.
+The interpreter looks in the environment (a mapping of identifiers to values)
+when it encounters an identifier.
 
 If the identifier is found in the environment the value is used. It is an error
 to refer to a variable that isn't found in the environment.
