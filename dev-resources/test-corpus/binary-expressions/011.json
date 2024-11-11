@@ -1,0 +1,9 @@
+{
+  "input" : {
+    "expression" : "\"string\" == 4",
+    "environment" : { }
+  },
+  "expected" : {
+    "result" : false
+  }
+}

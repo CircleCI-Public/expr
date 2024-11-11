@@ -1,0 +1,11 @@
+{
+  "input" : {
+    "expression" : "foo == \"bye\"",
+    "environment" : {
+      "foo" : null
+    }
+  },
+  "expected" : {
+    "result" : false
+  }
+}

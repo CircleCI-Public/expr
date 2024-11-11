@@ -1,0 +1,13 @@
+{
+  "input" : {
+    "expression" : "branch == \"main\" and project == \"my-project\" or always_run",
+    "environment" : {
+      "branch" : "main",
+      "project" : "my-project",
+      "always_run" : null
+    }
+  },
+  "expected" : {
+    "result" : true
+  }
+}

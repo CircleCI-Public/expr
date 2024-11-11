@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "0 <= (1 > (2 < 3) >= 5",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "EOF",
+      "errorType" : "Parser/EXPECTED_RIGHT_PAREN",
+      "lexeme" : "",
+      "charPos" : 22
+    }
+  }
+}

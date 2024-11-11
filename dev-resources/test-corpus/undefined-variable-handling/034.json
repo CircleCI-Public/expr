@@ -1,0 +1,11 @@
+{
+  "input" : {
+    "expression" : "foo and true",
+    "environment" : {
+      "foo" : null
+    }
+  },
+  "expected" : {
+    "result" : false
+  }
+}

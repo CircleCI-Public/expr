@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "false starts-with \"string\"",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "STARTS_WITH",
+      "errorType" : "Interpreter/EXPECTED_STRING_OPERAND",
+      "lexeme" : "starts-with",
+      "charPos" : 6
+    }
+  }
+}

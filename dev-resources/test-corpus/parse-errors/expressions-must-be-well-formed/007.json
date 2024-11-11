@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : ">= 4",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "GREATER_EQUAL",
+      "errorType" : "Parser/EXPECTED_EXPRESSION",
+      "lexeme" : ">=",
+      "charPos" : 0
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "42 starts-with \"hello\"",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "STARTS_WITH",
+      "errorType" : "Interpreter/EXPECTED_STRING_OPERAND",
+      "lexeme" : "starts-with",
+      "charPos" : 3
+    }
+  }
+}

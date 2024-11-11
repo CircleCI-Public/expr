@@ -1,0 +1,13 @@
+{
+  "input" : {
+    "expression" : "branch == \"main\" and not (number == 5 and project == \"my-project\")",
+    "environment" : {
+      "branch" : "main",
+      "number" : 5,
+      "project" : "another-project"
+    }
+  },
+  "expected" : {
+    "result" : true
+  }
+}

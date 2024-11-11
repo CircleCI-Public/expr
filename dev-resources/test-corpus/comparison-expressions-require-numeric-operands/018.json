@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "\"hi\" <= \"hi\"",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "LESS_EQUAL",
+      "errorType" : "Interpreter/EXPECTED_NUMERIC_OPERAND",
+      "lexeme" : "<=",
+      "charPos" : 5
+    }
+  }
+}
