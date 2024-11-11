@@ -1,0 +1,9 @@
+{
+  "input" : {
+    "expression" : "!true",
+    "environment" : { }
+  },
+  "expected" : {
+    "result" : false
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "input" : {
+    "expression" : "(5 < 4 or not foo) and \"s\" != 42",
+    "environment" : {
+      "foo" : true
+    }
+  },
+  "expected" : {
+    "result" : false
+  }
+}

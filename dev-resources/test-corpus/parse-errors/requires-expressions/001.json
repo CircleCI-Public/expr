@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "and",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "AND",
+      "errorType" : "Parser/EXPECTED_EXPRESSION",
+      "lexeme" : "and",
+      "charPos" : 0
+    }
+  }
+}

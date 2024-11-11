@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "foo and (",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "EOF",
+      "errorType" : "Parser/EXPECTED_EXPRESSION",
+      "lexeme" : "",
+      "charPos" : 9
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "input" : {
+    "expression" : "5 >= 5",
+    "environment" : { }
+  },
+  "expected" : {
+    "result" : true
+  }
+}

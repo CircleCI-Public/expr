@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "42 <= \"hello\"",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "LESS_EQUAL",
+      "errorType" : "Interpreter/EXPECTED_NUMERIC_OPERAND",
+      "lexeme" : "<=",
+      "charPos" : 3
+    }
+  }
+}

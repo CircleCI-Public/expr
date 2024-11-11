@@ -1,0 +1,9 @@
+{
+  "input" : {
+    "expression" : "\"hi\" != \"hi\"",
+    "environment" : { }
+  },
+  "expected" : {
+    "result" : false
+  }
+}

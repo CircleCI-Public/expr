@@ -143,3 +143,140 @@ Build the Java sources with `lein javac`
 
 ## Tests
 Run tests with `lein test`
+
+## Test corpus
+There is a corpus of test cases in `dev-resources/test-corpus` which can be
+used to assert that implementations in different languages have the same
+behaviours as the original Java implementation.
+
+Each individual JSON file is a single test case.
+Keys:
+* `input` - the test inputs, an `expression`, and an `environment`
+    * `expression` is a string containing the expression to interpret.
+    * `environment` is a JSON object with string keys, and string, boolean,
+      integer, or `null` values.
+* `expected` - the expected outcome, the content differs if the test case is
+  expected to successfully interpret the expression and return a result, or if
+  there should be an error reported.
+    * If the expression is expected to be interpreted successfully this is a
+      JSON object with a single key `result` that maps to the outcome.
+    * If the expression is expected to cause an error, this is a JSON object
+      with a single key `error` which maps to a JSON object describing the
+      error.
+
+### Successful interpretation
+A test case expecting the interpreter to return a result:
+```json
+{
+  "input" : {
+    "expression" : "1 == 1",
+    "environment" : { }
+  },
+  "expected" : {
+    "result" : true
+  }
+}
+```
+
+Since the expression should evaluate `true`, the expected `result` is `true`.
+If the expression is expected to evaluatee `false` then the expected `result`
+is `false`.
+
+### Error test cases
+A test case expecting that the interpreter returns an error:
+```json
+{
+  "input" : {
+    "expression" : "42 <= \"hello\"",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "LESS_EQUAL",
+      "errorType" : "Interpreter/EXPECTED_NUMERIC_OPERAND",
+      "lexeme" : "<=",
+      "charPos" : 3
+    }
+  }
+}
+```
+The `error` object will not have a `tokenType` key if the error occured in the scanner.
+
+#### Scan errors
+Errors with scanning have the following keys:
+* `errorType` - The type of error, values can be:
+    * `"Scanner/INCOMPLETE_EQUALS"` - Malformed equality operator.
+    * `"Scanner/UNTERMINATED_STRING"` - The scanner is scanning a string but
+      reached EOF before reading the closing double-quote character. The
+      reported error character is the opening double-quote.
+    * `"Scanner/UNEXPECTED_CHARACTER"` - Encountered an invalid character in
+      the input.
+* `lexeme` - The character where the error was encountered. This isn't strictly
+  speaking a `lexeme` at this stage, but it makes dealing with the error cases
+  easier if they have consistent key names.
+* `charPos` - The position of `errorChar` in the input, 0-indexed.
+
+E.g. for the expression `"text \"an unterminated string"` the response should be:
+```json
+{
+  "errorType": "Scanner/UNTERMINATED_STRING",
+  "lexeme": "\"",
+  "charPos": 5
+}
+```
+
+#### Parse errors
+Errors with parsing have the following keys:
+* `errorType` - The type of error, values can be:
+    * `"Parser/EXPECTED_EXPRESSION"` - The input doesn't match the expression grammar.
+    * `"Parser/UNEXPECTED_ADDITIONAL_INPUT"` - There is additional input
+      remaining after a full expression has been matched. The parser expects to
+      consume all of the input expression.
+    * `"Parser/EXPECTED_RIGHT_PAREN"` - There are unbalanced parentheses in the
+      expression, a `(` was seen without a matching `)`.
+* `tokenType` - The type of token being parsed when the error was encountered.
+  See `TokenType.java` for a full list.
+* `lexeme` - The lexeme for the token being parsed.
+* `charPos` - The start position of the token in the input, 0-indexed.
+
+E.g. for the expression `"and"` the response should be:
+```json
+{
+  "errorType": "Parser/EXPECTED_EXPRESSION",
+  "tokenType": "AND",
+  "lexeme": "and",
+  "charPos": 0
+}
+```
+
+#### Interpreter errors
+The interpreter operates on an Abstract Syntax Tree (AST). Each node in the
+tree is associated with a parsed token. This token is reported in the
+interpreter errors since the token identifies the problematic part of the
+input.
+
+Errors with interpreting have the following keys:
+* `errorType` - The type of error, values can be:
+    * `"Interpreter/EXPECTED_NUMERIC_OPERAND"` - The operator being interpreted
+      needs numeric operands, but at least one of the operands is non-numeric.
+      For these errors the operator token is reported.
+    * `"Interpreter/EXPECTED_STRING_OPERAND"` - The operator being interpreted
+      needs string operands, but at least one of the operands is not a string.
+      For these errors the operator token is reported.
+    * `"Interpreter/UNKNOWN_VARIABLE"` - A variable is referenced in the
+      expression which is not available in the environment.
+* `tokenType` - The type of the token associated with the AST node where the
+  error was encountered.
+  See `TokenType.java` for a full list.
+* `lexeme` - The lexeme for the token.
+* `charPos` - The start position of the token in the input, 0-indexed.
+
+E.g. for the expression `"foo starts-with \"hello\""` with environment `{"foo": 42}`
+```json
+{
+  "errorType": "Interpreter/EXPECTED_STRING_OPERAND",
+  "tokenType": "STARTS_WITH",
+  "lexeme": "starts-with",
+  "charPos": 4
+}
+```
