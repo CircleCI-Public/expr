@@ -147,7 +147,25 @@ public class Interpreter implements Expr.Visitor<Object> {
       throw new Error(expr.name, Error.Type.UNKNOWN_VARIABLE);
     }
 
-    return environment.get(expr.name.lexeme);
+    var value = environment.get(expr.name.lexeme);
+
+    // The only numeric type supported by expr is Long integers.
+    // Ensure that all other integer numeric types in the environment are
+    // converted to Longs, otherwise the numeric operand checks will fail.
+    if (value == null) {
+      return null;
+    }
+    else if (value instanceof Integer) {
+      return Long.valueOf((Integer) value);
+    }
+    else if (value instanceof Short) {
+      return Long.valueOf((Short) value);
+    }
+    else if (value instanceof Byte) {
+      return Long.valueOf((Byte) value);
+    }
+
+    return value;
   }
 
   @Override

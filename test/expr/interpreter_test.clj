@@ -438,3 +438,12 @@
      "project" "my-project"
      "always_run" nil}
     true))
+
+(deftest different-integer-types-are-converted-to-longs
+  (are [environment] (false? (-> (util/scan "foo < 5")
+                                 (util/parse)
+                                 (util/interpret environment)))
+    {"foo" (Byte/valueOf (byte 10))}
+    {"foo" (Short/valueOf (short 10))}
+    {"foo" (Integer/valueOf 10)}
+    {"foo" (Long/valueOf 10)}))
