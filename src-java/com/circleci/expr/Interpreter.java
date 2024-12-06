@@ -114,9 +114,22 @@ public class Interpreter implements Expr.Visitor<Object> {
     return isTruthy(expr.accept(this));
   }
 
+  /**
+   * Evaluate the expression represented by the AST rooted at `expr` in the
+   * Interpreter's configured `environment`.
+   *
+   * Returns the value of `expr`, which may be any scalar type.
+   *
+   * @throws Interpreter.Error if an error is encountered while interpreting `expr`.
+   */
+  public Object evaluate(Expr expr) {
+    return expr.accept(this);
+  }
+
+
   @Override
   public Object visitLogicalExpr(Expr.Logical expr) {
-    Object left = evaluate(expr.left);
+    Object left = eval(expr.left);
 
     if (expr.operator.type == OR) {
       if (isTruthy(left)) return left;
@@ -125,14 +138,14 @@ public class Interpreter implements Expr.Visitor<Object> {
       if (!isTruthy(left)) return left;
     }
 
-    return evaluate(expr.right);
+    return eval(expr.right);
   }
 
   @Override
   public Object visitBinaryExpr(Expr.Binary expr) {
-    // evaluate left and right, apply the operator, return it
-    Object left = evaluate(expr.left);
-    Object right = evaluate(expr.right);
+    // eval left and right, apply the operator, return it
+    Object left = eval(expr.left);
+    Object right = eval(expr.right);
 
     // This implementation uses `null` for undefined variables. Undefined
     // variables "infect" binary expressions, if either operand is undefined
@@ -168,7 +181,7 @@ public class Interpreter implements Expr.Visitor<Object> {
 
   @Override
   public Object visitUnaryExpr(Expr.Unary expr) {
-    Object value = evaluate(expr.right);
+    Object value = eval(expr.right);
 
     switch (expr.operator.type) {
       case NOT:
@@ -212,10 +225,10 @@ public class Interpreter implements Expr.Visitor<Object> {
 
   @Override
   public Object visitGroupingExpr(Expr.Grouping expr) {
-    return evaluate(expr.expression);
+    return eval(expr.expression);
   }
 
-  private Object evaluate(Expr expr) {
+  private Object eval(Expr expr) {
     return expr.accept(this);
   }
 

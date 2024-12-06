@@ -36,6 +36,20 @@
     ;; Except for 'false'
     "false" false))
 
+(deftest evaluates-literals
+  (are [expression expected] (= expected
+                                (-> (util/scan expression)
+                                    (util/parse)
+                                    (util/evaluate {"ident" 5})))
+    ;; All literals are true
+    "0" 0
+    "1" 1
+    "\"string\"" "string"
+    "ident" 5
+    "true" true
+    ;; Except for 'false'
+    "false" false))
+
 (deftest logical-expressions
   (are [expression environment expected] (= expected
                                             (-> (util/scan expression)
