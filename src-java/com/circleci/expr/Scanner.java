@@ -52,6 +52,46 @@ public class Scanner {
       this.errorChar = errorChar;
       this.errorPos = errorPos;
     }
+
+    /**
+     * Return a multiline error message describing the error represented by
+     * this exception.
+     *
+     * Returns a string of the form:
+     *
+     * explanation
+     * line of expression containing the error
+     * marker line pointing at the error token
+     *
+     * E.g.
+     * "Unexpected character '&':\n" +
+     * "2 > 5 && false\n" +
+     * "      ^"
+     */
+    public String asErrorMessage(String expression) {
+      switch (this.type) {
+        case UNEXPECTED_CHARACTER:
+          return Errors.errorMessage(String.format("Unexpected character '%s':" , this.errorChar),
+              expression,
+              this.errorPos,
+              1);
+
+        case INCOMPLETE_EQUALS:
+          return Errors.errorMessage(String.format("Incomplete token, expected \"==\", found '%s':", this.errorChar),
+              expression,
+              this.errorPos,
+              1);
+
+        case UNTERMINATED_STRING:
+          return Errors.errorMessage(String.format("Unterminated string starting here:", this.errorChar),
+              expression,
+              this.errorPos,
+              1);
+
+        default:
+          return String.format("Unknown error scanning expression: '%s'", expression);
+      }
+    }
   }
 
   private static final Map<String, TokenType> keywords;

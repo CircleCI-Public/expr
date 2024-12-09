@@ -60,6 +60,48 @@ public class Parser {
       this.type = type;
       this.token = token;
     }
+
+    /**
+     * Return a multiline error message describing the error represented by
+     * this exception.
+     *
+     * Returns a string of the form:
+     *
+     * explanation
+     * line of expression containing the error
+     * marker line pointing at the error token
+     *
+     * E.g.
+     * "Expected expression, found \")\":\n" +
+     * "foo and ) bar\n" +
+     * "        ^"
+     */
+    public String asErrorMessage(String expression) {
+      var errorString = this.token.lexeme;
+
+      switch (this.type) {
+        case UNEXPECTED_ADDITIONAL_INPUT:
+          return Errors.errorMessage(String.format("Unexpected additional input, found \"%s\", expected EOF:", errorString),
+              expression,
+              this.token.charPos,
+              errorString.length());
+
+        case EXPECTED_EXPRESSION:
+          return Errors.errorMessage(String.format("Expected expression, found \"%s\":", errorString),
+              expression,
+              this.token.charPos,
+              errorString.length());
+
+        case EXPECTED_RIGHT_PAREN:
+          return Errors.errorMessage("Expected ')' after expression:",
+              expression,
+              this.token.charPos,
+              1);
+
+        default:
+          return String.format("Unknown error parsing expression: '%s'", expression);
+      }
+    }
   }
 
   // List of tokens to assemble into an AST

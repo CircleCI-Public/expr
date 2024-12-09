@@ -51,6 +51,48 @@ public class Interpreter implements Expr.Visitor<Object> {
       this.token = token;
       this.type = type;
     }
+
+    /**
+     * Return a multiline error message describing the error represented by
+     * this exception.
+     *
+     * Returns a string of the form:
+     *
+     * explanation
+     * line of expression containing the error
+     * marker line pointing at the error token
+     *
+     * E.g.
+     * "Referred to a variable \"bar\" that does not exist:\n" +
+     * "foo >= bar\n" +
+     * "       ^^^"
+     */
+    public String asErrorMessage(String expression) {
+      var errorString = this.token.lexeme;
+
+      switch (this.type) {
+        case EXPECTED_NUMERIC_OPERAND:
+          return Errors.errorMessage(String.format("Expected numeric operands to \"%s\" operator:", errorString),
+              expression,
+              this.token.charPos,
+              errorString.length());
+
+        case EXPECTED_STRING_OPERAND:
+          return Errors.errorMessage(String.format("Expected string operands to \"%s\" operator:", errorString),
+              expression,
+              this.token.charPos,
+              errorString.length());
+
+        case UNKNOWN_VARIABLE:
+          return Errors.errorMessage(String.format("Referred to a variable \"%s\" that does not exist:", errorString),
+              expression,
+              this.token.charPos,
+              errorString.length());
+
+        default:
+          return String.format("Unknown error interpreting expression: '%s'", expression);
+      }
+    }
   }
 
   // A lookup table from known variable names to values
