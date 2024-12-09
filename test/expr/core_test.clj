@@ -20,7 +20,8 @@
             [clojure.string :as string]
             [expr.util :as util]
             [expr.core :as expr])
-  (:import (com.circleci.expr Interpreter$Error
+  (:import (com.circleci.expr Errors
+                              Interpreter$Error
                               Parser$ParseError
                               Scanner$ScanError)))
 
@@ -29,40 +30,40 @@
     (is (= (string/join \newline ["Preamble message:"
                                   "some.number > baz or true"
                                   "              ^^^"])
-           (#'expr/build-error-message "Preamble message:"
-                                       "some.number > baz or true"
-                                       14
-                                       3))))
+           (Errors/errorMessage "Preamble message:"
+                                "some.number > baz or true"
+                                14
+                                3))))
 
   (testing "Pinpoints errors in multi-line expressions"
     (is (= (string/join \newline ["Preamble message:"
                                   "some.number > baz or true"
                                   "              ^^^"])
-           (#'expr/build-error-message "Preamble message:"
-                                       (string/join \newline ["foo.bar == \"main\" and"
-                                                              "some.number > baz or true"])
-                                       36
-                                       3))))
+           (Errors/errorMessage "Preamble message:"
+                                (string/join \newline ["foo.bar == \"main\" and"
+                                                       "some.number > baz or true"])
+                                36
+                                3))))
 
   (testing "Error is on the end of a line"
     (is (= (string/join \newline ["Preamble message:"
                                   "some.number > baz or t"
                                   "                     ^"])
-           (#'expr/build-error-message "Preamble message:"
-                                       (string/join \newline ["foo.bar == \"main\" and"
-                                                              "some.number > baz or t"
-                                                              "1 <= 15"])
-                                       43
-                                       1))))
+           (Errors/errorMessage "Preamble message:"
+                                (string/join \newline ["foo.bar == \"main\" and"
+                                                       "some.number > baz or t"
+                                                       "1 <= 15"])
+                                43
+                                1))))
 
   (testing "Error is after the end of a line"
     (is (= (string/join \newline ["Preamble message:"
                                   "foo.bar.baz == (1 > 5"
                                   "                     ^"])
-           (#'expr/build-error-message "Preamble message:"
-                                       "foo.bar.baz == (1 > 5"
-                                       21
-                                       1)))))
+           (Errors/errorMessage "Preamble message:"
+                                "foo.bar.baz == (1 > 5"
+                                21
+                                1)))))
 
 (deftest pretty-scan-error
   (testing "Unexpected characters"
@@ -72,7 +73,7 @@
       (is (= (string/join \newline ["Unexpected character '&':"
                                     "2 > 5 && false"
                                     "      ^"])
-             (#'expr/pretty-scan-error e expression)))))
+             (.asErrorMessage e expression)))))
 
   (testing "Incomplete tokens"
     (let [expression "foo = 58"
@@ -81,7 +82,7 @@
       (is (= (string/join \newline ["Incomplete token, expected \"==\", found ' ':"
                                     "foo = 58"
                                     "     ^"])
-             (#'expr/pretty-scan-error e expression)))))
+             (.asErrorMessage e expression)))))
 
   (testing "Unterminated strings"
     (let [expression "foo == \"an unterminated string"
@@ -90,7 +91,7 @@
       (is (= (string/join \newline ["Unterminated string starting here:"
                                     "foo == \"an unterminated string"
                                     "       ^"])
-             (#'expr/pretty-scan-error e expression))))))
+             (.asErrorMessage e expression))))))
 
 (deftest pretty-parse-error
   (testing "Unexpected additional input"
@@ -100,7 +101,7 @@
       (is (= (string/join \newline ["Unexpected additional input, found \"foo\", expected EOF:"
                                     "5 > 4 foo"
                                     "      ^^^"])
-             (#'expr/pretty-parse-error e expression)))))
+             (.asErrorMessage e expression)))))
 
   (testing "Expected an expression"
     (let [expression "foo and ) bar"
@@ -109,7 +110,7 @@
       (is (= (string/join \newline ["Expected expression, found \")\":"
                                     "foo and ) bar"
                                     "        ^"])
-             (#'expr/pretty-parse-error e expression)))))
+             (.asErrorMessage e expression)))))
 
   (testing "Expected a right parenthesis"
     (let [expression "foo and (bar > 3"
@@ -118,7 +119,7 @@
       (is (= (string/join \newline ["Expected ')' after expression:"
                                     "foo and (bar > 3"
                                     "                ^"])
-             (#'expr/pretty-parse-error e expression))))))
+             (.asErrorMessage e expression))))))
 
 (deftest pretty-interpreter-error
   (testing "Expected a numeric operand"
@@ -130,7 +131,7 @@
       (is (= (string/join \newline ["Expected numeric operands to \"<=\" operator:"
                                     "foo <= true or false"
                                     "    ^^"])
-             (#'expr/pretty-interpreter-error e expression)))))
+             (.asErrorMessage e expression)))))
 
   (testing "Expected a string operand"
     (let [expression "foo starts-with \"api\""
@@ -141,7 +142,7 @@
       (is (= (string/join \newline ["Expected string operands to \"starts-with\" operator:"
                                     "foo starts-with \"api\""
                                     "    ^^^^^^^^^^^"])
-             (#'expr/pretty-interpreter-error e expression)))))
+             (.asErrorMessage e expression)))))
 
   (testing "Unknown variable"
     (let [expression "1 > 1 or \"main\" != foo and false"
@@ -154,7 +155,7 @@
       (is (= (string/join \newline ["Referred to a variable \"foo\" that does not exist:"
                                     "1 > 1 or \"main\" != foo and false"
                                     "                   ^^^"])
-             (#'expr/pretty-interpreter-error e expression))))))
+             (.asErrorMessage e expression))))))
 
 (deftest parse-can-parse
   (testing "no errors"
