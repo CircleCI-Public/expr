@@ -83,3 +83,7 @@
 (defn interpret
   [^Expr expr environment]
   (.interpret (Interpreter. environment) expr))
+
+(defn evaluate
+  [^Expr expr environment]
+  (.evaluate (Interpreter. environment) expr))

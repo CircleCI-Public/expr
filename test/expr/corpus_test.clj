@@ -18,12 +18,10 @@
               (assoc (json/parse-string (slurp f))
                      :test-name (.getPath f))))))
 
-(defn run-test
-  [expression environment]
+(defn- run-test
+  [process expression environment]
   (try
-    {"result" (-> (util/scan expression)
-                  (util/parse)
-                  (util/interpret environment))}
+    {"result" (process expression environment)}
     (catch Scanner$ScanError e
       {"error" {"errorType" (str "Scanner/" (.-type e))
                 "lexeme" (str (.-errorChar e))
@@ -41,10 +39,26 @@
                   "lexeme" (.-lexeme token)
                   "charPos" (.-charPos token)}}))))
 
-(deftest run-test-corpus
-  (doseq [{:strs [input expected]
-           :keys [test-name]} (test-files "dev-resources/test-corpus")
-          :let [{:strs [expression environment]} input]]
-    (is (= expected
-           (run-test expression environment))
-        test-name)))
+(deftest run-interpreter-test-corpus
+  (let [run-interpreter-test (partial run-test (fn [expression environment]
+                                                 (-> (util/scan expression)
+                                                     (util/parse)
+                                                     (util/interpret environment))))]
+    (doseq [{:strs [input expected]
+             :keys [test-name]} (test-files "dev-resources/test-corpus")
+            :let [{:strs [expression environment]} input]]
+      (is (= expected
+             (run-interpreter-test expression environment))
+          test-name))))
+
+(deftest run-evaluator-test-corpus
+  (let [run-evaluator-test (partial run-test (fn [expression environment]
+                                               (-> (util/scan expression)
+                                                   (util/parse)
+                                                   (util/evaluate environment))))]
+    (doseq [{:strs [input expected]
+             :keys [test-name]} (test-files "dev-resources/evaluator-test-corpus")
+            :let [{:strs [expression environment]} input]]
+      (is (= expected
+             (run-evaluator-test expression environment))
+          test-name))))

@@ -63,11 +63,43 @@
       {:errors [(.asErrorMessage e expression)]})))
 
 (defn interpret
+  "Interpret an expression.
+
+  Interpret returns the truthiness of the eventual value of the expression.
+
+  On success returns a map of the form:
+    {:result <boolean result of interpreting expression>}
+
+  On error returns a map of the form:
+    {:errors <collection of error message strings>}"
   [^String expression pipeline-values]
   (try
     (let [tokens (.scan (Scanner. expression))
           expr (.parse (Parser. tokens))]
       {:result (.interpret (Interpreter. pipeline-values) expr)})
+    (catch Scanner$ScanError e
+      {:errors [(.asErrorMessage e expression)]})
+    (catch Parser$ParseError e
+      {:errors [(.asErrorMessage e expression)]})
+    (catch Interpreter$Error e
+      {:errors [(.asErrorMessage e expression)]})))
+
+(defn evaluate
+  "Evaluate an expression.
+
+  Evaluate returns the eventual value of the expression, which may be any
+  scalar type supported by the language.
+
+  On success returns a map of the form:
+    {:result <result of evaluating expression>}
+
+  On error returns a map of the form:
+    {:errors <collection of error message strings>}"
+  [^String expression pipeline-values]
+  (try
+    (let [tokens (.scan (Scanner. expression))
+          expr (.parse (Parser. tokens))]
+      {:result (.evaluate (Interpreter. pipeline-values) expr)})
     (catch Scanner$ScanError e
       {:errors [(.asErrorMessage e expression)]})
     (catch Parser$ParseError e

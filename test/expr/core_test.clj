@@ -227,3 +227,26 @@
                                             "foo >= bar"
                                             "       ^^^"])]}
            (expr/interpret "foo >= bar" {"foo" 3})))))
+
+(deftest evaluate-can-evaluate
+  (testing "no errors"
+    (is (= {:result "hello"}
+           (expr/evaluate "15 < 3 or \"hello\"" {}))))
+
+  (testing "scanner error"
+    (is (= {:errors [(string/join \newline ["Unexpected character '&':"
+                                            "2 > 5 && false"
+                                            "      ^"])]}
+           (expr/evaluate "2 > 5 && false" {}))))
+
+  (testing "parser error"
+    (is (= {:errors [(string/join \newline ["Expected ')' after expression:"
+                                            "foo and (bar > 3"
+                                            "                ^"])]}
+           (expr/evaluate "foo and (bar > 3" {}))))
+
+  (testing "evaluateer error"
+    (is (= {:errors [(string/join \newline ["Referred to a variable \"bar\" that does not exist:"
+                                            "foo >= bar"
+                                            "       ^^^"])]}
+           (expr/evaluate "foo >= bar" {"foo" 3})))))
