@@ -28,4 +28,8 @@ public class Errors {
              .add(" ".repeat(errorPos - lineStart) + "^".repeat(errorLength))
              .toString();
   }
+
+  public static interface ErrorMessage {
+    public String asErrorMessage(String expression);
+  }
 }

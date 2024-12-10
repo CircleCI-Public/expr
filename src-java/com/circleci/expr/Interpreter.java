@@ -22,6 +22,7 @@ package com.circleci.expr;
 
 import java.util.Map;
 
+import static com.circleci.expr.Errors.ErrorMessage;
 import static com.circleci.expr.TokenType.*;
 
 /**
@@ -29,7 +30,7 @@ import static com.circleci.expr.TokenType.*;
  */
 public class Interpreter implements Expr.Visitor<Object> {
 
-  public static class Error extends RuntimeException {
+  public static class Error extends RuntimeException implements ErrorMessage {
     static final long serialVersionUID = 1;
 
     public static enum Type {
@@ -67,6 +68,7 @@ public class Interpreter implements Expr.Visitor<Object> {
      * "foo >= bar\n" +
      * "       ^^^"
      */
+    @Override
     public String asErrorMessage(String expression) {
       var errorString = this.token.lexeme;
 
