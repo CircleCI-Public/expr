@@ -25,10 +25,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.circleci.expr.Errors.ErrorMessage;
 import static com.circleci.expr.TokenType.*;
 
 public class Scanner {
-  public static class ScanError extends RuntimeException {
+  public static class ScanError extends RuntimeException implements ErrorMessage {
     static final long serialVersionUID = 1;
 
     public static enum Type {
@@ -68,6 +69,7 @@ public class Scanner {
      * "2 > 5 && false\n" +
      * "      ^"
      */
+    @Override
     public String asErrorMessage(String expression) {
       switch (this.type) {
         case UNEXPECTED_CHARACTER:

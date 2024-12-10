@@ -32,13 +32,14 @@ package com.circleci.expr;
 
 import java.util.List;
 
+import static com.circleci.expr.Errors.ErrorMessage;
 import static com.circleci.expr.TokenType.*;
 
 /**
  * Parser performs a recursive descent parse of the input tokens.
  */
 public class Parser {
-  public static class ParseError extends RuntimeException {
+  public static class ParseError extends RuntimeException implements ErrorMessage {
     static final long serialVersionUID = 1;
 
     public static enum Type {
@@ -76,6 +77,7 @@ public class Parser {
      * "foo and ) bar\n" +
      * "        ^"
      */
+    @Override
     public String asErrorMessage(String expression) {
       var errorString = this.token.lexeme;
 
