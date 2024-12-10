@@ -1,0 +1,12 @@
+{
+  "input" : {
+    "expression" : "project == \"my-project\" and branch or \"default value\"",
+    "environment" : {
+      "branch" : "main",
+      "project" : null
+    }
+  },
+  "expected" : {
+    "result" : "default value"
+  }
+}

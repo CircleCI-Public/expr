@@ -1,0 +1,13 @@
+{
+  "input" : {
+    "expression" : ".foo",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "errorType" : "Scanner/UNEXPECTED_CHARACTER",
+      "lexeme" : ".",
+      "charPos" : 0
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "foo > 5",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "IDENTIFIER",
+      "errorType" : "Interpreter/UNKNOWN_VARIABLE",
+      "lexeme" : "foo",
+      "charPos" : 0
+    }
+  }
+}

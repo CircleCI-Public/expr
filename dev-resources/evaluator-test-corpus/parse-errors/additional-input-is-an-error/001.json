@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "foo and bar baz",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "IDENTIFIER",
+      "errorType" : "Parser/UNEXPECTED_ADDITIONAL_INPUT",
+      "lexeme" : "baz",
+      "charPos" : 12
+    }
+  }
+}

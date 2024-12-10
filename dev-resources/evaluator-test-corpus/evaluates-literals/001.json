@@ -1,0 +1,11 @@
+{
+  "input" : {
+    "expression" : "0",
+    "environment" : {
+      "ident" : 5
+    }
+  },
+  "expected" : {
+    "result" : 0
+  }
+}
