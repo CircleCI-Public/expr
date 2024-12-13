@@ -122,7 +122,10 @@
                {:type TokenType/EOF :lexeme "" :pos 7}]
 
     "foo_bar" [{:type TokenType/IDENTIFIER :lexeme "foo_bar" :pos 0 :literal "foo_bar"}
-               {:type TokenType/EOF :lexeme "" :pos 7}])
+               {:type TokenType/EOF :lexeme "" :pos 7}]
+
+    "foo_bar?" [{:type TokenType/IDENTIFIER :lexeme "foo_bar?" :pos 0 :literal "foo_bar?"}
+                {:type TokenType/EOF :lexeme "" :pos 8}])
 
   (testing "identifiers cannot contain strings of '.'s"
     (let [e (is (thrown-with-msg? Scanner$ScanError #"Unexpected character\."
