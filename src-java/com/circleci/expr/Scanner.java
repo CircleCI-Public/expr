@@ -290,7 +290,7 @@ public class Scanner {
    * @see isDigit
    */
   private boolean isIdentifierTail(char c) {
-    return isAlpha(c) || isDigit(c) || c == '-' || c == '_';
+    return isAlpha(c) || isDigit(c) || c == '-' || c == '_' || c == '?';
   }
 
   /**
