@@ -56,7 +56,7 @@ public abstract class Expr {
     public final Token operator;
     public final Expr right;
 
-    Logical(Expr left, Token operator, Expr right) {
+    public Logical(Expr left, Token operator, Expr right) {
       this.left = left;
       this.operator = operator;
       this.right = right;
@@ -76,7 +76,7 @@ public abstract class Expr {
     public final Token operator;
     public final Expr right;
 
-    Binary(Expr left, Token operator, Expr right) {
+    public Binary(Expr left, Token operator, Expr right) {
       this.left = left;
       this.operator = operator;
       this.right = right;
@@ -95,7 +95,7 @@ public abstract class Expr {
     public final Token operator;
     public final Expr right;
 
-    Unary(Token operator, Expr right) {
+    public Unary(Token operator, Expr right) {
       this.operator = operator;
       this.right = right;
     }
@@ -114,7 +114,7 @@ public abstract class Expr {
   public static class Literal extends Expr {
     public final Object value;
 
-    Literal(Object value) {
+    public Literal(Object value) {
       this.value = value;
     }
 
@@ -132,7 +132,7 @@ public abstract class Expr {
   public static class Identifier extends Expr {
     public final Token name;
 
-    Identifier(Token name) {
+    public Identifier(Token name) {
       this.name = name;
     }
 
@@ -150,7 +150,7 @@ public abstract class Expr {
   public static class Grouping extends Expr {
     public final Expr expression;
 
-    Grouping(Expr expression) {
+    public Grouping(Expr expression) {
       this.expression = expression;
     }
 
