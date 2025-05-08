@@ -48,19 +48,19 @@ type Visitable[T any] struct {
 }
 
 func (v *Visitable[T]) Accept(visitor Visitor[T]) (T, error) {
-	switch v.Expression.(type) {
+	switch expr := v.Expression.(type) {
 	case Logical:
-		return visitor.VisitLogicalExpr(v.Expression.(Logical))
+		return visitor.VisitLogicalExpr(expr)
 	case Binary:
-		return visitor.VisitBinaryExpr(v.Expression.(Binary))
+		return visitor.VisitBinaryExpr(expr)
 	case Unary:
-		return visitor.VisitUnaryExpr(v.Expression.(Unary))
+		return visitor.VisitUnaryExpr(expr)
 	case Literal:
-		return visitor.VisitLiteralExpr(v.Expression.(Literal))
+		return visitor.VisitLiteralExpr(expr)
 	case Identifier:
-		return visitor.VisitIdentifierExpr(v.Expression.(Identifier))
+		return visitor.VisitIdentifierExpr(expr)
 	case Grouping:
-		return visitor.VisitGroupingExpr(v.Expression.(Grouping))
+		return visitor.VisitGroupingExpr(expr)
 	default:
 		panic("non-exhaustive switch")
 	}

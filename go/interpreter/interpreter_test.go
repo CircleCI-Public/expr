@@ -31,6 +31,15 @@ import (
 )
 
 func interpret(expression string, env map[string]any) (bool, error) {
+	envVals := make(map[string]Val, len(env))
+	for k, v := range env {
+		b, err := BoxVal(v)
+		if err != nil {
+			return false, err
+		}
+		envVals[k] = b
+	}
+
 	s := scanner.New(expression)
 
 	tokens, err := s.Scan()
@@ -45,7 +54,7 @@ func interpret(expression string, env map[string]any) (bool, error) {
 		return false, err
 	}
 
-	i := New(env)
+	i := New(envVals)
 	result, err := i.Interpret(expr)
 
 	if err != nil {
