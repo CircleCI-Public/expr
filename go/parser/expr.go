@@ -22,22 +22,48 @@ package parser
 
 import "github.com/circleci/expr/go/token"
 
-type Visitor interface {
-	VisitLogicalExpr(expr Logical) (any, error)
-	VisitBinaryExpr(expr Binary) (any, error)
-	VisitUnaryExpr(expr Unary) (any, error)
-	VisitLiteralExpr(expr Literal) (any, error)
-	VisitIdentifierExpr(expr Identifier) (any, error)
-	VisitGroupingExpr(expr Grouping) (any, error)
+type Visitor[T any] interface {
+	VisitLogicalExpr(expr Logical) (T, error)
+	VisitBinaryExpr(expr Binary) (T, error)
+	VisitUnaryExpr(expr Unary) (T, error)
+	VisitLiteralExpr(expr Literal) (T, error)
+	VisitIdentifierExpr(expr Identifier) (T, error)
+	VisitGroupingExpr(expr Grouping) (T, error)
 }
 
 // Represents expressions that together form an abstract syntax tree.
 //
-// Exprs are simple data types with public members. They provide an `accept`
-// method which cooperates with the `Visitor` interface to facilitate walking
-// the AST.
+// Exprs are simple data types with public members.
 type Expr interface {
-	Accept(visitor Visitor) (any, error)
+	isExpr()
+}
+
+// Visitable is a parameterised "facilitator" type used to walk an Expr AST
+// with a Visitor.
+// Implementers of Visitor should create a Visitable with the correct concrete
+// type for the Visitor's return value, wrapping the Expr they need to visit,
+// then call the Visitable's Accept method.
+type Visitable[T any] struct {
+	Expression Expr
+}
+
+func (v *Visitable[T]) Accept(visitor Visitor[T]) (T, error) {
+	switch expr := v.Expression.(type) {
+	case Logical:
+		return visitor.VisitLogicalExpr(expr)
+	case Binary:
+		return visitor.VisitBinaryExpr(expr)
+	case Unary:
+		return visitor.VisitUnaryExpr(expr)
+	case Literal:
+		return visitor.VisitLiteralExpr(expr)
+	case Identifier:
+		return visitor.VisitIdentifierExpr(expr)
+	case Grouping:
+		return visitor.VisitGroupingExpr(expr)
+	default:
+		panic("non-exhaustive switch")
+	}
 }
 
 // A logical `and` / `or` node in the AST.
@@ -47,9 +73,7 @@ type Logical struct {
 	Right    Expr
 }
 
-func (l Logical) Accept(visitor Visitor) (any, error) {
-	return visitor.VisitLogicalExpr(l)
-}
+func (l Logical) isExpr() {}
 
 // A binary operator node in the AST.
 type Binary struct {
@@ -58,9 +82,7 @@ type Binary struct {
 	Right    Expr
 }
 
-func (b Binary) Accept(visitor Visitor) (any, error) {
-	return visitor.VisitBinaryExpr(b)
-}
+func (b Binary) isExpr() {}
 
 // A unary operator node in the AST.
 type Unary struct {
@@ -68,9 +90,7 @@ type Unary struct {
 	Right    Expr
 }
 
-func (u Unary) Accept(visitor Visitor) (any, error) {
-	return visitor.VisitUnaryExpr(u)
-}
+func (u Unary) isExpr() {}
 
 // A literal value node in the AST.
 //
@@ -79,9 +99,7 @@ type Literal struct {
 	Value any
 }
 
-func (l Literal) Accept(visitor Visitor) (any, error) {
-	return visitor.VisitLiteralExpr(l)
-}
+func (l Literal) isExpr() {}
 
 // An identifier node in the AST.
 //
@@ -90,9 +108,7 @@ type Identifier struct {
 	Name token.Token
 }
 
-func (i Identifier) Accept(visitor Visitor) (any, error) {
-	return visitor.VisitIdentifierExpr(i)
-}
+func (i Identifier) isExpr() {}
 
 // A grouping node in the AST.
 //
@@ -101,6 +117,4 @@ type Grouping struct {
 	Expression Expr
 }
 
-func (g Grouping) Accept(visitor Visitor) (any, error) {
-	return visitor.VisitGroupingExpr(g)
-}
+func (g Grouping) isExpr() {}

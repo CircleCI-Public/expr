@@ -33,13 +33,18 @@ import (
 
 type sExpVisitor struct{}
 
-func (v sExpVisitor) VisitLogicalExpr(expr Logical) (any, error) {
-	l, err := expr.Left.Accept(v)
+func (s sExpVisitor) convert(expr Expr) (string, error) {
+	v := Visitable[string]{Expression: expr}
+	return v.Accept(s)
+}
+
+func (v sExpVisitor) VisitLogicalExpr(expr Logical) (string, error) {
+	l, err := v.convert(expr.Left)
 	if err != nil {
 		return "", err
 	}
 
-	r, err := expr.Right.Accept(v)
+	r, err := v.convert(expr.Right)
 	if err != nil {
 		return "", err
 	}
@@ -47,13 +52,13 @@ func (v sExpVisitor) VisitLogicalExpr(expr Logical) (any, error) {
 	return fmt.Sprintf("(%s %s %s)", expr.Operator.Lexeme, l, r), nil
 }
 
-func (v sExpVisitor) VisitBinaryExpr(expr Binary) (any, error) {
-	l, err := expr.Left.Accept(v)
+func (v sExpVisitor) VisitBinaryExpr(expr Binary) (string, error) {
+	l, err := v.convert(expr.Left)
 	if err != nil {
 		return "", err
 	}
 
-	r, err := expr.Right.Accept(v)
+	r, err := v.convert(expr.Right)
 	if err != nil {
 		return "", err
 	}
@@ -61,8 +66,8 @@ func (v sExpVisitor) VisitBinaryExpr(expr Binary) (any, error) {
 	return fmt.Sprintf("(%s %s %s)", expr.Operator.Lexeme, l, r), nil
 }
 
-func (v sExpVisitor) VisitUnaryExpr(expr Unary) (any, error) {
-	r, err := expr.Right.Accept(v)
+func (v sExpVisitor) VisitUnaryExpr(expr Unary) (string, error) {
+	r, err := v.convert(expr.Right)
 	if err != nil {
 		return "", err
 	}
@@ -70,16 +75,16 @@ func (v sExpVisitor) VisitUnaryExpr(expr Unary) (any, error) {
 	return fmt.Sprintf("(%s %s)", expr.Operator.Lexeme, r), nil
 }
 
-func (v sExpVisitor) VisitLiteralExpr(expr Literal) (any, error) {
+func (v sExpVisitor) VisitLiteralExpr(expr Literal) (string, error) {
 	return fmt.Sprintf("(literal %v)", expr.Value), nil
 }
 
-func (v sExpVisitor) VisitIdentifierExpr(expr Identifier) (any, error) {
+func (v sExpVisitor) VisitIdentifierExpr(expr Identifier) (string, error) {
 	return fmt.Sprintf("(identifier %s)", expr.Name.Lexeme), nil
 }
 
-func (v sExpVisitor) VisitGroupingExpr(expr Grouping) (any, error) {
-	g, err := expr.Expression.Accept(v)
+func (v sExpVisitor) VisitGroupingExpr(expr Grouping) (string, error) {
+	g, err := v.convert(expr.Expression)
 	if err != nil {
 		return "", err
 	}
@@ -107,16 +112,7 @@ func parse(expression string) (string, error) {
 		return "", err
 	}
 
-	v, err := expr.Accept(sExpVisitor{})
-	if err != nil {
-		return "", err
-	}
-
-	if v, ok := v.(string); ok {
-		return v, nil
-	}
-
-	return "", fmt.Errorf("Didn't get a string")
+	return sExpVisitor{}.convert(expr)
 }
 
 func TestLiterals(t *testing.T) {

@@ -22,7 +22,6 @@ package interpreter
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/circleci/expr/go/errors"
 	"github.com/circleci/expr/go/parser"
@@ -99,17 +98,11 @@ func (e Error) AsErrorMessage(expression string) string {
 }
 
 type Interpreter struct {
-	env map[string]any
+	env map[string]Val
 }
 
-func New(e map[string]any) *Interpreter {
-	// convert float64 to integers
-	for k, v := range e {
-		if f, ok := v.(float64); ok {
-			e[k] = int64(f)
-		}
-	}
-	return &Interpreter{env: e}
+func New(env map[string]Val) Interpreter {
+	return Interpreter{env: env}
 }
 
 // Interpret the expression represented by the AST rooted at expr in the
@@ -123,7 +116,8 @@ func (i Interpreter) Interpret(expr parser.Expr) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return isTruthy(res), nil
+
+	return res.IsTruthy(), nil
 }
 
 // Evaluate the expression represented by the AST rooted at expr in the
@@ -132,196 +126,146 @@ func (i Interpreter) Interpret(expr parser.Expr) (bool, error) {
 // Returns the value of expr, which may be any scalar type.
 //
 // Returns an Error if an error is encountered while interpreting expr.
-func (i Interpreter) Evaluate(expr parser.Expr) (any, error) {
-	res, err := expr.Accept(i)
+func (i Interpreter) Evaluate(expr parser.Expr) (Val, error) {
+	v := parser.Visitable[Val]{Expression: expr}
+	res, err := v.Accept(i)
+
 	if err != nil {
-		return false, err
+		return BoxBool(false), err
 	}
 	return res, nil
 }
 
-func (i Interpreter) VisitLogicalExpr(expr parser.Logical) (any, error) {
+func (i Interpreter) VisitLogicalExpr(expr parser.Logical) (Val, error) {
 	left, err := i.Evaluate(expr.Left)
 	if err != nil {
-		return nil, err
+		return UndefinedVal(), err
 	}
 
 	if expr.Operator.Type == token.OR {
-		if isTruthy(left) {
+		if left.IsTruthy() {
 			return left, nil
 		}
 	} else {
-		if !isTruthy(left) {
+		if !left.IsTruthy() {
 			return left, nil
 		}
 	}
 
 	r, err := i.Evaluate(expr.Right)
 	if err != nil {
-		return nil, err
+		return UndefinedVal(), err
 	}
 	return r, nil
 }
 
-func (i Interpreter) VisitBinaryExpr(expr parser.Binary) (any, error) {
+func (i Interpreter) VisitBinaryExpr(expr parser.Binary) (Val, error) {
 	// Evaluate left and right, apply the operator, return it
 	left, err := i.Evaluate(expr.Left)
 	if err != nil {
-		return nil, err
+		return UndefinedVal(), err
 	}
 	right, err := i.Evaluate(expr.Right)
 	if err != nil {
-		return nil, err
+		return UndefinedVal(), err
 	}
 
-	// This implementation uses `null` for undefined variables. Undefined
-	// variables "infect" binary expressions, if either operand is undefined
-	// then the result of the operator is undefined, no matter what the
+	// This implementation uses `NewUndefined()` for undefined variables.
+	// Undefined variables "infect" binary expressions, if either operand is
+	// undefined then the result of the operator is undefined, no matter what the
 	// operator is.
-	if left == nil || right == nil {
-		return nil, nil
+	if left.Undefined() || right.Undefined() {
+		return UndefinedVal(), nil
 	}
 
 	switch expr.Operator.Type {
 	case token.EQUAL:
-		return isEqual(left, right), nil
+		return BoxBool(left.Equal(right)), nil
 	case token.NOT_EQUAL:
-		return !isEqual(left, right), nil
+		return BoxBool(!left.Equal(right)), nil
 	case token.STARTS_WITH:
-		l, r, err := assertStringOperands(expr.Operator, left, right)
+		res, err := left.StartsWith(right)
 		if err != nil {
-			return nil, err
+			return UndefinedVal(), Error{
+				Type:  EXPECTED_STRING_OPERAND,
+				Token: expr.Operator,
+			}
 		}
-		return strings.HasPrefix(l, r), nil
+		return BoxBool(res), nil
 	case token.GREATER:
-		l, r, err := assertNumberOperands(expr.Operator, left, right)
+		res, err := left.Greater(right)
 		if err != nil {
-			return nil, err
+			return UndefinedVal(), Error{
+				Type:  EXPECTED_NUMERIC_OPERAND,
+				Token: expr.Operator,
+			}
 		}
-		return l > r, nil
+		return BoxBool(res), nil
 	case token.GREATER_EQUAL:
-		l, r, err := assertNumberOperands(expr.Operator, left, right)
+		res, err := left.GreaterEqual(right)
 		if err != nil {
-			return nil, err
+			return UndefinedVal(), Error{
+				Type:  EXPECTED_NUMERIC_OPERAND,
+				Token: expr.Operator,
+			}
 		}
-		return l >= r, nil
+		return BoxBool(res), nil
 	case token.LESS:
-		l, r, err := assertNumberOperands(expr.Operator, left, right)
+		res, err := left.Less(right)
 		if err != nil {
-			return nil, err
+			return UndefinedVal(), Error{
+				Type:  EXPECTED_NUMERIC_OPERAND,
+				Token: expr.Operator,
+			}
 		}
-		return l < r, nil
+		return BoxBool(res), nil
 	case token.LESS_EQUAL:
-		l, r, err := assertNumberOperands(expr.Operator, left, right)
+		res, err := left.LessEqual(right)
 		if err != nil {
-			return nil, err
+			return UndefinedVal(), Error{
+				Type:  EXPECTED_NUMERIC_OPERAND,
+				Token: expr.Operator,
+			}
 		}
-		return l <= r, nil
+		return BoxBool(res), nil
 	default:
-		return nil, nil
+		return UndefinedVal(), nil
 	}
 }
 
-func (i Interpreter) VisitUnaryExpr(expr parser.Unary) (any, error) {
-	val, err := i.Evaluate(expr.Right)
+func (i Interpreter) VisitUnaryExpr(expr parser.Unary) (Val, error) {
+	v, err := i.Evaluate(expr.Right)
 	if err != nil {
-		return nil, err
+		return UndefinedVal(), err
 	}
 	if expr.Operator.Type == token.NOT {
-		return !isTruthy(val), nil
+		return BoxBool(!v.IsTruthy()), nil
 	}
-	return nil, nil
+	return UndefinedVal(), nil
 }
 
-func (i Interpreter) VisitLiteralExpr(expr parser.Literal) (any, error) {
-	return expr.Value, nil
+func (i Interpreter) VisitLiteralExpr(expr parser.Literal) (Val, error) {
+	return BoxVal(expr.Value)
 }
 
-func (i Interpreter) VisitIdentifierExpr(expr parser.Identifier) (any, error) {
-	val, ok := i.env[expr.Name.Lexeme]
+func (i Interpreter) VisitIdentifierExpr(expr parser.Identifier) (Val, error) {
+	v, ok := i.env[expr.Name.Lexeme]
 	if !ok {
-		return nil, Error{
+		return UndefinedVal(), Error{
 			Type:  UNKNOWN_VARIABLE,
 			Token: expr.Name,
 		}
 	}
 
-	// The only numeric type supported by expr is integers.
-	// Ensure that all other integer numeric types in the environment are
-	// converted to Longs, otherwise the numeric operand checks will fail.
-	if val == nil {
-		return nil, nil
-	}
-
-	if iv, ok := val.(int); ok {
-		return int64(iv), nil
-	}
-	if iv, ok := val.(int8); ok {
-		return int64(iv), nil
-	}
-	if iv, ok := val.(int16); ok {
-		return int64(iv), nil
-	}
-	if iv, ok := val.(int32); ok {
-		return int64(iv), nil
-	}
-	if iv, ok := val.(int64); ok {
-		return iv, nil
-	}
-	// TODO - other types??
-	return val, nil
-}
-
-func (i Interpreter) VisitGroupingExpr(expr parser.Grouping) (any, error) {
-	v, err := i.Evaluate(expr.Expression)
-	if err != nil {
-		return nil, err
-	}
+	// The only numeric type supported by expr is integers. The Val constructor
+	// ensures that only integer types can be used.
 	return v, nil
 }
 
-func isTruthy(val any) bool {
-	if val == nil {
-		return false
+func (i Interpreter) VisitGroupingExpr(expr parser.Grouping) (Val, error) {
+	v, err := i.Evaluate(expr.Expression)
+	if err != nil {
+		return UndefinedVal(), err
 	}
-
-	if vl, ok := val.(bool); ok {
-		return vl
-	}
-
-	return true
-}
-
-func isEqual(a, b any) bool {
-	if a == nil && b == nil {
-		return true
-	}
-	if a == nil {
-		return false
-	}
-	return a == b
-}
-
-func assertNumberOperands(operator token.Token, left any, right any) (l, r int64, err error) {
-	l, lok := left.(int64)
-	r, rok := right.(int64)
-	if !lok || !rok {
-		return 0, 0, Error{
-			Type:  EXPECTED_NUMERIC_OPERAND,
-			Token: operator,
-		}
-	}
-	return l, r, nil
-}
-
-func assertStringOperands(operator token.Token, left any, right any) (l, r string, err error) {
-	l, lok := left.(string)
-	r, rok := right.(string)
-	if !lok || !rok {
-		return "", "", Error{
-			Type:  EXPECTED_STRING_OPERAND,
-			Token: operator,
-		}
-	}
-	return l, r, nil
+	return v, nil
 }
