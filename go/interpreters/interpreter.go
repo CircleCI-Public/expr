@@ -18,14 +18,14 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 */
 
-package interpreter
+package interpreters
 
 import (
 	"fmt"
 
 	"github.com/circleci/expr/go/errors"
-	"github.com/circleci/expr/go/parser"
-	"github.com/circleci/expr/go/token"
+	"github.com/circleci/expr/go/parsers"
+	"github.com/circleci/expr/go/tokens"
 )
 
 type errorType string
@@ -51,7 +51,7 @@ func (et errorType) Symbol() string {
 
 type Error struct {
 	Type  errorType
-	Token token.Token
+	Token tokens.Token
 }
 
 func (e Error) Error() string {
@@ -111,7 +111,7 @@ func New(env map[string]Val) Interpreter {
 // Returns the boolean value of expr.
 //
 // Returns Error if an error is encountered while interpreting expr.
-func (i Interpreter) Interpret(expr parser.Expr) (bool, error) {
+func (i Interpreter) Interpret(expr parsers.Expr) (bool, error) {
 	res, err := i.Evaluate(expr)
 	if err != nil {
 		return false, err
@@ -126,8 +126,8 @@ func (i Interpreter) Interpret(expr parser.Expr) (bool, error) {
 // Returns the value of expr, which may be any scalar type.
 //
 // Returns an Error if an error is encountered while interpreting expr.
-func (i Interpreter) Evaluate(expr parser.Expr) (Val, error) {
-	v := parser.Visitable[Val]{Expression: expr}
+func (i Interpreter) Evaluate(expr parsers.Expr) (Val, error) {
+	v := parsers.Visitable[Val]{Expression: expr}
 	res, err := v.Accept(i)
 
 	if err != nil {
@@ -136,13 +136,13 @@ func (i Interpreter) Evaluate(expr parser.Expr) (Val, error) {
 	return res, nil
 }
 
-func (i Interpreter) VisitLogicalExpr(expr parser.Logical) (Val, error) {
+func (i Interpreter) VisitLogicalExpr(expr parsers.Logical) (Val, error) {
 	left, err := i.Evaluate(expr.Left)
 	if err != nil {
 		return UndefinedVal(), err
 	}
 
-	if expr.Operator.Type == token.OR {
+	if expr.Operator.Type == tokens.OR {
 		if left.IsTruthy() {
 			return left, nil
 		}
@@ -159,7 +159,7 @@ func (i Interpreter) VisitLogicalExpr(expr parser.Logical) (Val, error) {
 	return r, nil
 }
 
-func (i Interpreter) VisitBinaryExpr(expr parser.Binary) (Val, error) {
+func (i Interpreter) VisitBinaryExpr(expr parsers.Binary) (Val, error) {
 	// Evaluate left and right, apply the operator, return it
 	left, err := i.Evaluate(expr.Left)
 	if err != nil {
@@ -179,11 +179,11 @@ func (i Interpreter) VisitBinaryExpr(expr parser.Binary) (Val, error) {
 	}
 
 	switch expr.Operator.Type {
-	case token.EQUAL:
+	case tokens.EQUAL:
 		return BoxBool(left.Equal(right)), nil
-	case token.NOT_EQUAL:
+	case tokens.NOT_EQUAL:
 		return BoxBool(!left.Equal(right)), nil
-	case token.STARTS_WITH:
+	case tokens.STARTS_WITH:
 		res, err := left.StartsWith(right)
 		if err != nil {
 			return UndefinedVal(), Error{
@@ -192,7 +192,7 @@ func (i Interpreter) VisitBinaryExpr(expr parser.Binary) (Val, error) {
 			}
 		}
 		return BoxBool(res), nil
-	case token.GREATER:
+	case tokens.GREATER:
 		res, err := left.Greater(right)
 		if err != nil {
 			return UndefinedVal(), Error{
@@ -201,7 +201,7 @@ func (i Interpreter) VisitBinaryExpr(expr parser.Binary) (Val, error) {
 			}
 		}
 		return BoxBool(res), nil
-	case token.GREATER_EQUAL:
+	case tokens.GREATER_EQUAL:
 		res, err := left.GreaterEqual(right)
 		if err != nil {
 			return UndefinedVal(), Error{
@@ -210,7 +210,7 @@ func (i Interpreter) VisitBinaryExpr(expr parser.Binary) (Val, error) {
 			}
 		}
 		return BoxBool(res), nil
-	case token.LESS:
+	case tokens.LESS:
 		res, err := left.Less(right)
 		if err != nil {
 			return UndefinedVal(), Error{
@@ -219,7 +219,7 @@ func (i Interpreter) VisitBinaryExpr(expr parser.Binary) (Val, error) {
 			}
 		}
 		return BoxBool(res), nil
-	case token.LESS_EQUAL:
+	case tokens.LESS_EQUAL:
 		res, err := left.LessEqual(right)
 		if err != nil {
 			return UndefinedVal(), Error{
@@ -233,22 +233,22 @@ func (i Interpreter) VisitBinaryExpr(expr parser.Binary) (Val, error) {
 	}
 }
 
-func (i Interpreter) VisitUnaryExpr(expr parser.Unary) (Val, error) {
+func (i Interpreter) VisitUnaryExpr(expr parsers.Unary) (Val, error) {
 	v, err := i.Evaluate(expr.Right)
 	if err != nil {
 		return UndefinedVal(), err
 	}
-	if expr.Operator.Type == token.NOT {
+	if expr.Operator.Type == tokens.NOT {
 		return BoxBool(!v.IsTruthy()), nil
 	}
 	return UndefinedVal(), nil
 }
 
-func (i Interpreter) VisitLiteralExpr(expr parser.Literal) (Val, error) {
+func (i Interpreter) VisitLiteralExpr(expr parsers.Literal) (Val, error) {
 	return BoxVal(expr.Value)
 }
 
-func (i Interpreter) VisitIdentifierExpr(expr parser.Identifier) (Val, error) {
+func (i Interpreter) VisitIdentifierExpr(expr parsers.Identifier) (Val, error) {
 	v, ok := i.env[expr.Name.Lexeme]
 	if !ok {
 		return UndefinedVal(), Error{
@@ -262,7 +262,7 @@ func (i Interpreter) VisitIdentifierExpr(expr parser.Identifier) (Val, error) {
 	return v, nil
 }
 
-func (i Interpreter) VisitGroupingExpr(expr parser.Grouping) (Val, error) {
+func (i Interpreter) VisitGroupingExpr(expr parsers.Grouping) (Val, error) {
 	v, err := i.Evaluate(expr.Expression)
 	if err != nil {
 		return UndefinedVal(), err

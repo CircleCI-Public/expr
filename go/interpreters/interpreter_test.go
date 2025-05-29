@@ -18,7 +18,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 */
 
-package interpreter
+package interpreters
 
 import (
 	"strings"
@@ -26,8 +26,8 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"github.com/circleci/expr/go/parser"
-	"github.com/circleci/expr/go/scanner"
+	"github.com/circleci/expr/go/parsers"
+	"github.com/circleci/expr/go/scanners"
 )
 
 func interpret(expression string, env map[string]any) (bool, error) {
@@ -40,14 +40,14 @@ func interpret(expression string, env map[string]any) (bool, error) {
 		envVals[k] = b
 	}
 
-	s := scanner.New(expression)
+	s := scanners.New(expression)
 
 	tokens, err := s.Scan()
 	if err != nil {
 		return false, err
 	}
 
-	p := parser.New(tokens)
+	p := parsers.New(tokens)
 	expr, err := p.Parse()
 
 	if err != nil {

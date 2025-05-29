@@ -18,9 +18,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 */
 
-package parser
+package parsers
 
-import "github.com/circleci/expr/go/token"
+import "github.com/circleci/expr/go/tokens"
 
 type Visitor[T any] interface {
 	VisitLogicalExpr(expr Logical) (T, error)
@@ -69,7 +69,7 @@ func (v *Visitable[T]) Accept(visitor Visitor[T]) (T, error) {
 // A logical `and` / `or` node in the AST.
 type Logical struct {
 	Left     Expr
-	Operator token.Token
+	Operator tokens.Token
 	Right    Expr
 }
 
@@ -78,7 +78,7 @@ func (l Logical) isExpr() {}
 // A binary operator node in the AST.
 type Binary struct {
 	Left     Expr
-	Operator token.Token
+	Operator tokens.Token
 	Right    Expr
 }
 
@@ -86,7 +86,7 @@ func (b Binary) isExpr() {}
 
 // A unary operator node in the AST.
 type Unary struct {
-	Operator token.Token
+	Operator tokens.Token
 	Right    Expr
 }
 
@@ -105,7 +105,7 @@ func (l Literal) isExpr() {}
 //
 // Identifier nodes are leaf nodes.
 type Identifier struct {
-	Name token.Token
+	Name tokens.Token
 }
 
 func (i Identifier) isExpr() {}
