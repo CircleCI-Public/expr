@@ -18,7 +18,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 */
 
-package parser
+package parsers
 
 /* Grammar:
  * expression -> logic_or
@@ -34,7 +34,7 @@ import (
 	"fmt"
 
 	"github.com/circleci/expr/go/errors"
-	"github.com/circleci/expr/go/token"
+	"github.com/circleci/expr/go/tokens"
 )
 
 type errorType string
@@ -60,7 +60,7 @@ func (et errorType) Symbol() string {
 
 type Error struct {
 	Type  errorType
-	Token token.Token
+	Token tokens.Token
 }
 
 func (e Error) Error() string {
@@ -107,14 +107,14 @@ func (e Error) AsErrorMessage(expression string) string {
 }
 
 type parser struct {
-	tokens  []token.Token
+	tokens  []tokens.Token
 	current int
 }
 
 // Create a parser to parse the given list of Tokens.
-func New(tokens []token.Token) *parser {
+func New(toks []tokens.Token) *parser {
 	return &parser{
-		tokens:  tokens,
+		tokens:  toks,
 		current: 0,
 	}
 }
@@ -152,7 +152,7 @@ func (p *parser) or() (Expr, error) {
 		return nil, err
 	}
 
-	for p.match(token.OR) {
+	for p.match(tokens.OR) {
 		operator := p.previous()
 		right, err := p.and()
 		if err != nil {
@@ -171,7 +171,7 @@ func (p *parser) and() (Expr, error) {
 		return nil, err
 	}
 
-	for p.match(token.AND) {
+	for p.match(tokens.AND) {
 		operator := p.previous()
 		right, err := p.equality()
 		if err != nil {
@@ -190,7 +190,7 @@ func (p *parser) equality() (Expr, error) {
 		return nil, err
 	}
 
-	for p.match(token.EQUAL, token.NOT_EQUAL, token.STARTS_WITH) {
+	for p.match(tokens.EQUAL, tokens.NOT_EQUAL, tokens.STARTS_WITH) {
 		operator := p.previous()
 		right, err := p.comparison()
 		if err != nil {
@@ -209,7 +209,7 @@ func (p *parser) comparison() (Expr, error) {
 		return nil, err
 	}
 
-	for p.match(token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL) {
+	for p.match(tokens.GREATER, tokens.GREATER_EQUAL, tokens.LESS, tokens.LESS_EQUAL) {
 		operator := p.previous()
 		right, err := p.unary()
 		if err != nil {
@@ -223,7 +223,7 @@ func (p *parser) comparison() (Expr, error) {
 
 // Match a 'unary' production.
 func (p *parser) unary() (Expr, error) {
-	if p.match(token.NOT) {
+	if p.match(tokens.NOT) {
 		operator := p.previous()
 		right, err := p.unary()
 		if err != nil {
@@ -242,27 +242,27 @@ func (p *parser) unary() (Expr, error) {
 
 // Match a 'primary' production.
 func (p *parser) primary() (Expr, error) {
-	if p.match(token.FALSE) {
+	if p.match(tokens.FALSE) {
 		return Literal{Value: false}, nil
 	}
-	if p.match(token.TRUE) {
+	if p.match(tokens.TRUE) {
 		return Literal{Value: true}, nil
 	}
 
-	if p.match(token.NUMBER, token.STRING) {
+	if p.match(tokens.NUMBER, tokens.STRING) {
 		return Literal{Value: p.previous().Literal}, nil
 	}
 
-	if p.match(token.IDENTIFIER) {
+	if p.match(tokens.IDENTIFIER) {
 		return Identifier{Name: p.previous()}, nil
 	}
 
-	if p.match(token.LEFT_PAREN) {
+	if p.match(tokens.LEFT_PAREN) {
 		expr, err := p.expression()
 		if err != nil {
 			return nil, err
 		}
-		_, err = p.consume(token.RIGHT_PAREN, EXPECTED_RIGHT_PAREN)
+		_, err = p.consume(tokens.RIGHT_PAREN, EXPECTED_RIGHT_PAREN)
 		if err != nil {
 			return nil, err
 		}
@@ -276,7 +276,7 @@ func (p *parser) primary() (Expr, error) {
 //
 // Consumes the token and returns true if there is a match. Returns false
 // without consuming any tokens otherwise.
-func (p *parser) match(types ...token.TokenType) bool {
+func (p *parser) match(types ...tokens.TokenType) bool {
 	for _, t := range types {
 		if p.check(t) {
 			p.advance()
@@ -292,18 +292,18 @@ func (p *parser) match(types ...token.TokenType) bool {
 // Returns the token if the next token in the input is of the expected type.
 //
 // Returns an Error if the next token does not match the expected type.
-func (p *parser) consume(expected token.TokenType, et errorType) (token.Token, error) {
+func (p *parser) consume(expected tokens.TokenType, et errorType) (tokens.Token, error) {
 	if p.check(expected) {
 		return p.advance(), nil
 	}
 
-	return token.Token{}, Error{Type: et, Token: p.peek()}
+	return tokens.Token{}, Error{Type: et, Token: p.peek()}
 }
 
 // Check if the next token is of the expected type.
 //
 // Returns true if the type is as expected, false otherwise.
-func (p *parser) check(t token.TokenType) bool {
+func (p *parser) check(t tokens.TokenType) bool {
 	if p.eof() {
 		return false
 	}
@@ -312,14 +312,14 @@ func (p *parser) check(t token.TokenType) bool {
 }
 
 // Returns the token one before the current position in the input token list.
-func (p *parser) previous() token.Token {
+func (p *parser) previous() tokens.Token {
 	return p.tokens[p.current-1]
 }
 
 // Advance the pointer in the token list.
 //
 // Returns the token that the pointer was pointing to.
-func (p *parser) advance() token.Token {
+func (p *parser) advance() tokens.Token {
 	if !p.eof() {
 		p.current += 1
 	}
@@ -330,10 +330,10 @@ func (p *parser) advance() token.Token {
 // Returns true if the next token that would be returned by 'advance' is EOF.
 // False otherwise.
 func (p *parser) eof() bool {
-	return p.peek().Type == token.EOF
+	return p.peek().Type == tokens.EOF
 }
 
 // Return the next token in the input token list without advancing.
-func (p *parser) peek() token.Token {
+func (p *parser) peek() tokens.Token {
 	return p.tokens[p.current]
 }

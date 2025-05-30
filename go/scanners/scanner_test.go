@@ -18,14 +18,14 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 */
 
-package scanner
+package scanners
 
 import (
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/circleci/expr/go/token"
+	"github.com/circleci/expr/go/tokens"
 	"gotest.tools/v3/assert"
 )
 
@@ -34,62 +34,62 @@ func TestScansKeywords(t *testing.T) {
 
 	var tests = []struct {
 		expression string
-		expected   []token.Token
+		expected   []tokens.Token
 	}{
 		{"and",
-			[]token.Token{
-				{Type: token.AND, Lexeme: "and", CharPos: 0, Literal: "and"},
-				{Type: token.EOF, Lexeme: "", CharPos: 3}}},
+			[]tokens.Token{
+				{Type: tokens.AND, Lexeme: "and", CharPos: 0, Literal: "and"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 3}}},
 
 		{"AND",
-			[]token.Token{
-				{Type: token.AND, Lexeme: "AND", CharPos: 0, Literal: "AND"},
-				{Type: token.EOF, Lexeme: "", CharPos: 3}}},
+			[]tokens.Token{
+				{Type: tokens.AND, Lexeme: "AND", CharPos: 0, Literal: "AND"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 3}}},
 
 		{"or",
-			[]token.Token{
-				{Type: token.OR, Lexeme: "or", CharPos: 0, Literal: "or"},
-				{Type: token.EOF, Lexeme: "", CharPos: 2}}},
+			[]tokens.Token{
+				{Type: tokens.OR, Lexeme: "or", CharPos: 0, Literal: "or"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 2}}},
 		{"OR",
-			[]token.Token{
-				{Type: token.OR, Lexeme: "OR", CharPos: 0, Literal: "OR"},
-				{Type: token.EOF, Lexeme: "", CharPos: 2}}},
+			[]tokens.Token{
+				{Type: tokens.OR, Lexeme: "OR", CharPos: 0, Literal: "OR"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 2}}},
 
 		{"not",
-			[]token.Token{
-				{Type: token.NOT, Lexeme: "not", CharPos: 0, Literal: "not"},
-				{Type: token.EOF, Lexeme: "", CharPos: 3}}},
+			[]tokens.Token{
+				{Type: tokens.NOT, Lexeme: "not", CharPos: 0, Literal: "not"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 3}}},
 		{"NOT",
-			[]token.Token{
-				{Type: token.NOT, Lexeme: "NOT", CharPos: 0, Literal: "NOT"},
-				{Type: token.EOF, Lexeme: "", CharPos: 3}}},
+			[]tokens.Token{
+				{Type: tokens.NOT, Lexeme: "NOT", CharPos: 0, Literal: "NOT"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 3}}},
 
 		{"true",
-			[]token.Token{
-				{Type: token.TRUE, Lexeme: "true", CharPos: 0, Literal: "true"},
-				{Type: token.EOF, Lexeme: "", CharPos: 4}}},
+			[]tokens.Token{
+				{Type: tokens.TRUE, Lexeme: "true", CharPos: 0, Literal: "true"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 4}}},
 		{"TRUE",
-			[]token.Token{
-				{Type: token.TRUE, Lexeme: "TRUE", CharPos: 0, Literal: "TRUE"},
-				{Type: token.EOF, Lexeme: "", CharPos: 4}}},
+			[]tokens.Token{
+				{Type: tokens.TRUE, Lexeme: "TRUE", CharPos: 0, Literal: "TRUE"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 4}}},
 
 		{"false",
-			[]token.Token{
-				{Type: token.FALSE, Lexeme: "false", CharPos: 0, Literal: "false"},
-				{Type: token.EOF, Lexeme: "", CharPos: 5}}},
+			[]tokens.Token{
+				{Type: tokens.FALSE, Lexeme: "false", CharPos: 0, Literal: "false"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 5}}},
 		{"FALSE",
-			[]token.Token{
-				{Type: token.FALSE, Lexeme: "FALSE", CharPos: 0, Literal: "FALSE"},
-				{Type: token.EOF, Lexeme: "", CharPos: 5}}},
+			[]tokens.Token{
+				{Type: tokens.FALSE, Lexeme: "FALSE", CharPos: 0, Literal: "FALSE"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 5}}},
 
 		{"starts-with",
-			[]token.Token{
-				{Type: token.STARTS_WITH, Lexeme: "starts-with", CharPos: 0, Literal: "starts-with"},
-				{Type: token.EOF, Lexeme: "", CharPos: 11}}},
+			[]tokens.Token{
+				{Type: tokens.STARTS_WITH, Lexeme: "starts-with", CharPos: 0, Literal: "starts-with"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 11}}},
 		{"STARTS-WITH",
-			[]token.Token{
-				{Type: token.STARTS_WITH, Lexeme: "STARTS-WITH", CharPos: 0, Literal: "STARTS-WITH"},
-				{Type: token.EOF, Lexeme: "", CharPos: 11}}},
+			[]tokens.Token{
+				{Type: tokens.STARTS_WITH, Lexeme: "STARTS-WITH", CharPos: 0, Literal: "STARTS-WITH"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 11}}},
 	}
 
 	for _, tt := range tests {
@@ -111,35 +111,35 @@ func TestScansOperators(t *testing.T) {
 
 	var tests = []struct {
 		expression string
-		expected   []token.Token
+		expected   []tokens.Token
 	}{
 		{"()",
-			[]token.Token{
-				{Type: token.LEFT_PAREN, Lexeme: "(", CharPos: 0},
-				{Type: token.RIGHT_PAREN, Lexeme: ")", CharPos: 1},
-				{Type: token.EOF, Lexeme: "", CharPos: 2}}},
+			[]tokens.Token{
+				{Type: tokens.LEFT_PAREN, Lexeme: "(", CharPos: 0},
+				{Type: tokens.RIGHT_PAREN, Lexeme: ")", CharPos: 1},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 2}}},
 
 		{"!",
-			[]token.Token{
-				{Type: token.NOT, Lexeme: "!", CharPos: 0},
-				{Type: token.EOF, Lexeme: "", CharPos: 1}}},
+			[]tokens.Token{
+				{Type: tokens.NOT, Lexeme: "!", CharPos: 0},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 1}}},
 
 		{"!= ==",
-			[]token.Token{
-				{Type: token.NOT_EQUAL, Lexeme: "!=", CharPos: 0},
-				{Type: token.EQUAL, Lexeme: "==", CharPos: 3},
-				{Type: token.EOF, Lexeme: "", CharPos: 5}}},
+			[]tokens.Token{
+				{Type: tokens.NOT_EQUAL, Lexeme: "!=", CharPos: 0},
+				{Type: tokens.EQUAL, Lexeme: "==", CharPos: 3},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 5}}},
 		{"> >=",
-			[]token.Token{
-				{Type: token.GREATER, Lexeme: ">", CharPos: 0},
-				{Type: token.GREATER_EQUAL, Lexeme: ">=", CharPos: 2},
-				{Type: token.EOF, Lexeme: "", CharPos: 4}}},
+			[]tokens.Token{
+				{Type: tokens.GREATER, Lexeme: ">", CharPos: 0},
+				{Type: tokens.GREATER_EQUAL, Lexeme: ">=", CharPos: 2},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 4}}},
 
 		{"< <=",
-			[]token.Token{
-				{Type: token.LESS, Lexeme: "<", CharPos: 0},
-				{Type: token.LESS_EQUAL, Lexeme: "<=", CharPos: 2},
-				{Type: token.EOF, Lexeme: "", CharPos: 4}}},
+			[]tokens.Token{
+				{Type: tokens.LESS, Lexeme: "<", CharPos: 0},
+				{Type: tokens.LESS_EQUAL, Lexeme: "<=", CharPos: 2},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 4}}},
 	}
 
 	for _, tt := range tests {
@@ -169,27 +169,27 @@ func TestScansStrings(t *testing.T) {
 
 	var tests = []struct {
 		expression string
-		expected   []token.Token
+		expected   []tokens.Token
 	}{
 		{"\"\"",
-			[]token.Token{
-				{Type: token.STRING, Lexeme: "\"\"", CharPos: 0, Literal: ""},
-				{Type: token.EOF, Lexeme: "", CharPos: 2}}},
+			[]tokens.Token{
+				{Type: tokens.STRING, Lexeme: "\"\"", CharPos: 0, Literal: ""},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 2}}},
 
 		{"\"a string\"",
-			[]token.Token{
-				{Type: token.STRING, Lexeme: "\"a string\"", CharPos: 0, Literal: "a string"},
-				{Type: token.EOF, Lexeme: "", CharPos: 10}}},
+			[]tokens.Token{
+				{Type: tokens.STRING, Lexeme: "\"a string\"", CharPos: 0, Literal: "a string"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 10}}},
 
 		{"\"an \\\"escaped\\\" string\"",
-			[]token.Token{
-				{Type: token.STRING, Lexeme: "\"an \\\"escaped\\\" string\"", CharPos: 0, Literal: "an \"escaped\" string"},
-				{Type: token.EOF, Lexeme: "", CharPos: 23}}},
+			[]tokens.Token{
+				{Type: tokens.STRING, Lexeme: "\"an \\\"escaped\\\" string\"", CharPos: 0, Literal: "an \"escaped\" string"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 23}}},
 
 		{"\"backslash \\\\escapes\"",
-			[]token.Token{
-				{Type: token.STRING, Lexeme: "\"backslash \\\\escapes\"", CharPos: 0, Literal: "backslash \\escapes"},
-				{Type: token.EOF, Lexeme: "", CharPos: 21}}},
+			[]tokens.Token{
+				{Type: tokens.STRING, Lexeme: "\"backslash \\\\escapes\"", CharPos: 0, Literal: "backslash \\escapes"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 21}}},
 	}
 
 	for _, tt := range tests {
@@ -221,14 +221,14 @@ func TestScansDigits(t *testing.T) {
 		iStr := fmt.Sprintf("%d", i)
 
 		s := New(iStr)
-		tokens, err := s.Scan()
+		toks, err := s.Scan()
 		assert.NilError(t, err)
 
-		expected := []token.Token{
-			{Type: token.NUMBER, Lexeme: iStr, CharPos: 0, Literal: int64(i)},
-			{Type: token.EOF, Lexeme: "", CharPos: len(iStr)}}
+		expected := []tokens.Token{
+			{Type: tokens.NUMBER, Lexeme: iStr, CharPos: 0, Literal: int64(i)},
+			{Type: tokens.EOF, Lexeme: "", CharPos: len(iStr)}}
 
-		assert.DeepEqual(t, expected, tokens)
+		assert.DeepEqual(t, expected, toks)
 	}
 }
 
@@ -237,32 +237,32 @@ func TestScansIdentifiers(t *testing.T) {
 
 	var tests = []struct {
 		expression string
-		expected   []token.Token
+		expected   []tokens.Token
 	}{
 		{"foo",
-			[]token.Token{
-				{Type: token.IDENTIFIER, Lexeme: "foo", CharPos: 0, Literal: "foo"},
-				{Type: token.EOF, Lexeme: "", CharPos: 3}}},
+			[]tokens.Token{
+				{Type: tokens.IDENTIFIER, Lexeme: "foo", CharPos: 0, Literal: "foo"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 3}}},
 
 		{"foo.bar",
-			[]token.Token{
-				{Type: token.IDENTIFIER, Lexeme: "foo.bar", CharPos: 0, Literal: "foo.bar"},
-				{Type: token.EOF, Lexeme: "", CharPos: 7}}},
+			[]tokens.Token{
+				{Type: tokens.IDENTIFIER, Lexeme: "foo.bar", CharPos: 0, Literal: "foo.bar"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 7}}},
 
 		{"foo-bar",
-			[]token.Token{
-				{Type: token.IDENTIFIER, Lexeme: "foo-bar", CharPos: 0, Literal: "foo-bar"},
-				{Type: token.EOF, Lexeme: "", CharPos: 7}}},
+			[]tokens.Token{
+				{Type: tokens.IDENTIFIER, Lexeme: "foo-bar", CharPos: 0, Literal: "foo-bar"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 7}}},
 
 		{"foo_bar",
-			[]token.Token{
-				{Type: token.IDENTIFIER, Lexeme: "foo_bar", CharPos: 0, Literal: "foo_bar"},
-				{Type: token.EOF, Lexeme: "", CharPos: 7}}},
+			[]tokens.Token{
+				{Type: tokens.IDENTIFIER, Lexeme: "foo_bar", CharPos: 0, Literal: "foo_bar"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 7}}},
 
 		{"foo_bar?",
-			[]token.Token{
-				{Type: token.IDENTIFIER, Lexeme: "foo_bar?", CharPos: 0, Literal: "foo_bar?"},
-				{Type: token.EOF, Lexeme: "", CharPos: 8}}},
+			[]tokens.Token{
+				{Type: tokens.IDENTIFIER, Lexeme: "foo_bar?", CharPos: 0, Literal: "foo_bar?"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 8}}},
 	}
 
 	for _, tt := range tests {

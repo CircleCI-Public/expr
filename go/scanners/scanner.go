@@ -18,7 +18,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 */
 
-package scanner
+package scanners
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ import (
 	"strings"
 
 	"github.com/circleci/expr/go/errors"
-	"github.com/circleci/expr/go/token"
+	"github.com/circleci/expr/go/tokens"
 )
 
 type errorType string
@@ -94,26 +94,26 @@ func (e Error) AsErrorMessage(expression string) string {
 	}
 }
 
-var keywords = map[string]token.TokenType{
-	"starts-with": token.STARTS_WITH,
-	"STARTS-WITH": token.STARTS_WITH,
-	"and":         token.AND,
-	"AND":         token.AND,
-	"or":          token.OR,
-	"OR":          token.OR,
-	"not":         token.NOT,
-	"NOT":         token.NOT,
-	"true":        token.TRUE,
-	"TRUE":        token.TRUE,
-	"false":       token.FALSE,
-	"FALSE":       token.FALSE,
+var keywords = map[string]tokens.TokenType{
+	"starts-with": tokens.STARTS_WITH,
+	"STARTS-WITH": tokens.STARTS_WITH,
+	"and":         tokens.AND,
+	"AND":         tokens.AND,
+	"or":          tokens.OR,
+	"OR":          tokens.OR,
+	"not":         tokens.NOT,
+	"NOT":         tokens.NOT,
+	"true":        tokens.TRUE,
+	"TRUE":        tokens.TRUE,
+	"false":       tokens.FALSE,
+	"FALSE":       tokens.FALSE,
 }
 
 type scanner struct {
 	source  []rune
 	start   int
 	current int
-	tokens  []token.Token
+	tokens  []tokens.Token
 }
 
 func New(source string) *scanner {
@@ -127,7 +127,7 @@ func New(source string) *scanner {
 //
 // Returns an Error if an error is detected while scanning the source
 // string. See errorType for possible error cases.
-func (s *scanner) Scan() ([]token.Token, error) {
+func (s *scanner) Scan() ([]tokens.Token, error) {
 	for !s.eof() {
 		s.start = s.current
 		err := s.scanToken()
@@ -136,12 +136,12 @@ func (s *scanner) Scan() ([]token.Token, error) {
 		}
 	}
 
-	s.tokens = append(s.tokens, token.Token{Type: token.EOF, Lexeme: "", Literal: nil, CharPos: s.current})
+	s.tokens = append(s.tokens, tokens.Token{Type: tokens.EOF, Lexeme: "", Literal: nil, CharPos: s.current})
 
-	tokens := make([]token.Token, len(s.tokens))
-	copy(tokens, s.tokens)
+	toks := make([]tokens.Token, len(s.tokens))
+	copy(toks, s.tokens)
 
-	return tokens, nil
+	return toks, nil
 }
 
 // Scan a single token.
@@ -152,15 +152,15 @@ func (s *scanner) scanToken() error {
 	switch c {
 	// grouping
 	case '(':
-		s.addToken(token.LEFT_PAREN)
+		s.addToken(tokens.LEFT_PAREN)
 	case ')':
-		s.addToken(token.RIGHT_PAREN)
+		s.addToken(tokens.RIGHT_PAREN)
 	// operators
 	case '!':
 		if s.match('=') {
-			s.addToken(token.NOT_EQUAL)
+			s.addToken(tokens.NOT_EQUAL)
 		} else {
-			s.addToken(token.NOT)
+			s.addToken(tokens.NOT)
 		}
 	case '=':
 		if err := s.equal(); err != nil {
@@ -168,15 +168,15 @@ func (s *scanner) scanToken() error {
 		}
 	case '>':
 		if s.match('=') {
-			s.addToken(token.GREATER_EQUAL)
+			s.addToken(tokens.GREATER_EQUAL)
 		} else {
-			s.addToken(token.GREATER)
+			s.addToken(tokens.GREATER)
 		}
 	case '<':
 		if s.match('=') {
-			s.addToken(token.LESS_EQUAL)
+			s.addToken(tokens.LESS_EQUAL)
 		} else {
-			s.addToken(token.LESS)
+			s.addToken(tokens.LESS)
 		}
 
 		// Ignore whitespace
@@ -217,7 +217,7 @@ func (s *scanner) equal() error {
 		return Error{Type: INCOMPLETE_EQUALS, Char: c, Pos: s.current}
 	}
 	s.advance()
-	s.addToken(token.EQUAL)
+	s.addToken(tokens.EQUAL)
 
 	return nil
 }
@@ -250,7 +250,7 @@ func (s *scanner) string() error {
 	v = strings.ReplaceAll(v, "\\\"", "\"")
 	v = strings.ReplaceAll(v, "\\\\", "\\")
 
-	s.addTokenLiteral(token.STRING, v)
+	s.addTokenLiteral(tokens.STRING, v)
 
 	return nil
 }
@@ -272,7 +272,7 @@ func (s *scanner) number() error {
 		return err
 	}
 
-	s.addTokenLiteral(token.NUMBER, v)
+	s.addTokenLiteral(tokens.NUMBER, v)
 	return nil
 }
 
@@ -289,16 +289,16 @@ func (s *scanner) identifier() {
 
 	identifier := s.lexeme()
 	tokenType := keywords[identifier]
-	if tokenType == token.NOT_FOUND {
-		tokenType = token.IDENTIFIER
+	if tokenType == tokens.NOT_FOUND {
+		tokenType = tokens.IDENTIFIER
 	}
 
 	s.addTokenLiteral(tokenType, identifier)
 }
 
 // Add a token without a literal value to the `tokens` list.
-func (s *scanner) addToken(t token.TokenType) {
-	s.tokens = append(s.tokens, token.Token{
+func (s *scanner) addToken(t tokens.TokenType) {
+	s.tokens = append(s.tokens, tokens.Token{
 		Type:    t,
 		Lexeme:  s.lexeme(),
 		Literal: nil,
@@ -307,8 +307,8 @@ func (s *scanner) addToken(t token.TokenType) {
 }
 
 // Add a token with a literal value to the `tokens` list.
-func (s *scanner) addTokenLiteral(t token.TokenType, literal any) {
-	s.tokens = append(s.tokens, token.Token{
+func (s *scanner) addTokenLiteral(t tokens.TokenType, literal any) {
+	s.tokens = append(s.tokens, tokens.Token{
 		Type:    t,
 		Lexeme:  s.lexeme(),
 		Literal: literal,

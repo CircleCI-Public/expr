@@ -30,9 +30,9 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"github.com/circleci/expr/go/interpreter"
-	"github.com/circleci/expr/go/parser"
-	"github.com/circleci/expr/go/scanner"
+	"github.com/circleci/expr/go/interpreters"
+	"github.com/circleci/expr/go/parsers"
+	"github.com/circleci/expr/go/scanners"
 )
 
 type rawInput struct {
@@ -41,8 +41,8 @@ type rawInput struct {
 }
 
 type input struct {
-	Expression  string                     `json:"expression"`
-	Environment map[string]interpreter.Val `json:"environment"`
+	Expression  string                      `json:"expression"`
+	Environment map[string]interpreters.Val `json:"environment"`
 }
 
 func (i *input) UnmarshallJSON(input []byte) error {
@@ -55,7 +55,7 @@ func (i *input) UnmarshallJSON(input []byte) error {
 	i.Expression = raw.Expression
 
 	for k, v := range raw.Environment {
-		newV, err := interpreter.BoxVal(v)
+		newV, err := interpreters.BoxVal(v)
 		if err != nil {
 			return err
 		}
@@ -73,8 +73,8 @@ type expectedError struct {
 }
 
 type expected struct {
-	Error  *expectedError   `json:"error,omitempty"`
-	Result *interpreter.Val `json:"result,omitempty"`
+	Error  *expectedError    `json:"error,omitempty"`
+	Result *interpreters.Val `json:"result,omitempty"`
 }
 
 type test struct {
@@ -94,7 +94,7 @@ func loadTest(path string) (test, error) {
 	err = json.Unmarshal(data, &t)
 
 	if t.Expected.Error == nil && t.Expected.Result == nil {
-		u := interpreter.UndefinedVal()
+		u := interpreters.UndefinedVal()
 		t.Expected.Result = &u
 	}
 
@@ -128,13 +128,13 @@ func loadTestData(dir string) (map[string]test, error) {
 	return tests, nil
 }
 
-func scanAndParse(expression string) (parser.Expr, error) {
-	s := scanner.New(expression)
+func scanAndParse(expression string) (parsers.Expr, error) {
+	s := scanners.New(expression)
 	tokens, err := s.Scan()
 	if err != nil {
 		return nil, err
 	}
-	p := parser.New(tokens)
+	p := parsers.New(tokens)
 	e, err := p.Parse()
 	if err != nil {
 		return nil, err
@@ -142,8 +142,8 @@ func scanAndParse(expression string) (parser.Expr, error) {
 	return e, nil
 }
 
-func mapExpected(res *interpreter.Val, err error) (expected, error) {
-	if e, ok := err.(scanner.Error); ok {
+func mapExpected(res *interpreters.Val, err error) (expected, error) {
+	if e, ok := err.(scanners.Error); ok {
 		return expected{
 			Error: &expectedError{
 				ErrorType: fmt.Sprintf("Scanner/%s", e.Type.Symbol()),
@@ -153,7 +153,7 @@ func mapExpected(res *interpreter.Val, err error) (expected, error) {
 		}, nil
 	}
 
-	if e, ok := err.(parser.Error); ok {
+	if e, ok := err.(parsers.Error); ok {
 		return expected{
 			Error: &expectedError{
 				ErrorType: fmt.Sprintf("Parser/%s", e.Type.Symbol()),
@@ -164,7 +164,7 @@ func mapExpected(res *interpreter.Val, err error) (expected, error) {
 		}, nil
 	}
 
-	if e, ok := err.(interpreter.Error); ok {
+	if e, ok := err.(interpreters.Error); ok {
 		return expected{
 			Error: &expectedError{
 				ErrorType: fmt.Sprintf("Interpreter/%s", e.Type.Symbol()),
@@ -198,12 +198,12 @@ func TestCorpus(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			var got interpreter.Val
+			var got interpreters.Val
 			e, err := scanAndParse(tt.Input.Expression)
 			if err == nil {
 				var result bool
-				result, err = interpreter.New(tt.Input.Environment).Interpret(e)
-				got = interpreter.BoxBool(result)
+				result, err = interpreters.New(tt.Input.Environment).Interpret(e)
+				got = interpreters.BoxBool(result)
 			}
 
 			res, err := mapExpected(&got, err)
@@ -223,10 +223,10 @@ func TestEvaluatorCorpus(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			var got interpreter.Val
+			var got interpreters.Val
 			e, err := scanAndParse(tt.Input.Expression)
 			if err == nil {
-				got, err = interpreter.New(tt.Input.Environment).Evaluate(e)
+				got, err = interpreters.New(tt.Input.Environment).Evaluate(e)
 			}
 
 			res, err := mapExpected(&got, err)

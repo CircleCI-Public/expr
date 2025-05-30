@@ -18,7 +18,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 */
 
-package parser
+package parsers
 
 import (
 	"fmt"
@@ -28,7 +28,7 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"github.com/circleci/expr/go/scanner"
+	"github.com/circleci/expr/go/scanners"
 )
 
 type sExpVisitor struct{}
@@ -98,7 +98,7 @@ func normalise(sExp []string) string {
 }
 
 func parse(expression string) (string, error) {
-	s := scanner.New(expression)
+	s := scanners.New(expression)
 
 	tokens, err := s.Scan()
 	if err != nil {
