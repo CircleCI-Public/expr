@@ -1,6 +1,6 @@
 (defproject circleci/expr (or (System/getenv "VERSION")
                               "0.1.0-SNAPSHOT")
-  :profiles {:dev {:dependencies [[org.clojure/clojure "1.12.0"]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.12.1"]
                                   [cheshire "6.0.0"]]}
              :cljfmt {:plugins [[dev.weavejester/lein-cljfmt "0.13.1"]]
                       :cljfmt {:load-config-file? true}}
