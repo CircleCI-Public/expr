@@ -249,6 +249,11 @@ func TestScansIdentifiers(t *testing.T) {
 				{Type: tokens.IDENTIFIER, Lexeme: "foo.bar", CharPos: 0, Literal: "foo.bar"},
 				{Type: tokens.EOF, Lexeme: "", CharPos: 7}}},
 
+		{"a.b.c",
+			[]tokens.Token{
+				{Type: tokens.IDENTIFIER, Lexeme: "a.b.c", CharPos: 0, Literal: "a.b.c"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 5}}},
+
 		{"foo-bar",
 			[]tokens.Token{
 				{Type: tokens.IDENTIFIER, Lexeme: "foo-bar", CharPos: 0, Literal: "foo-bar"},
