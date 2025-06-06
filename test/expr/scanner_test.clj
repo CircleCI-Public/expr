@@ -118,6 +118,8 @@
            {:type TokenType/EOF :lexeme "" :pos 3}]
     "foo.bar" [{:type TokenType/IDENTIFIER :lexeme "foo.bar" :pos 0 :literal "foo.bar"}
                {:type TokenType/EOF :lexeme "" :pos 7}]
+    "a.b.c" [{:type TokenType/IDENTIFIER :lexeme "a.b.c" :pos 0 :literal "a.b.c"}
+             {:type TokenType/EOF :lexeme "" :pos 5}]
     "foo-bar" [{:type TokenType/IDENTIFIER :lexeme "foo-bar" :pos 0 :literal "foo-bar"}
                {:type TokenType/EOF :lexeme "" :pos 7}]
 

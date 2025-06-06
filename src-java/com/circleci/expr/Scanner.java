@@ -254,10 +254,13 @@ public class Scanner {
    * Consumes the token's characters and adds a Token to the `tokens` list.
    */
   private void identifier() {
-    if (isIdentifierTail(peek())) {
+    char c = peek();
+    if (isIdentifierTail(c) || (c == '.' && isIdentifierTail(peekNext()))) {
       advance();
-      while (isIdentifierTail(peek()) || (peek() == '.' && peekNext() != '.')) {
+      c = peek();
+      while (isIdentifierTail(c) || (c == '.' && isIdentifierTail(peekNext()))) {
         advance();
+        c = peek();
       }
     }
 

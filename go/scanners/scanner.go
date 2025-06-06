@@ -280,10 +280,14 @@ func (s *scanner) number() error {
 //
 // Consumes the token's characters and adds a Token to the `tokens` list.
 func (s *scanner) identifier() {
-	if isIdentifierTail(s.peek()) {
+	c := s.peek()
+	if isIdentifierTail(c) || (c == '.' && isIdentifierTail(s.peekNext())) {
 		s.advance()
-		for isIdentifierTail(s.peek()) || (s.peek() == '.' && s.peekNext() != '.') {
+		c = s.peek()
+
+		for isIdentifierTail(c) || (c == '.' && isIdentifierTail(s.peekNext())) {
 			s.advance()
+			c = s.peek()
 		}
 	}
 
