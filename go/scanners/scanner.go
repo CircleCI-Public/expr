@@ -392,13 +392,13 @@ func (s *scanner) advance() rune {
 // Returns true if the end of source has been reached.
 // False otherwise
 func (s *scanner) eof() bool {
-	return s.eofN(len(s.source))
+	return s.eofN(s.current)
 }
 
 // Returns true if pos is beyond the end of source.
 // False otherwise.
 func (s *scanner) eofN(pos int) bool {
-	return s.current >= pos
+	return pos >= len(s.source)
 }
 
 // Return the current lexeme.
