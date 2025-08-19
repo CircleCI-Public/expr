@@ -5,9 +5,8 @@
   ],
   "packageRules": [
     {
-      "matchPackageNames": ["cimg/go"],
       "matchDataSources": ["golang-version"],
-      "groupName": "go version"
+      "rangeStrategy": "bump"
     }
   ]
 }
