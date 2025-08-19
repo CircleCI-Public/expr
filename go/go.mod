@@ -1,6 +1,6 @@
 module github.com/circleci/expr/go
 
-go 1.24.2
+go 1.25.0
 
 require gotest.tools/v3 v3.5.2
 
