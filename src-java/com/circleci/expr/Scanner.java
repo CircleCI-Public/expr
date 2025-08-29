@@ -25,6 +25,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.re2j.Pattern;
+import com.google.re2j.PatternSyntaxException;
+
 import static com.circleci.expr.Errors.ErrorMessage;
 import static com.circleci.expr.TokenType.*;
 
@@ -35,7 +38,10 @@ public class Scanner {
     public static enum Type {
       UNEXPECTED_CHARACTER("Unexpected character."),
       INCOMPLETE_EQUALS("Incomplete token, expected \"==\"."),
-      UNTERMINATED_STRING("Unterminated string.");
+      UNTERMINATED_STRING("Unterminated string."),
+      UNTERMINATED_PATTERN("Unterminated pattern."),
+      INVALID_PATTERN_CHARACTER("Invalid pattern character."),
+      INVALID_PATTERN("Invalid pattern.");
 
       public final String message;
       private Type(String message) {
@@ -89,6 +95,24 @@ public class Scanner {
               expression,
               this.errorPos,
               1);
+
+      case UNTERMINATED_PATTERN ->
+        Errors.errorMessage(String.format("Unterminated pattern starting here:", this.errorChar),
+            expression,
+            this.errorPos,
+            1);
+
+      case INVALID_PATTERN_CHARACTER ->
+        Errors.errorMessage(String.format("Invalid pattern character, only ASCII and Latin-1 are allowed in patterns:", this.errorChar),
+            expression,
+            this.errorPos,
+            1);
+
+      case INVALID_PATTERN ->
+        Errors.errorMessage(String.format("Syntax error in pattern:", this.errorChar),
+            expression,
+            this.errorPos,
+            1);
       };
     }
   }
@@ -98,6 +122,8 @@ public class Scanner {
     keywords = new HashMap<>();
     keywords.put("starts-with", STARTS_WITH);
     keywords.put("STARTS-WITH", STARTS_WITH);
+    keywords.put("matches", MATCHES);
+    keywords.put("MATCHES", MATCHES);
     keywords.put("and", AND);
     keywords.put("AND", AND);
     keywords.put("or", OR);
@@ -166,6 +192,7 @@ public class Scanner {
         break;
 
       case '"': string(); break;
+      case '/': pattern(); break;
       default:
         if (isDigit(c)) {
           number();
@@ -229,12 +256,65 @@ public class Scanner {
   }
 
   /**
+   * Match a regular expression pattern token.
+   *
+   * Consumes all characters from the starting / to the terminating /. Adds a
+   * Token with the string content (excluding surrounding slashes) to the
+   * `tokens` list.
+   *
+   * Slash and backslach characters can be embedded by escaping with
+   * `\`: e.g. `\/`, `\\`
+   *
+   * @throws ScanError if the pattern is not terminated.
+   */
+  private void pattern() {
+    while (peek() != '/' && !eof()) {
+      // Deal with escape characters
+      var c = peek();
+      var cnext = peekNext();
+      if (c == '\\' && isEscapablePatternChar(cnext)) {
+        advance();
+      }
+      else if (c == '\\' && cnext == 'u') {
+        throw new ScanError('\\', current, ScanError.Type.INVALID_PATTERN_CHARACTER);
+      }
+      else if (c > 0xff) {
+        throw new ScanError(c, current, ScanError.Type.INVALID_PATTERN_CHARACTER);
+      }
+      advance();
+    }
+
+    if (eof()) {
+      throw new ScanError('/', start, ScanError.Type.UNTERMINATED_PATTERN);
+    }
+
+    // Consume the slash, we only peek()ed above
+    advance();
+    // Note: we do not evaluate escaped backslashes in the pattern. The regexp
+    // engine also interprets backslash escape sequences, so the only character
+    // we deal with ourselves is the one we added, the pattern delimiter `/`
+    String value = source.substring(start + 1, current - 1)
+                         .replace("\\/", "/");
+    try {
+      Pattern pattern = Pattern.compile(value);
+      addToken(PATTERN, pattern);
+    }
+    catch (PatternSyntaxException e) {
+      throw new ScanError('/', start, ScanError.Type.INVALID_PATTERN);
+    }
+  }
+
+  /**
    * Returns true if `c` is a character that could be escaped.
    *
    * False otherwise.
    */
   private boolean isEscapableChar(char c) {
     return c == '"' || c == '\\';
+  }
+
+  private boolean isEscapablePatternChar(char c) {
+    return c == '/' || c == '\\';
   }
 
   private void number() {

@@ -21,6 +21,7 @@ IN THE SOFTWARE.
 package com.circleci.expr;
 
 import java.util.Map;
+import com.google.re2j.Pattern;
 
 import static com.circleci.expr.Errors.ErrorMessage;
 import static com.circleci.expr.TokenType.*;
@@ -36,6 +37,7 @@ public class Interpreter implements Expr.Visitor<Object> {
     public static enum Type {
       EXPECTED_NUMERIC_OPERAND("Expected numeric value."),
       EXPECTED_STRING_OPERAND("Expected string value."),
+      EXPECTED_PATTERN_OPERAND("Expected regular expression value."),
       UNKNOWN_VARIABLE("Referred to a variable that is not set.");
 
       public final String message;
@@ -81,6 +83,12 @@ public class Interpreter implements Expr.Visitor<Object> {
 
         case EXPECTED_STRING_OPERAND ->
           Errors.errorMessage(String.format("Expected string operands to \"%s\" operator:", errorString),
+              expression,
+              this.token.charPos,
+              errorString.length());
+
+        case EXPECTED_PATTERN_OPERAND ->
+          Errors.errorMessage(String.format("Expected the right operand to \"%s\" operator to be a pattern:", errorString),
               expression,
               this.token.charPos,
               errorString.length());
@@ -162,6 +170,10 @@ public class Interpreter implements Expr.Visitor<Object> {
       case STARTS_WITH:
         assertStringOperands(expr.operator, left, right);
         return ((String) left).startsWith((String) right);
+      case MATCHES:
+        assertRegexOperands(expr.operator, left, right);
+        var matcher = ((Pattern) right).matcher((String) left);
+        return matcher.matches();
       case GREATER:
         assertNumberOperands(expr.operator, left, right);
         return (long) left > (long) right;
@@ -255,5 +267,12 @@ public class Interpreter implements Expr.Visitor<Object> {
   private boolean assertNumberOperands(Token operator, Object left, Object right) {
     if (left instanceof Long && right instanceof Long) return true;
     throw new Error(operator, Error.Type.EXPECTED_NUMERIC_OPERAND);
+  }
+
+  private boolean assertRegexOperands(Token operator, Object left, Object right) {
+    if (!(left instanceof String)) throw new Error(operator, Error.Type.EXPECTED_STRING_OPERAND);
+    if (!(right instanceof Pattern)) throw new Error(operator, Error.Type.EXPECTED_PATTERN_OPERAND);
+
+    return true;
   }
 }

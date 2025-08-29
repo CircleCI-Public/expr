@@ -5,7 +5,7 @@
   },
   "expected" : {
     "error" : {
-      "errorType" : "Scanner/UNEXPECTED_CHARACTER",
+      "errorType" : "Scanner/UNTERMINATED_PATTERN",
       "lexeme" : "/",
       "charPos" : 0
     }

@@ -91,6 +91,33 @@
       (is (= (string/join \newline ["Unterminated string starting here:"
                                     "foo == \"an unterminated string"
                                     "       ^"])
+             (.asErrorMessage e expression)))))
+
+  (testing "Unterminated patterns"
+    (let [expression "foo matches /an unterminated pattern"
+          e (is (thrown-with-msg? Scanner$ScanError #"Unterminated pattern\."
+                  (util/scan expression)))]
+      (is (= (string/join \newline ["Unterminated pattern starting here:"
+                                    "foo matches /an unterminated pattern"
+                                    "            ^"])
+             (.asErrorMessage e expression)))))
+
+  (testing "Invalid pattern character"
+    (let [expression "foo matches /hello \u23f0/"
+          e (is (thrown-with-msg? Scanner$ScanError #"Invalid pattern character\."
+                  (util/scan expression)))]
+      (is (= (string/join \newline ["Invalid pattern character, only ASCII and Latin-1 are allowed in patterns:"
+                                    "foo matches /hello \u23f0/"
+                                    "                   ^"])
+             (.asErrorMessage e expression)))))
+
+  (testing "Bad pattern syntax"
+    (let [expression "foo matches /hello (world/"
+          e (is (thrown-with-msg? Scanner$ScanError #"Invalid pattern\."
+                  (util/scan expression)))]
+      (is (= (string/join \newline ["Syntax error in pattern:"
+                                    "foo matches /hello (world/"
+                                    "            ^"])
              (.asErrorMessage e expression))))))
 
 (deftest pretty-parse-error
@@ -142,6 +169,17 @@
       (is (= (string/join \newline ["Expected string operands to \"starts-with\" operator:"
                                     "foo starts-with \"api\""
                                     "    ^^^^^^^^^^^"])
+             (.asErrorMessage e expression)))))
+
+  (testing "Expected a pattern operand"
+    (let [expression "\"hello\" matches 5"
+          e (is (thrown-with-msg? Interpreter$Error #"Expected regular expression value\."
+                  (-> (util/scan expression)
+                      (util/parse)
+                      (util/interpret {}))))]
+      (is (= (string/join \newline ["Expected the right operand to \"matches\" operator to be a pattern:"
+                                    "\"hello\" matches 5"
+                                    "        ^^^^^^^"])
              (.asErrorMessage e expression)))))
 
   (testing "Unknown variable"

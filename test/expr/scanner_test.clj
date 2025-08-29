@@ -18,7 +18,8 @@
 (ns expr.scanner-test
   (:require [clojure.test :refer (are deftest is testing)]
             [expr.util :as util])
-  (:import (com.circleci.expr Scanner$ScanError
+  (:import com.google.re2j.Pattern
+           (com.circleci.expr Scanner$ScanError
                               Scanner$ScanError$Type
                               TokenType)))
 
@@ -51,7 +52,12 @@
     "starts-with" [{:type TokenType/STARTS_WITH :lexeme "starts-with" :pos 0 :literal "starts-with"}
                    {:type TokenType/EOF :lexeme "" :pos 11}]
     "STARTS-WITH" [{:type TokenType/STARTS_WITH :lexeme "STARTS-WITH" :pos 0 :literal "STARTS-WITH"}
-                   {:type TokenType/EOF :lexeme "" :pos 11}]))
+                   {:type TokenType/EOF :lexeme "" :pos 11}]
+
+    "matches" [{:type TokenType/MATCHES :lexeme "matches" :pos 0 :literal "matches"}
+               {:type TokenType/EOF :lexeme "" :pos 7}]
+    "MATCHES" [{:type TokenType/MATCHES :lexeme "MATCHES" :pos 0 :literal "MATCHES"}
+               {:type TokenType/EOF :lexeme "" :pos 7}]))
 
 (deftest scans-operators
   (testing "well-formed operators"
@@ -104,6 +110,70 @@
       (is (= Scanner$ScanError$Type/UNTERMINATED_STRING
              (.-type e)))
       (is (= \" (.-errorChar e)))
+      (is (= 5 (.-errorPos e))))))
+
+(deftest scans-patterns
+  (testing "well-formed patterns"
+    (are [expression expected] (= expected (map util/token->map (util/scan expression)))
+      "//" [{:type TokenType/PATTERN :lexeme "//" :pos 0 :literal (Pattern/compile "")}
+            {:type TokenType/EOF :lexeme "" :pos 2}]
+
+      "/a pattern/" [{:type TokenType/PATTERN :lexeme "/a pattern/" :pos 0 :literal (Pattern/compile "a pattern")}
+                     {:type TokenType/EOF :lexeme "" :pos 11}]
+
+      "/an \\/escaped\\/ pattern/" [{:type TokenType/PATTERN :lexeme "/an \\/escaped\\/ pattern/" :pos 0 :literal (Pattern/compile "an /escaped/ pattern")}
+                                    {:type TokenType/EOF :lexeme "" :pos 24}]
+
+      "/backslash \\\\escapes/" [{:type TokenType/PATTERN :lexeme "/backslash \\\\escapes/" :pos 0 :literal (Pattern/compile "backslash \\\\escapes")}
+                                 {:type TokenType/EOF :lexeme "" :pos 21}]))
+
+  (testing "escaped pattern metacharacters"
+    (are [expression expected] (= expected (map util/token->map (util/scan expression)))
+      "/\\*/" [{:type TokenType/PATTERN :lexeme "/\\*/" :pos 0 :literal (Pattern/compile "\\*")}
+               {:type TokenType/EOF :lexeme "" :pos 4}]
+
+      "/\\+/" [{:type TokenType/PATTERN :lexeme "/\\+/" :pos 0 :literal (Pattern/compile "\\+")}
+               {:type TokenType/EOF :lexeme "" :pos 4}]
+
+      "/\\?/" [{:type TokenType/PATTERN :lexeme "/\\?/" :pos 0 :literal (Pattern/compile "\\?")}
+               {:type TokenType/EOF :lexeme "" :pos 4}]
+
+      "/\\|/" [{:type TokenType/PATTERN :lexeme "/\\|/" :pos 0 :literal (Pattern/compile "\\|")}
+               {:type TokenType/EOF :lexeme "" :pos 4}]
+
+      "/\\(\\)/" [{:type TokenType/PATTERN :lexeme "/\\(\\)/" :pos 0 :literal (Pattern/compile "\\(\\)")}
+                  {:type TokenType/EOF :lexeme "" :pos 6}]))
+
+  (testing "non-ascii characters are disallowed"
+    (let [e (is (thrown-with-msg? Scanner$ScanError #"Invalid pattern character\."
+                  (util/scan "/⏰/")))]
+      (is (= Scanner$ScanError$Type/INVALID_PATTERN_CHARACTER
+             (.-type e)))
+      (is (= \u23f0 (.-errorChar e)))
+      (is (= 1 (.-errorPos e)))))
+
+  (testing "unicode escape sequences are disallowed"
+    (let [e (is (thrown-with-msg? Scanner$ScanError #"Invalid pattern character\."
+                  (util/scan "/\u23f0/")))]
+      (is (= Scanner$ScanError$Type/INVALID_PATTERN_CHARACTER
+             (.-type e)))
+      (is (= \u23f0 (.-errorChar e)))
+      (is (= 1 (.-errorPos e)))))
+
+  (testing "passing a unicode escape through to the regular expression engine is disallowed"
+    (let [e (is (thrown-with-msg? Scanner$ScanError #"Invalid pattern character\."
+                  (util/scan "/\\u23f0/")))]
+      (is (= Scanner$ScanError$Type/INVALID_PATTERN_CHARACTER
+             (.-type e)))
+      (is (= \\ (.-errorChar e)))
+      (is (= 1 (.-errorPos e)))))
+
+  (testing "unterminated patterns"
+    (let [e (is (thrown-with-msg? Scanner$ScanError #"Unterminated pattern\."
+                  (util/scan "text /an unterminated pattern")))]
+      (is (= Scanner$ScanError$Type/UNTERMINATED_PATTERN
+             (.-type e)))
+      (is (= \/ (.-errorChar e)))
       (is (= 5 (.-errorPos e))))))
 
 (deftest scans-digits
@@ -162,7 +232,7 @@
       (is (= 0 (.-errorPos e))))))
 
 (deftest throws-for-unexpected-characters
-  (doseq [c "&*^%$£?/#~:;@'"]
+  (doseq [c "&*^%$£?#~:;@'"]
     (let [e (is (thrown-with-msg? Scanner$ScanError #"Unexpected character\."
                   (util/scan (str c))))]
       (is (= Scanner$ScanError$Type/UNEXPECTED_CHARACTER
