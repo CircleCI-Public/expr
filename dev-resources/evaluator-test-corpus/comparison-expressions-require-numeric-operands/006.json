@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "5 >= true",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "GREATER_EQUAL",
+      "errorType" : "Interpreter/EXPECTED_NUMERIC_OPERAND",
+      "lexeme" : ">=",
+      "charPos" : 2
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "input" : {
+    "expression" : "foo < 10",
+    "environment" : {
+      "foo" : "\"string\""
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "LESS",
+      "errorType" : "Interpreter/EXPECTED_NUMERIC_OPERAND",
+      "lexeme" : "<",
+      "charPos" : 4
+    }
+  }
+}

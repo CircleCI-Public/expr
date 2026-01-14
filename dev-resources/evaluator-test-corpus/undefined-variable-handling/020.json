@@ -1,11 +1,11 @@
 {
   "input" : {
-    "expression" : "not foo",
+    "expression" : "foo > 3",
     "environment" : {
       "foo" : null
     }
   },
   "expected" : {
-    "result" : true
+    "result" : null
   }
 }

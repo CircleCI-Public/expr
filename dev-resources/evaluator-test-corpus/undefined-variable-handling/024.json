@@ -1,13 +1,11 @@
 {
   "input" : {
-    "expression" : "always_run or project == \"my-project\" and branch",
+    "expression" : "foo >= foo",
     "environment" : {
-      "branch" : null,
-      "project" : "my-project",
-      "always_run" : true
+      "foo" : null
     }
   },
   "expected" : {
-    "result" : true
+    "result" : null
   }
 }

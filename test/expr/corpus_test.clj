@@ -49,7 +49,7 @@
             :let [{:strs [expression environment]} input]]
       (is (= expected
              (run-interpreter-test expression environment))
-          test-name))))
+          (format "%s: %s" test-name expression)))))
 
 (deftest run-evaluator-test-corpus
   (let [run-evaluator-test (partial run-test (fn [expression environment]
@@ -61,4 +61,4 @@
             :let [{:strs [expression environment]} input]]
       (is (= expected
              (run-evaluator-test expression environment))
-          test-name))))
+          (format "%s: %s" test-name expression)))))
