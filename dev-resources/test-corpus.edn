@@ -1,0 +1,634 @@
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to
+; deal in the Software without restriction, including without limitation the
+; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+; sell copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in
+; all copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+; IN THE SOFTWARE.
+
+;; Format
+;;
+;; Each set of tests is defined as a map with a :name key and a :tests key
+;; The :name key is used to create a subdirectory in the test corpus directory.
+;; Each case in the :tests data is written to a uniquely named JSON file in
+;; that subdirectory.
+;;
+;; The :tests data should be a vector in triples of expression, environment,
+;; expected
+;; - expression is a string expression to be interpreted
+;; - environment is a map of variable name to value
+;; - expected is the expected result. This is a a scalar value when the
+;;   interpreter is expected to succeed, or if an error is expected, a map
+;;   describing the error
+;;
+;; The error map has a form like:
+;; {:tokenType "GREATER"
+;;  :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+;;  :lexeme ">"
+;;  :charPos 2}
+;;
+;; `:tokenType` is the name of a token constant - see TokenType.java for valid
+;; token constants.
+;; `:tokenType` will not be present for errors from the scanner as the tokens
+;; haven't been determined.
+;;
+;; `:errorType` is the type of error. It is prefixed with the subsystem the
+;; error was produced by and the specific error type within that.
+;; See Scanner.java, Parser.java, and Interpreter.java for available error
+;; types
+;;
+;; `:lexeme` is the string portion of the input associated with the error.
+;;
+;; `:charPos` is the start position of the lexeme in the input string.
+
+{:name "interprets-literals"
+ :tests [;; All literals are true
+         "0" {"ident" 5} true
+         "1" {"ident" 5} true
+         "\"string\"" {"ident" 5} true
+         "ident" {"ident" 5} true
+         "true" {"ident" 5} true
+         ;; Except for 'false'
+         "false" {"ident" 5} false
+         "ident?" {"ident?" 5} true]}
+
+{:name "logical-expressions"
+ :tests [;; ===
+         ;; and
+         ;; ===
+         "true and true" {} true
+         "true and false" {} false
+         "false and true" {} false
+         "false and false" {} false
+
+         ;; 'and' short-circuits, shown here by not needing to reference the
+         ;; 'foo' variable that doesn't exist in the environment
+         "false and foo" {} false
+
+         ;; Alias is accepted
+         "true AND false" {} false
+
+         ;; Environment lookups work
+         "true and foo" {"foo" true} true
+         "foo and false" {"foo" true} false
+         "true and foo" {"foo" false} false
+
+         ;; ==
+         ;; or
+         ;; ==
+         "true or true" {} true
+         "true or false" {} true
+         "false or true" {} true
+         "false or false" {} false
+
+         ;; 'or' short-circuits, shown here by not needing to reference the 'foo'
+         ;; variable that doesn't exist in the environment
+         "true or foo" {} true
+
+         ;; Alias is accepted
+         "false OR true" {} true
+
+         ;; Environment lookups work
+         "false or foo" {"foo" true} true
+         "foo or foo" {"foo" false} false
+
+         ;; ===
+         ;; not
+         ;; ===
+         "!true" {} false
+         "!false" {} true
+         ;; not is an alias for !
+         "not true" {} false
+         "not false" {} true
+
+         ;; Environment works
+         "not foo" {"foo" true} false
+         "!foo" {"foo" true} false]}
+
+{:name "binary-expressions"
+ :tests [;; ========
+         ;; equality
+         ;; ========
+         "1 == 1" {} true
+         "1 == 2" {} false
+         "\"hi\" == \"hi\"" {} true
+         "\"hi\" == \"bye\"" {} false
+         "true == true" {} true
+         "false == false" {} true
+         "foo == foo" {"foo" "\"hello\""} true
+         "foo == bar" {"foo" 1, "bar" 1} true
+         "foo == bar" {"foo" 5, "bar" 1} false
+
+         ;; Mixed types are never equal
+         "true == 12" {} false
+         "\"string\" == 4" {} false
+         "5 == false" {} false
+         "foo == bar" {"foo" "5", "bar" true} false
+
+         ;; ==========
+         ;; inequality
+         ;; ==========
+         "1 != 1" {} false
+         "1 != 2" {} true
+         "\"hi\" != \"hi\"" {} false
+         "\"hi\" != \"bye\"" {} true
+         "true != true" {} false
+         "false != false" {} false
+         "foo != foo" {"foo" "\"hello\""} false
+         "foo != bar" {"foo" 1, "bar" 1} false
+         "foo != bar" {"foo" 5, "bar" 1} true
+
+         ;; Mixed types are never equal
+         "true != 12" {} true
+         "\"string\" != 4" {} true
+         "5 != false" {} true
+         "foo != bar" {"foo" "5", "bar" true} true
+
+         ;; ============
+         ;; greater than
+         ;; ============
+         ;; NB operands must be numbers
+         "1 > 3" {} false
+         "5 > 3" {} true
+         "5 > 5" {} false
+         "5 > foo" {"foo" 4} true
+         "foo > 5" {"foo" 7} true
+
+         ;; ==================
+         ;; greater than equal
+         ;; ==================
+         ;; NB operands must be numbers
+         "1 >= 3" {} false
+         "5 >= 3" {} true
+         "5 >= 5" {} true
+         "5 >= foo" {"foo" 4} true
+         "foo >= 5" {"foo" 7} true
+
+         ;; =========
+         ;; less than
+         ;; =========
+         ;; NB operands must be numbers
+         "1 < 3" {} true
+         "5 < 3" {} false
+         "5 < 5" {} false
+         "5 < foo" {"foo" 4} false
+         "foo < 5" {"foo" 1} true
+
+         ;; ===============
+         ;; less than equal
+         ;; ===============
+         ;; NB operands must be numbers
+         "1 <= 3" {} true
+         "5 <= 3" {} false
+         "5 <= 5" {} true
+         "5 <= foo" {"foo" 4} false
+         "foo <= 5" {"foo" 1} true
+
+         ;; ===========
+         ;; starts-with
+         ;; ===========
+         "\"hello world\" starts-with \"hello\"" {} true
+         "\"hello world\" starts-with \"api\"" {} false
+         "\"hello world\" starts-with foo" {"foo" "he"} true
+         "foo starts-with \"hello\"" {"foo" "hello world"} true
+         "foo starts-with \"api\"" {"foo" "hello world"} false]}
+
+{:name "comparison-expressions-require-numeric-operands"
+ :tests ["5 > true" {} {:tokenType "GREATER"
+                        :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                        :lexeme ">"
+                        :charPos 2}
+         "false > 3" {} {:tokenType "GREATER"
+                         :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                         :lexeme ">"
+                         :charPos 6}
+         "\"hi\" > \"hi\"" {} {:tokenType "GREATER"
+                               :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                               :lexeme ">"
+                               :charPos 5}
+         "false > false" {} {:tokenType "GREATER"
+                             :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                             :lexeme ">"
+                             :charPos 6}
+         "foo > 10" {"foo" "\"string\""} {:tokenType "GREATER"
+                                          :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                                          :lexeme ">"
+                                          :charPos 4}
+
+         "5 >= true" {} {:tokenType "GREATER_EQUAL"
+                         :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                         :lexeme ">="
+                         :charPos 2}
+         "false >= 3" {} {:tokenType "GREATER_EQUAL"
+                          :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                          :lexeme ">="
+                          :charPos 6}
+         "\"hi\" >= \"hi\"" {} {:tokenType "GREATER_EQUAL"
+                                :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                                :lexeme ">="
+                                :charPos 5}
+         "false >= false" {} {:tokenType "GREATER_EQUAL"
+                              :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                              :lexeme ">="
+                              :charPos 6}
+         "foo >= 10" {"foo" "\"string\""} {:tokenType "GREATER_EQUAL"
+                                           :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                                           :lexeme ">="
+                                           :charPos 4}
+
+         "5 < true" {} {:tokenType "LESS"
+                        :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                        :lexeme "<"
+                        :charPos 2}
+         "false < 3" {} {:tokenType "LESS"
+                         :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                         :lexeme "<"
+                         :charPos 6}
+         "\"hi\" < \"hi\"" {} {:tokenType "LESS"
+                               :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                               :lexeme "<"
+                               :charPos 5}
+         "false < false" {} {:tokenType "LESS"
+                             :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                             :lexeme "<"
+                             :charPos 6}
+         "foo < 10" {"foo" "\"string\""} {:tokenType "LESS"
+                                          :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                                          :lexeme "<"
+                                          :charPos 4}
+
+         "5 <= true" {} {:tokenType "LESS_EQUAL"
+                         :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                         :lexeme "<="
+                         :charPos 2}
+         "false <= 3" {} {:tokenType "LESS_EQUAL"
+                          :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                          :lexeme "<="
+                          :charPos 6}
+         "\"hi\" <= \"hi\"" {} {:tokenType "LESS_EQUAL"
+                                :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                                :lexeme "<="
+                                :charPos 5}
+         "false <= false" {} {:tokenType "LESS_EQUAL"
+                              :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                              :lexeme "<="
+                              :charPos 6}
+         "foo <= 10" {"foo" "\"string\""} {:tokenType "LESS_EQUAL"
+                                           :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
+                                           :lexeme "<="
+                                           :charPos 4}]}
+
+{:name "starts-with-requires-string-operands"
+ :tests ["\"string\" starts-with 5" {} {:tokenType "STARTS_WITH"
+                                        :errorType "Interpreter/EXPECTED_STRING_OPERAND"
+                                        :lexeme "starts-with"
+                                        :charPos 9}
+         "false starts-with \"string\"" {} {:tokenType "STARTS_WITH"
+                                            :errorType "Interpreter/EXPECTED_STRING_OPERAND"
+                                            :lexeme "starts-with"
+                                            :charPos 6}
+         "55 starts-with 5" {} {:tokenType "STARTS_WITH"
+                                :errorType "Interpreter/EXPECTED_STRING_OPERAND"
+                                :lexeme "starts-with"
+                                :charPos 3}
+         "false starts-with false" {} {:tokenType "STARTS_WITH"
+                                       :errorType "Interpreter/EXPECTED_STRING_OPERAND"
+                                       :lexeme "starts-with"
+                                       :charPos 6}
+         "foo starts-with \"f\"" {"foo" 55} {:tokenType "STARTS_WITH"
+                                             :errorType "Interpreter/EXPECTED_STRING_OPERAND"
+                                             :lexeme "starts-with"
+                                             :charPos 4}]}
+
+{:name "throws-when-variable-lookup-fails"
+ :tests ["foo > 5" {} {:tokenType "IDENTIFIER"
+                       :errorType "Interpreter/UNKNOWN_VARIABLE"
+                       :lexeme "foo"
+                       :charPos 0}]}
+
+{:name "interprets-complex-expressions"
+ :tests ["(5 < 4 or not foo) and \"s\" != 42"
+         {"foo" false}
+         true
+
+         "(5 < 4 or not foo) and \"s\" != 42"
+         {"foo" true}
+         false
+
+         "branch == \"main\" and project == \"my-project\" or always_run"
+         {"branch" "main"
+          "project" "my-project"
+          "always_run" false}
+         true
+
+         "branch == \"main\" and project == \"my-project\" or always_run"
+         {"branch" "main"
+          "project" "my-project"
+          "always_run" true}
+         true
+
+         "branch == \"main\" and project == \"my-project\" or always_run"
+         {"branch" "develop"
+          "project" "my-project"
+          "always_run" true}
+         true
+
+         "branch == \"main\" and project == \"my-project\" or always_run"
+         {"branch" "develop"
+          "project" "my-project"
+          "always_run" false}
+         false
+
+         "branch == \"main\" and not (number == 5 and project == \"my-project\")"
+         {"branch" "main"
+          "number" 5
+          "project" "another-project"}
+         true
+
+         "branch starts-with \"main\" and not (number == 5 and project == \"my-project\")"
+         {"branch" "mainly-on-the-plain"
+          "number" 5
+          "project" "another-project"}
+         true]}
+
+{:name "undefined-variable-handling"
+ :tests [;; ========
+         ;; equality
+         ;; ========
+         "1 == foo" {"foo" nil} false
+         "foo == 2" {"foo" nil} false
+         "\"hi\" == foo" {"foo" nil} false
+         "foo == \"bye\"" {"foo" nil} false
+         "foo == foo" {"foo" nil} false
+         "foo == foo" {"foo" nil, "bar" "\"hello\""} false
+         "foo == bar" {"foo" 1, "bar" nil} false
+         "foo == bar" {"foo" nil, "bar" 1} false
+
+         "1 != foo" {"foo" nil} false
+         "foo != 2" {"foo" nil} false
+         "\"hi\" != foo" {"foo" nil} false
+         "foo != \"bye\"" {"foo" nil} false
+         "foo != true" {"foo" nil} false
+         "false != foo" {"foo" nil} false
+         "foo != foo" {"foo" nil} false
+         "foo != foo" {"foo" nil, "bar" "\"hello\""} false
+         "foo != bar" {"foo" 1, "bar" nil} false
+         "foo != bar" {"foo" nil, "bar" 5} false
+
+         ;; ============
+         ;; greater than
+         ;; ============
+         "1 > foo" {"foo" nil} false
+         "foo > 3" {"foo" nil} false
+         "foo > foo" {"foo" nil} false
+
+         ;; ==================
+         ;; greater than equal
+         ;; ==================
+         "1 >= foo" {"foo" nil} false
+         "foo >= 3" {"foo" nil} false
+         "foo >= foo" {"foo" nil} false
+
+         ;; =========
+         ;; less than
+         ;; =========
+         "1 < foo" {"foo" nil} false
+         "foo < 3" {"foo" nil} false
+         "foo < foo" {"foo" nil} false
+
+         ;; ===============
+         ;; less than equal
+         ;; ===============
+         "1 <= foo" {"foo" nil} false
+         "foo <= 3" {"foo" nil} false
+         "foo <= foo" {"foo" nil} false
+
+         ;; ===========
+         ;; starts-with
+         ;; ===========
+         "\"hello world\" starts-with foo" {"foo" nil} false
+         "foo starts-with \"hello\"" {"foo" nil} false
+
+         ;; ===
+         ;; and
+         ;; ===
+         "true and foo" {"foo" nil} false
+         "foo and true" {"foo" nil} false
+         "12 and foo" {"foo" nil} false
+         "foo and 12" {"foo" nil} false
+         "\"hello world\" and foo" {"foo" nil} false
+         "foo and \"hello world\"" {"foo" nil} false
+
+         "false and foo" {"foo" nil} false
+         "foo and false" {"foo" nil} false
+         "foo and foo" {"foo" nil} false
+
+         ;; ==
+         ;; or
+         ;; ==
+         "true or foo" {"foo" nil} true
+         "foo or true" {"foo" nil} true
+         "12 or foo" {"foo" nil} true
+         "foo or 12" {"foo" nil} true
+         "\"hello world\" or foo" {"foo" nil} true
+         "foo or \"hello world\"" {"foo" nil} true
+
+         "false or foo" {"foo" nil} false
+         "foo or false" {"foo" nil} false
+         "foo or foo" {"foo" nil} false
+
+         ;; ===
+         ;; not
+         ;; ===
+         "!foo" {"foo" nil} true
+         ;; not is an alias for !
+         "not foo" {"foo" nil} true
+
+         ;; complex expressions
+         "branch == \"main\" and project == \"my-project\" or always_run"
+         {"branch" nil
+          "project" "my-project"
+          "always_run" true}
+         true
+
+         "branch == \"main\" and project == \"my-project\" or always_run"
+         {"branch" "main"
+          "project" nil
+          "always_run" true}
+         true
+
+         "branch == \"main\" and project == \"my-project\" or always_run"
+         {"branch" "main"
+          "project" "my-project"
+          "always_run" nil}
+         true
+
+         "branch == \"main\" or project == \"my-project\" and always_run"
+         {"branch" nil
+          "project" "my-project"
+          "always_run" true}
+         true
+
+         "branch == \"main\" or project == \"my-project\" and always_run"
+         {"branch" "main"
+          "project" nil
+          "always_run" false}
+         true
+
+         "branch == \"main\" or project == \"my-project\" and always_run"
+         {"branch" "main"
+          "project" "my-project"
+          "always_run" nil}
+         true]}
+
+{:name ["scan-errors" "identifiers-cannot-contain-strings-of-dots"]
+ :tests ["foo..bar" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                        :lexeme "."
+                        :charPos 3}]}
+
+{:name ["scan-errors" "identifiers-cannot-contain-start-with-dot"]
+ :tests [".foo" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                    :lexeme "."
+                    :charPos 0}]}
+
+{:name ["scan-errors" "identifiers-cannot-contain-start-with-dash"]
+ :tests ["-foo" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                    :lexeme "-"
+                    :charPos 0}]}
+
+{:name ["scan-errors" "identifiers-cannot-contain-start-with-underscore"]
+ :tests ["_foo" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                    :lexeme "_"
+                    :charPos 0}]}
+
+{:name ["scan-errors" "improperly-formed-operators"]
+ :tests ["=!" {} {:errorType "Scanner/INCOMPLETE_EQUALS"
+                  :lexeme "!"
+                  :charPos 1}]}
+
+{:name ["scan-errors" "unterminated-string"]
+ :tests ["text \"an unterminated string" {} {:errorType "Scanner/UNTERMINATED_STRING"
+                                             :lexeme "\""
+                                             :charPos 5}]}
+
+{:name ["scan-errors" "throws-for-unexpected-characters"]
+ :tests ["&" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme "&"
+                 :charPos 0}
+         "*" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme "*"
+                 :charPos 0}
+         "^" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme "^"
+                 :charPos 0}
+         "%" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme "%"
+                 :charPos 0}
+         "$" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme "$"
+                 :charPos 0}
+         "£" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme "£"
+                 :charPos 0}
+         "?" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme "?"
+                 :charPos 0}
+         "/" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme "/"
+                 :charPos 0}
+         "#" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme "#"
+                 :charPos 0}
+         "~" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme "~"
+                 :charPos 0}
+         ":" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme ":"
+                 :charPos 0}
+         ";" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme ";"
+                 :charPos 0}
+         "@" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme "@"
+                 :charPos 0}
+         "'" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme "'"
+                 :charPos 0}]}
+
+{:name ["parse-errors" "requires-expressions"]
+ :tests ["and" {} {:errorType "Parser/EXPECTED_EXPRESSION"
+                   :tokenType "AND"
+                   :lexeme "and"
+                   :charPos 0}]}
+
+{:name ["parse-errors" "additional-input-is-an-error"]
+ :tests ["foo and bar baz" {} {:errorType "Parser/UNEXPECTED_ADDITIONAL_INPUT"
+                               :tokenType "IDENTIFIER"
+                               :lexeme "baz"
+                               :charPos 12}]}
+
+{:name ["parse-errors" "expressions-must-be-well-formed"]
+ :tests ["" {} {:errorType "Parser/EXPECTED_EXPRESSION"
+                :tokenType "EOF"
+                :lexeme ""
+                :charPos 0}
+         "and" {} {:errorType "Parser/EXPECTED_EXPRESSION"
+                   :tokenType "AND"
+                   :lexeme "and"
+                   :charPos 0}
+         "foo or" {} {:errorType "Parser/EXPECTED_EXPRESSION"
+                      :tokenType "EOF"
+                      :lexeme ""
+                      :charPos 6}
+         "and foo" {} {:errorType "Parser/EXPECTED_EXPRESSION"
+                       :tokenType "AND"
+                       :lexeme "and"
+                       :charPos 0}
+         "!" {} {:errorType "Parser/EXPECTED_EXPRESSION"
+                 :tokenType "EOF"
+                 :lexeme ""
+                 :charPos 1}
+         "5 <" {} {:errorType "Parser/EXPECTED_EXPRESSION"
+                   :tokenType "EOF"
+                   :lexeme ""
+                   :charPos 3}
+         ">= 4" {} {:errorType "Parser/EXPECTED_EXPRESSION"
+                    :tokenType "GREATER_EQUAL"
+                    :lexeme ">="
+                    :charPos 0}
+         "(" {} {:errorType "Parser/EXPECTED_EXPRESSION"
+                 :tokenType "EOF"
+                 :lexeme ""
+                 :charPos 1}
+         "foo and (" {} {:errorType "Parser/EXPECTED_EXPRESSION"
+                         :tokenType "EOF"
+                         :lexeme ""
+                         :charPos 9}]}
+
+{:name ["parse-errors" "grouping-parens-must-be-balanced"]
+ :tests ["(1 > 2 3" {} {:errorType "Parser/EXPECTED_RIGHT_PAREN"
+                        :tokenType "NUMBER"
+                        :lexeme "3"
+                        :charPos 7}
+         "1 > 2) < 3" {} {:errorType "Parser/UNEXPECTED_ADDITIONAL_INPUT"
+                          :tokenType "RIGHT_PAREN"
+                          :lexeme ")"
+                          :charPos 5}
+         "((foo and bar)" {} {:errorType "Parser/EXPECTED_RIGHT_PAREN"
+                              :tokenType "EOF"
+                              :lexeme ""
+                              :charPos 14}
+         "0 <= (1 > (2 < 3) >= 5" {} {:errorType "Parser/EXPECTED_RIGHT_PAREN"
+                                      :tokenType "EOF"
+                                      :lexeme ""
+                                      :charPos 22}]}
