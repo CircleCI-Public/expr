@@ -1,6 +1,6 @@
 {
   "input" : {
-    "expression" : "12 and foo",
+    "expression" : "\"hi\" == foo",
     "environment" : {
       "foo" : null
     }

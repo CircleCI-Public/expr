@@ -44,7 +44,9 @@
 
 (def ^:private test-corpus-data
   [{:file "test-corpus.edn"
-    :dir "test-corpus"}])
+    :dir "test-corpus"}
+   {:file "evaluator-corpus.edn"
+    :dir "evaluator-test-corpus"}])
 
 (defn -main
   []

@@ -5,8 +5,8 @@
   },
   "expected" : {
     "error" : {
-      "tokenType" : "GREATER_EQUAL",
       "errorType" : "Parser/EXPECTED_EXPRESSION",
+      "tokenType" : "GREATER_EQUAL",
       "lexeme" : ">=",
       "charPos" : 0
     }

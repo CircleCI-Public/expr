@@ -1,0 +1,13 @@
+{
+  "input" : {
+    "expression" : "branch starts-with \"main\" and not (number == 5 and project == \"my-project\")",
+    "environment" : {
+      "branch" : "mainly-on-the-plain",
+      "number" : 5,
+      "project" : "another-project"
+    }
+  },
+  "expected" : {
+    "result" : true
+  }
+}

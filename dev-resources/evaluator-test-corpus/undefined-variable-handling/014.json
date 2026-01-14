@@ -1,11 +1,11 @@
 {
   "input" : {
-    "expression" : "\"hello world\" or foo",
+    "expression" : "false != foo",
     "environment" : {
       "foo" : null
     }
   },
   "expected" : {
-    "result" : "hello world"
+    "result" : null
   }
 }

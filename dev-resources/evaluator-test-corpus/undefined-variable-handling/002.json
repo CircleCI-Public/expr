@@ -1,6 +1,6 @@
 {
   "input" : {
-    "expression" : "foo and true",
+    "expression" : "foo == 2",
     "environment" : {
       "foo" : null
     }

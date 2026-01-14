@@ -5,8 +5,8 @@
   },
   "expected" : {
     "error" : {
-      "tokenType" : "RIGHT_PAREN",
       "errorType" : "Parser/UNEXPECTED_ADDITIONAL_INPUT",
+      "tokenType" : "RIGHT_PAREN",
       "lexeme" : ")",
       "charPos" : 5
     }

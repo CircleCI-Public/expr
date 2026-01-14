@@ -1,8 +1,9 @@
 {
   "input" : {
-    "expression" : "foo or foo",
+    "expression" : "foo != bar",
     "environment" : {
-      "foo" : null
+      "foo" : null,
+      "bar" : 5
     }
   },
   "expected" : {

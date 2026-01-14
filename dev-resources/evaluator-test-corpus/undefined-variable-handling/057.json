@@ -1,0 +1,13 @@
+{
+  "input" : {
+    "expression" : "branch or always_run and project",
+    "environment" : {
+      "branch" : "main",
+      "project" : null,
+      "always_run" : false
+    }
+  },
+  "expected" : {
+    "result" : "main"
+  }
+}

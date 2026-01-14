@@ -1,0 +1,11 @@
+{
+  "input" : {
+    "expression" : "foo starts-with \"hello\"",
+    "environment" : {
+      "foo" : null
+    }
+  },
+  "expected" : {
+    "result" : null
+  }
+}
