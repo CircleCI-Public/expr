@@ -5,8 +5,8 @@
   },
   "expected" : {
     "error" : {
-      "tokenType" : "NUMBER",
       "errorType" : "Parser/EXPECTED_RIGHT_PAREN",
+      "tokenType" : "NUMBER",
       "lexeme" : "3",
       "charPos" : 7
     }

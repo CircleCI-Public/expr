@@ -5,8 +5,8 @@
   },
   "expected" : {
     "error" : {
-      "tokenType" : "AND",
       "errorType" : "Parser/EXPECTED_EXPRESSION",
+      "tokenType" : "AND",
       "lexeme" : "and",
       "charPos" : 0
     }

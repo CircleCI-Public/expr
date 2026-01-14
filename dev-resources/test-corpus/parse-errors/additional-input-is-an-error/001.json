@@ -5,8 +5,8 @@
   },
   "expected" : {
     "error" : {
-      "tokenType" : "IDENTIFIER",
       "errorType" : "Parser/UNEXPECTED_ADDITIONAL_INPUT",
+      "tokenType" : "IDENTIFIER",
       "lexeme" : "baz",
       "charPos" : 12
     }

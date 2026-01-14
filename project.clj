@@ -1,7 +1,8 @@
 (defproject circleci/expr (or (System/getenv "VERSION")
                               "0.1.0-SNAPSHOT")
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.12.1"]
-                                  [cheshire "6.0.0"]]}
+                                  [cheshire "6.0.0"]]
+                   :aliases {"generate-corpus" ["run" "-m" "expr.generate-corpus"]}}
              :cljfmt {:plugins [[dev.weavejester/lein-cljfmt "0.13.1"]]
                       :cljfmt {:load-config-file? true}}
              :deploy {:plugins [[circle/s3-wagon-private "1.2.2" :exclusions [commons-codec]]]

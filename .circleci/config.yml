@@ -12,6 +12,16 @@ jobs:
       - *lein_image
     steps:
       - checkout
+      - run:
+          name: Ensure corpus tests are generated
+          command: |
+            lein generate-corpus
+            if git diff --exit-code; then
+              echo "Test corpus up to date"
+            else
+              echo "Regenerate corpus tests with 'lein generate-corpus' and check in the changes"
+              exit 1
+            fi
       - run: lein test
       - run: lein with-profile +cljfmt cljfmt check
 
