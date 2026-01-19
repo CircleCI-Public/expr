@@ -20,7 +20,8 @@
             [clojure.pprint]
             [clojure.java.io :as io]
             [cheshire.core :as json])
-  (:import java.io.PushbackReader))
+  (:import java.io.PushbackReader
+           com.google.re2j.Pattern))
 
 (defn write-test-file
   [dirs n expression environment expected]
@@ -37,10 +38,26 @@
 (defn- read-test
   [rdr]
   (let [eof (Object.)
-        v (edn/read {:eof eof} rdr)]
+        v (edn/read {:eof eof
+                     :readers {'corpus/regexp (fn [v] (Pattern/compile v))}}
+                    rdr)]
     (if (= v eof)
       nil
       v)))
+
+(defn- coerce-expected
+  "Coerce expected values without a matching JSON type into a type that the
+  corpus test runners can turn back into the real type."
+  [expected]
+  (cond
+    (map? expected)
+    {:error expected}
+
+    (instance? Pattern expected)
+    {:result (str "corpus/regexp:" expected)}
+
+    :else
+    {:result expected}))
 
 (def ^:private test-corpus-data
   [{:file "test-corpus.edn"
@@ -69,9 +86,7 @@
                                  (inc n)
                                  expression
                                  environment
-                                 (if (map? expected)
-                                   {:error expected}
-                                   {:result expected})))
+                                 (coerce-expected expected)))
               (recur (read-test rdr))))))
       (catch Exception e
         (println (format "unable to generate test corpus from resource %s" file))

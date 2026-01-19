@@ -29,7 +29,9 @@
 ;; - environment is a map of variable name to value
 ;; - expected is the expected result. This is a a scalar value when the
 ;;   interpreter is expected to succeed, or if an error is expected, a map
-;;   describing the error
+;;   describing the error.
+;;   Expected can be a string of the form "corpus/regexp:pattern". This value
+;;   should be read by test harnesses as the regular expression "pattern"
 ;;
 ;; The error map has a form like:
 ;; {:tokenType "GREATER"

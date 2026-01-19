@@ -3,12 +3,14 @@ package interpreters
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
 type Val struct {
 	vb *bool
 	vs *string
+	vp *regexp.Regexp
 	vn *int64
 }
 
@@ -24,6 +26,10 @@ func BoxVal(a any) (Val, error) {
 	case string:
 		return Val{
 			vs: &v,
+		}, nil
+	case *regexp.Regexp:
+		return Val{
+			vp: v,
 		}, nil
 	case int:
 		n := int64(v)
@@ -87,6 +93,8 @@ func (l Val) Unbox() any {
 		return *l.vb
 	case l.vs != nil:
 		return *l.vs
+	case l.vp != nil:
+		return l.vp
 	case l.vn != nil:
 		return *l.vn
 	default:
@@ -104,6 +112,9 @@ func (l Val) IsTruthy() bool {
 		return *l.vb
 	// All strings are truthy
 	case l.vs != nil:
+		return true
+	// All regexps are truthy
+	case l.vp != nil:
 		return true
 	// All numbers are truthy
 	case l.vn != nil:
@@ -128,6 +139,13 @@ func (l Val) String() (string, bool) {
 	return "", false
 }
 
+func (l Val) Regexp() (*regexp.Regexp, bool) {
+	if l.vp != nil {
+		return l.vp, true
+	}
+	return nil, false
+}
+
 func (l Val) Number() (int64, bool) {
 	if l.vn != nil {
 		return *l.vn, true
@@ -136,6 +154,18 @@ func (l Val) Number() (int64, bool) {
 }
 
 func (l Val) Equal(r Val) bool {
+	// Go regexp structs store state. In the `expr` language a regexp can only be
+	// used to match a value once, but the state values mean that two regexp
+	// structs with the same pattern are not equal.
+	// Instead when both operands are regexps, compare the source pattern
+	// strings.
+	lr, lok := l.Regexp()
+	rr, rok := r.Regexp()
+
+	if lok && rok {
+		return lr.String() == rr.String()
+	}
+
 	return l.Unbox() == r.Unbox()
 }
 
@@ -190,19 +220,32 @@ func (l Val) LessEqual(r Val) (bool, error) {
 }
 
 func (v *Val) UnmarshalJSON(input []byte) error {
-	var val any
-	err := json.Unmarshal(input, &val)
+	var value any
+	err := json.Unmarshal(input, &value)
 	if err != nil {
 		return err
 	}
 
-	boxed, err := BoxVal(val)
+	if val, ok := value.(string); ok {
+		if strings.HasPrefix(val, "corpus/regexp:") {
+			pattern := strings.TrimPrefix(val, "corpus/regexp:")
+
+			var err error
+			value, err = regexp.Compile(pattern)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	boxed, err := BoxVal(value)
 	if err != nil {
 		return err
 	}
 
 	v.vb = boxed.vb
 	v.vs = boxed.vs
+	v.vp = boxed.vp
 	v.vn = boxed.vn
 
 	return nil
