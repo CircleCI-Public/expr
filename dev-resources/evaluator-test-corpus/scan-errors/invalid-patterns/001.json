@@ -1,12 +1,12 @@
 {
   "input" : {
-    "expression" : ":",
+    "expression" : "/foo(?:bar/",
     "environment" : { }
   },
   "expected" : {
     "error" : {
-      "errorType" : "Scanner/UNEXPECTED_CHARACTER",
-      "lexeme" : ":",
+      "errorType" : "Scanner/INVALID_PATTERN",
+      "lexeme" : "/",
       "charPos" : 0
     }
   }

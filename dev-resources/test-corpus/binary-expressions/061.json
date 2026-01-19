@@ -1,8 +1,8 @@
 {
   "input" : {
-    "expression" : "false",
+    "expression" : "bar matches /fo+d/",
     "environment" : {
-      "ident" : 5
+      "bar" : "hi"
     }
   },
   "expected" : {

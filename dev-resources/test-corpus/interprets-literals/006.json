@@ -1,11 +1,11 @@
 {
   "input" : {
-    "expression" : "false",
+    "expression" : "true",
     "environment" : {
       "ident" : 5
     }
   },
   "expected" : {
-    "result" : false
+    "result" : true
   }
 }

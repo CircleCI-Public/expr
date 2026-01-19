@@ -1,8 +1,8 @@
 {
   "input" : {
-    "expression" : "true",
+    "expression" : "ident?",
     "environment" : {
-      "ident" : 5
+      "ident?" : 5
     }
   },
   "expected" : {

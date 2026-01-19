@@ -1,12 +1,12 @@
 {
   "input" : {
-    "expression" : ":",
+    "expression" : "#",
     "environment" : { }
   },
   "expected" : {
     "error" : {
       "errorType" : "Scanner/UNEXPECTED_CHARACTER",
-      "lexeme" : ":",
+      "lexeme" : "#",
       "charPos" : 0
     }
   }
