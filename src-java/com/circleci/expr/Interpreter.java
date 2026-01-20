@@ -72,28 +72,25 @@ public class Interpreter implements Expr.Visitor<Object> {
     public String asErrorMessage(String expression) {
       var errorString = this.token.lexeme;
 
-      switch (this.type) {
-        case EXPECTED_NUMERIC_OPERAND:
-          return Errors.errorMessage(String.format("Expected numeric operands to \"%s\" operator:", errorString),
+      return switch (this.type) {
+        case EXPECTED_NUMERIC_OPERAND ->
+          Errors.errorMessage(String.format("Expected numeric operands to \"%s\" operator:", errorString),
               expression,
               this.token.charPos,
               errorString.length());
 
-        case EXPECTED_STRING_OPERAND:
-          return Errors.errorMessage(String.format("Expected string operands to \"%s\" operator:", errorString),
+        case EXPECTED_STRING_OPERAND ->
+          Errors.errorMessage(String.format("Expected string operands to \"%s\" operator:", errorString),
               expression,
               this.token.charPos,
               errorString.length());
 
-        case UNKNOWN_VARIABLE:
-          return Errors.errorMessage(String.format("Referred to a variable \"%s\" that does not exist:", errorString),
+        case UNKNOWN_VARIABLE ->
+          Errors.errorMessage(String.format("Referred to a variable \"%s\" that does not exist:", errorString),
               expression,
               this.token.charPos,
               errorString.length());
-
-        default:
-          return String.format("Unknown error interpreting expression: '%s'", expression);
-      }
+      };
     }
   }
 
