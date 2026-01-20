@@ -22,11 +22,14 @@ package scanners
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
-	"github.com/circleci/expr/go/tokens"
+	"github.com/google/go-cmp/cmp"
 	"gotest.tools/v3/assert"
+
+	"github.com/circleci/expr/go/tokens"
 )
 
 func TestScansKeywords(t *testing.T) {
@@ -214,6 +217,103 @@ func TestScansStrings(t *testing.T) {
 	})
 }
 
+func TestScansPatterns(t *testing.T) {
+	t.Parallel()
+	t.Run("well-formed patterns", func(t *testing.T) {
+		var tests = []struct {
+			expression string
+			expected   []tokens.Token
+		}{
+			{"//",
+				[]tokens.Token{
+					{Type: tokens.PATTERN, Lexeme: "//", CharPos: 0, Literal: regexp.MustCompile("")},
+					{Type: tokens.EOF, Lexeme: "", CharPos: 2}}},
+
+			{"/a pattern/",
+				[]tokens.Token{
+					{Type: tokens.PATTERN, Lexeme: "/a pattern/", CharPos: 0, Literal: regexp.MustCompile("a pattern")},
+					{Type: tokens.EOF, Lexeme: "", CharPos: 11}}},
+
+			{"/an \\/escaped\\/ pattern/",
+				[]tokens.Token{
+					{Type: tokens.PATTERN, Lexeme: "/an \\/escaped\\/ pattern/", CharPos: 0, Literal: regexp.MustCompile("an /escaped/ pattern")},
+					{Type: tokens.EOF, Lexeme: "", CharPos: 24}}},
+
+			{"/backslash \\\\escapes/",
+				[]tokens.Token{
+					{Type: tokens.PATTERN, Lexeme: "/backslash \\\\escapes/", CharPos: 0, Literal: regexp.MustCompile(`backslash \\escapes`)},
+					{Type: tokens.EOF, Lexeme: "", CharPos: 21}}},
+
+			// escaped pattern metacharacters
+			{`/\*/`,
+				[]tokens.Token{
+					{Type: tokens.PATTERN, Lexeme: `/\*/`, CharPos: 0, Literal: regexp.MustCompile(`\*`)},
+					{Type: tokens.EOF, Lexeme: "", CharPos: 4}}},
+
+			{`/\+/`,
+				[]tokens.Token{
+					{Type: tokens.PATTERN, Lexeme: `/\+/`, CharPos: 0, Literal: regexp.MustCompile(`\+`)},
+					{Type: tokens.EOF, Lexeme: "", CharPos: 4}}},
+
+			{`/\?/`,
+				[]tokens.Token{
+					{Type: tokens.PATTERN, Lexeme: `/\?/`, CharPos: 0, Literal: regexp.MustCompile(`\?`)},
+					{Type: tokens.EOF, Lexeme: "", CharPos: 4}}},
+
+			{`/\|/`,
+				[]tokens.Token{
+					{Type: tokens.PATTERN, Lexeme: `/\|/`, CharPos: 0, Literal: regexp.MustCompile(`\|`)},
+					{Type: tokens.EOF, Lexeme: "", CharPos: 4}}},
+
+			{`/\(\)/`,
+				[]tokens.Token{
+					{Type: tokens.PATTERN, Lexeme: `/\(\)/`, CharPos: 0, Literal: regexp.MustCompile(`\(\)`)},
+					{Type: tokens.EOF, Lexeme: "", CharPos: 6}}},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.expression, func(t *testing.T) {
+				t.Parallel()
+
+				s := New(tt.expression)
+
+				tokens, err := s.Scan()
+				assert.NilError(t, err)
+
+				assert.DeepEqual(t, tt.expected, tokens, cmp.Transformer("regexps", func(v *regexp.Regexp) string { return v.String() }))
+			})
+		}
+	})
+
+	t.Run("non-ascii characters are disallowed", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := New("/⏰/").Scan()
+		assert.Error(t, err, "error scanning expression: Invalid pattern character scanning '⏰' at 1")
+	})
+
+	t.Run("unicode escape sequences are disallowed", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := New("/\u23f0/").Scan()
+		assert.Error(t, err, "error scanning expression: Invalid pattern character scanning '\u23f0' at 1")
+	})
+
+	t.Run("passing a unicode escape through to the regular expression engine is disallowed", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := New("/\\u23f0/").Scan()
+		assert.Error(t, err, "error scanning expression: Invalid pattern character scanning '\\' at 1")
+	})
+
+	t.Run("unterminated patterns", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := New("text /an unterminated pattern").Scan()
+		assert.Error(t, err, "error scanning expression: Unterminated pattern scanning '/' at 5")
+	})
+}
+
 func TestScansDigits(t *testing.T) {
 	t.Parallel()
 
@@ -319,11 +419,11 @@ func TestScansIdentifiers(t *testing.T) {
 func TestUnexpectedCharacters(t *testing.T) {
 	t.Parallel()
 
-	for _, c := range "&*^%$£?/#~:;@'" {
+	for _, c := range "&*^%$£?#~:;@'" {
 		s := New(string(c))
 		_, err := s.Scan()
 
-		assert.Error(t, err, fmt.Sprintf("error scanning expression: Unexpected character scanning %q at 0", c))
+		assert.Error(t, err, fmt.Sprintf("error scanning expression: Unexpected character scanning '%c' at 0", c))
 	}
 }
 
@@ -379,6 +479,60 @@ func TestPrettyScanErrors(t *testing.T) {
 				"Unterminated string starting here:",
 				"foo == \"an unterminated string",
 				"       ^"},
+			"\n")
+
+		assert.Equal(t, expected, err.(Error).AsErrorMessage(expression))
+	})
+
+	t.Run("Unterminated patterns", func(t *testing.T) {
+		t.Parallel()
+		expression := "foo matches /an unterminated pattern"
+
+		s := New(expression)
+		_, err := s.Scan()
+		assert.ErrorContains(t, err, "error scanning expression")
+
+		expected := strings.Join(
+			[]string{
+				"Unterminated pattern starting here:",
+				"foo matches /an unterminated pattern",
+				"            ^"},
+			"\n")
+
+		assert.Equal(t, expected, err.(Error).AsErrorMessage(expression))
+	})
+
+	t.Run("Invalid pattern character", func(t *testing.T) {
+		t.Parallel()
+		expression := "foo matches /hello \u23f0/"
+
+		s := New(expression)
+		_, err := s.Scan()
+		assert.ErrorContains(t, err, "error scanning expression")
+
+		expected := strings.Join(
+			[]string{
+				"Invalid pattern character, only ASCII and Latin-1 are allowed in patterns:",
+				"foo matches /hello \u23f0/",
+				"                   ^"},
+			"\n")
+
+		assert.Equal(t, expected, err.(Error).AsErrorMessage(expression))
+	})
+
+	t.Run("Bad pattern syntax", func(t *testing.T) {
+		t.Parallel()
+		expression := "foo matches /hello (world/"
+
+		s := New(expression)
+		_, err := s.Scan()
+		assert.ErrorContains(t, err, "error scanning expression")
+
+		expected := strings.Join(
+			[]string{
+				"Syntax error in pattern:",
+				"foo matches /hello (world/",
+				"            ^"},
 			"\n")
 
 		assert.Equal(t, expected, err.(Error).AsErrorMessage(expression))

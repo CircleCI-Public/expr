@@ -35,6 +35,7 @@ const (
 	NOT_EQUAL
 	EQUAL
 	STARTS_WITH
+	MATCHES
 	GREATER
 	GREATER_EQUAL
 	LESS
@@ -44,6 +45,7 @@ const (
 	IDENTIFIER
 	STRING
 	NUMBER
+	PATTERN
 
 	// Keywords
 	AND
@@ -69,6 +71,8 @@ func (tt TokenType) String() string {
 		return "EQUAL"
 	case STARTS_WITH:
 		return "STARTS_WITH"
+	case MATCHES:
+		return "MATCHES"
 	case GREATER:
 		return "GREATER"
 	case GREATER_EQUAL:
@@ -85,6 +89,8 @@ func (tt TokenType) String() string {
 		return "STRING"
 	case NUMBER:
 		return "NUMBER"
+	case PATTERN:
+		return "PATTERN"
 
 	// Keywords
 	case AND:
