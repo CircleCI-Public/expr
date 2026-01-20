@@ -71,28 +71,25 @@ public class Scanner {
      */
     @Override
     public String asErrorMessage(String expression) {
-      switch (this.type) {
-        case UNEXPECTED_CHARACTER:
-          return Errors.errorMessage(String.format("Unexpected character '%s':" , this.errorChar),
+      return switch (this.type) {
+        case UNEXPECTED_CHARACTER ->
+          Errors.errorMessage(String.format("Unexpected character '%s':" , this.errorChar),
               expression,
               this.errorPos,
               1);
 
-        case INCOMPLETE_EQUALS:
-          return Errors.errorMessage(String.format("Incomplete token, expected \"==\", found '%s':", this.errorChar),
+        case INCOMPLETE_EQUALS ->
+          Errors.errorMessage(String.format("Incomplete token, expected \"==\", found '%s':", this.errorChar),
               expression,
               this.errorPos,
               1);
 
-        case UNTERMINATED_STRING:
-          return Errors.errorMessage(String.format("Unterminated string starting here:", this.errorChar),
+        case UNTERMINATED_STRING ->
+          Errors.errorMessage(String.format("Unterminated string starting here:", this.errorChar),
               expression,
               this.errorPos,
               1);
-
-        default:
-          return String.format("Unknown error scanning expression: '%s'", expression);
-      }
+      };
     }
   }
 

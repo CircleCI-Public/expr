@@ -81,28 +81,25 @@ public class Parser {
     public String asErrorMessage(String expression) {
       var errorString = this.token.lexeme;
 
-      switch (this.type) {
-        case UNEXPECTED_ADDITIONAL_INPUT:
-          return Errors.errorMessage(String.format("Unexpected additional input, found \"%s\", expected EOF:", errorString),
+      return switch (this.type) {
+        case UNEXPECTED_ADDITIONAL_INPUT ->
+          Errors.errorMessage(String.format("Unexpected additional input, found \"%s\", expected EOF:", errorString),
               expression,
               this.token.charPos,
               errorString.length());
 
-        case EXPECTED_EXPRESSION:
-          return Errors.errorMessage(String.format("Expected expression, found \"%s\":", errorString),
+        case EXPECTED_EXPRESSION ->
+          Errors.errorMessage(String.format("Expected expression, found \"%s\":", errorString),
               expression,
               this.token.charPos,
               errorString.length());
 
-        case EXPECTED_RIGHT_PAREN:
-          return Errors.errorMessage("Expected ')' after expression:",
+        case EXPECTED_RIGHT_PAREN ->
+          Errors.errorMessage("Expected ')' after expression:",
               expression,
               this.token.charPos,
               1);
-
-        default:
-          return String.format("Unknown error parsing expression: '%s'", expression);
-      }
+      };
     }
   }
 
