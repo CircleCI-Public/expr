@@ -4,12 +4,12 @@ tasks:
   lint:
     desc: Lint code
     cmds:
-      - go tool -modfile=go.tool.mod golangci-lint run
+      - go tool golangci-lint run
 
   test:
     desc: Run the tests
     cmds:
-      - go tool -modfile=go.tool.mod gotestsum ./... -- -race
+      - go tool gotestsum ./... -- -race
 
   fmt:
     desc: Fmt the code
