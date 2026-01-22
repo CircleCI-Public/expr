@@ -19,6 +19,11 @@ Equality: `==`, `!=`
 Equality: `starts-with`
 * string prefix equality
 
+Matching: `matches`
+* regular expression string match. The left-hand side operand must be a string,
+  the right-hand side operand must be a pattern value. The `matches` operator
+  evaluates true if—and only if—the entire string matches the pattern.
+
 Comparison: `>=`, `>`, `<=`, `<`
 * Numeric comparisons
 
@@ -36,6 +41,13 @@ character is used to escape an embedded quote, or to escape an
 embedded `\`.
 * E.g. `"the quick brown fox"`, `"You can embed \" and \\ characters"`
 
+Regular expression patterns are enclosed with forward-slashes `/`. The `\`
+character is used to escape an embedded `/` or `\`. The pattern language is
+[re2](https://github.com/google/re2/wiki/syntax). While the pattern syntax
+supports capturing groups, there is no way to make use of the captures in an
+Expr expression.
+* E.g. `/hello\s+world/`
+
 The boolean literals are `true`, and `false`.
 
 ## Grammar
@@ -44,13 +56,14 @@ The boolean literals are `true`, and `false`.
 expression -> logic_or
 logic_or -> logic_and ( "or" logic_and )*;
 logic_and -> equality ( "and" equality )*;
-equality -> comparison ( ( "==" | "!=" | "starts-with" ) comparison )*;
+equality -> comparison ( ( "==" | "!=" | "starts-with" | "matches" ) comparison )*;
 comparison -> unary ( ( ">=" | ">" | "<=" | "<" ) unary)*;
 unary -> "not" unary | primary;
-primary -> "true" | "false" | NUMBER | STRING | IDENTIFIER | "(" expression ")"
+primary -> "true" | "false" | NUMBER | STRING | IDENTIFIER | PATTERN | "(" expression ")"
 
 NUMBER: /\d+/
 STRING: "\"" [\"]* "\""
+PATTERN: "/" [\/]* "/"
 IDENTIFIER: /[a-zA-Z][\w\-]*(?:\.[\w\-]+)*/
 ```
 
@@ -58,6 +71,13 @@ IDENTIFIER: /[a-zA-Z][\w\-]*(?:\.[\w\-]+)*/
 The `\` character can be used to escape embedded `"` or `\` characters.
 
 E.g.  `"foo == \"ma\\in\"` is the literal string `foo == "ma\in"`
+
+### Note on patterns
+The `\` character can be used to escape embedded `/` or `\` characters.
+
+The pattern syntax is [re2](https://github.com/google/re2/wiki/syntax) with a
+restriction that only ASCII and Latin-1 characters are supported in the
+pattern. Metacharacters (such as `.`) can still match any Unicode character.
 
 ### Note on identifiers
 Identifiers start with an alphabetic character and can be followed by
@@ -92,6 +112,7 @@ The precedence table, from weakest to strongest binding:
 +-------------+---------------+
 | == !=       | left          |
 | starts-with |               |
+| matches     |               |
 +-------------+---------------+
 | >= > <= <   | left          |
 +-------------+---------------+
