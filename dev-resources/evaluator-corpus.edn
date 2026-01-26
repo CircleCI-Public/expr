@@ -58,6 +58,7 @@
          "0" {"ident" 5} 0
          "1" {"ident" 5} 1
          "\"string\"" {"ident" 5} "string"
+         "/pattern/" {"ident" 5} #corpus/regexp "pattern"
          "ident" {"ident" 5} 5
          "true" {"ident" 5} true
          "false" {"ident" 5} false
@@ -201,7 +202,21 @@
          "\"hello world\" starts-with \"api\"" {} false
          "\"hello world\" starts-with foo" {"foo" "he"} true
          "foo starts-with \"hello\"" {"foo" "hello world"} true
-         "foo starts-with \"api\"" {"foo" "hello world"} false]}
+         "foo starts-with \"api\"" {"foo" "hello world"} false
+
+         ;; =======
+         ;; matches
+         ;; =======
+         "\"hello world\" matches /hello\\s\\w+/" {} true
+         "\"hello world\" matches /\\w+ world/" {} true
+         "\"hello world\" matches /^hello/" {} false
+         "\"hello world\" matches /^world/" {} false
+         "\"hello world\" matches /world/" {} false
+         "\"hello world\" matches /world$/" {} false
+         "bar matches /fo+d/" {"bar" "food"} true
+         "bar matches /fo+d/" {"bar" "fooooood"} true
+         "bar matches /fo+d/" {"bar" "fd"} false
+         "bar matches /fo+d/" {"bar" "hi"} false]}
 
 {:name "comparison-expressions-require-numeric-operands"
  :tests ["5 > true" {} {:tokenType "GREATER"
@@ -309,6 +324,24 @@
                                              :errorType "Interpreter/EXPECTED_STRING_OPERAND"
                                              :lexeme "starts-with"
                                              :charPos 4}]}
+
+{:name "matches-requires-correct-operands"
+ :tests ["5 matches /pattern/" {} {:tokenType "MATCHES"
+                                   :errorType "Interpreter/EXPECTED_STRING_OPERAND"
+                                   :lexeme "matches"
+                                   :charPos 2}
+         "foo matches /pattern/" {"foo" 55} {:tokenType "MATCHES"
+                                             :errorType "Interpreter/EXPECTED_STRING_OPERAND"
+                                             :lexeme "matches"
+                                             :charPos 4}
+         "\"string\" matches true" {} {:tokenType "MATCHES"
+                                       :errorType "Interpreter/EXPECTED_PATTERN_OPERAND"
+                                       :lexeme "matches"
+                                       :charPos 9}
+         "foo matches 12" {"foo" "string"} {:tokenType "MATCHES"
+                                            :errorType "Interpreter/EXPECTED_PATTERN_OPERAND"
+                                            :lexeme "matches"
+                                            :charPos 4}]}
 
 {:name "throws-when-variable-lookup-fails"
  :tests ["foo > 5" {} {:tokenType "IDENTIFIER"
@@ -519,6 +552,22 @@
                                              :lexeme "\""
                                              :charPos 5}]}
 
+{:name ["scan-errors" "unterminated-patterns"]
+ :tests ["text /an unterminated pattern" {} {:errorType "Scanner/UNTERMINATED_PATTERN"
+                                             :lexeme "/"
+                                             :charPos 5}]}
+
+{:name ["scan-errors" "invalid-patterns"]
+ :tests ["/foo(?:bar/" {} {:errorType "Scanner/INVALID_PATTERN"
+                           :lexeme "/"
+                           :charPos 0}
+         "/foo⏰/" {} {:errorType "Scanner/INVALID_PATTERN_CHARACTER"
+                      :lexeme "⏰"
+                      :charPos 4}
+         "/foo\\u23f0/" {} {:errorType "Scanner/INVALID_PATTERN_CHARACTER"
+                            :lexeme "\\"
+                            :charPos 4}]}
+
 {:name ["scan-errors" "throws-for-unexpected-characters"]
  :tests ["&" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
                  :lexeme "&"
@@ -540,9 +589,6 @@
                  :charPos 0}
          "?" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
                  :lexeme "?"
-                 :charPos 0}
-         "/" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
-                 :lexeme "/"
                  :charPos 0}
          "#" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
                  :lexeme "#"

@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "5 matches /pattern/",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "MATCHES",
+      "errorType" : "Interpreter/EXPECTED_STRING_OPERAND",
+      "lexeme" : "matches",
+      "charPos" : 2
+    }
+  }
+}

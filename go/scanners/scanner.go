@@ -22,6 +22,7 @@ package scanners
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -32,9 +33,12 @@ import (
 type errorType string
 
 const (
-	UNEXPECTED_CHARACTER errorType = "Unexpected character"
-	INCOMPLETE_EQUALS    errorType = "Incomplete token, expected \"==\""
-	UNTERMINATED_STRING  errorType = "Unterminated string"
+	UNEXPECTED_CHARACTER      errorType = "Unexpected character"
+	INCOMPLETE_EQUALS         errorType = "Incomplete token, expected \"==\""
+	UNTERMINATED_STRING       errorType = "Unterminated string"
+	UNTERMINATED_PATTERN      errorType = "Unterminated pattern"
+	INVALID_PATTERN_CHARACTER errorType = "Invalid pattern character"
+	INVALID_PATTERN           errorType = "Invalid pattern"
 )
 
 func (et errorType) Symbol() string {
@@ -45,6 +49,12 @@ func (et errorType) Symbol() string {
 		return "INCOMPLETE_EQUALS"
 	case UNTERMINATED_STRING:
 		return "UNTERMINATED_STRING"
+	case UNTERMINATED_PATTERN:
+		return "UNTERMINATED_PATTERN"
+	case INVALID_PATTERN_CHARACTER:
+		return "INVALID_PATTERN_CHARACTER"
+	case INVALID_PATTERN:
+		return "INVALID_PATTERN"
 	}
 
 	panic("Encountered unknown Scanner errorType value")
@@ -57,7 +67,7 @@ type Error struct {
 }
 
 func (e Error) Error() string {
-	return fmt.Sprintf("error scanning expression: %s scanning %q at %d", e.Type, e.Char, e.Pos)
+	return fmt.Sprintf("error scanning expression: %s scanning '%c' at %d", e.Type, e.Char, e.Pos)
 }
 
 // Return a multiline error message describing this error.
@@ -89,6 +99,21 @@ func (e Error) AsErrorMessage(expression string) string {
 			expression,
 			e.Pos,
 			1)
+	case UNTERMINATED_PATTERN:
+		return errors.ErrorMessage("Unterminated pattern starting here:",
+			expression,
+			e.Pos,
+			1)
+	case INVALID_PATTERN_CHARACTER:
+		return errors.ErrorMessage("Invalid pattern character, only ASCII and Latin-1 are allowed in patterns:",
+			expression,
+			e.Pos,
+			1)
+	case INVALID_PATTERN:
+		return errors.ErrorMessage("Syntax error in pattern:",
+			expression,
+			e.Pos,
+			1)
 	default:
 		return fmt.Sprintf("Unknown error scanning expression; '%s'", expression)
 	}
@@ -97,6 +122,8 @@ func (e Error) AsErrorMessage(expression string) string {
 var keywords = map[string]tokens.TokenType{
 	"starts-with": tokens.STARTS_WITH,
 	"STARTS-WITH": tokens.STARTS_WITH,
+	"matches":     tokens.MATCHES,
+	"MATCHES":     tokens.MATCHES,
 	"and":         tokens.AND,
 	"AND":         tokens.AND,
 	"or":          tokens.OR,
@@ -193,6 +220,10 @@ func (s *scanner) scanToken() error {
 		if err := s.string(); err != nil {
 			return err
 		}
+	case '/':
+		if err := s.pattern(); err != nil {
+			return err
+		}
 	default:
 		if isDigit(c) {
 			if err := s.number(); err != nil {
@@ -255,11 +286,61 @@ func (s *scanner) string() error {
 	return nil
 }
 
+// Match a regular expression pattern token.
+//
+// Consumes all characters from the starting / to the terminating /. Adds a
+// Token with the string content (excluding surrounding slashes) to the
+// `tokens` list.
+//
+// Slash and backslach characters can be embedded by escaping with
+// `\`: e.g. `\/`, `\\`
+//
+// Returns an error if the pattern is not terminated.
+func (s *scanner) pattern() error {
+	for s.peek() != '/' && !s.eof() {
+		// Deal with escape characters
+		c := s.peek()
+		cnext := s.peekNext()
+		if c == '\\' && isEscapablePatternChar(cnext) {
+			s.advance()
+		} else if c == '\\' && cnext == 'u' {
+			return Error{Type: INVALID_PATTERN_CHARACTER, Char: c, Pos: s.current}
+		} else if c > 0xff {
+			return Error{Type: INVALID_PATTERN_CHARACTER, Char: c, Pos: s.current}
+		}
+		s.advance()
+	}
+
+	if s.eof() {
+		return Error{Type: UNTERMINATED_PATTERN, Char: '/', Pos: s.start}
+	}
+
+	// Consume the slash, we only peek()ed above
+	s.advance()
+	// Note: we do not evaluate escaped backslashes in the pattern. The regexp
+	// engine also interprets backslash escape sequences, so the only character
+	// we deal with ourselves is the one we added, the pattern delimiter `/`
+	v := string(s.source[s.start+1 : s.current-1])
+	v = strings.ReplaceAll(v, "\\/", "/")
+
+	pattern, err := regexp.Compile(v)
+	if err != nil {
+		return Error{Type: INVALID_PATTERN, Char: '/', Pos: s.start}
+	}
+	s.addTokenLiteral(tokens.PATTERN, pattern)
+
+	return nil
+}
+
 // Returns true if `c` is a character that could be escaped.
 //
 // False otherwise.
 func isEscapableChar(c rune) bool {
 	return c == '"' || c == '\\'
+}
+
+func isEscapablePatternChar(c rune) bool {
+	return c == '/' || c == '\\'
 }
 
 func (s *scanner) number() error {

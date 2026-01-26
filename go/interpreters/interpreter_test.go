@@ -64,225 +64,6 @@ func interpret(expression string, env map[string]any) (bool, error) {
 	return result, nil
 }
 
-func TestLiterals(t *testing.T) {
-	t.Parallel()
-
-	var tests = []struct {
-		expression string
-		expected   bool
-	}{
-		// All literals are true
-		{"0", true},
-		{"1", true},
-		{"\"string\"", true},
-		{"ident", true},
-		{"true", true},
-		// Except for 'false'
-		{"false", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.expression, func(t *testing.T) {
-			t.Parallel()
-
-			env := map[string]any{"ident": 5}
-
-			result, err := interpret(tt.expression, env)
-			assert.NilError(t, err)
-
-			assert.DeepEqual(t, tt.expected, result)
-		})
-	}
-}
-
-func TestLogicalExpressions(t *testing.T) {
-	t.Parallel()
-
-	var tests = []struct {
-		expression  string
-		environment map[string]any
-		expected    bool
-	}{
-		// ===
-		// and
-		// ===
-		{"true and true", map[string]any{}, true},
-		{"true and false", map[string]any{}, false},
-		{"false and true", map[string]any{}, false},
-		{"false and false", map[string]any{}, false},
-
-		// 'and' short-circuits, shown here by not needing to reference the
-		// 'foo' variable that doesn't exist in the environment
-		{"false and foo", map[string]any{}, false},
-
-		// Alias is accepted
-		{"true AND false", map[string]any{}, false},
-
-		// Environment lookups work
-		{"true and foo", map[string]any{"foo": true}, true},
-		{"foo and false", map[string]any{"foo": true}, false},
-		{"true and foo", map[string]any{"foo": false}, false},
-
-		// ==
-		// or
-		// ==
-		{"true or true", map[string]any{}, true},
-		{"true or false", map[string]any{}, true},
-		{"false or true", map[string]any{}, true},
-		{"false or false", map[string]any{}, false},
-
-		// 'or' short-circuits, shown here by not needing to reference the 'foo'
-		// variable that doesn't exist in the environment
-		{"true or foo", map[string]any{}, true},
-
-		// Alias is accepted
-		{"false OR true", map[string]any{}, true},
-
-		// Environment lookups work
-		{"false or foo", map[string]any{"foo": true}, true},
-		{"foo or foo", map[string]any{"foo": false}, false},
-
-		// ===
-		// not
-		// ===
-		{"!true", map[string]any{}, false},
-		{"!false", map[string]any{}, true},
-		// not is an alias for !
-		{"not true", map[string]any{}, false},
-		{"not false", map[string]any{}, true},
-
-		// Environment works
-		{"not foo", map[string]any{"foo": true}, false},
-		{"!foo", map[string]any{"foo": true}, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.expression, func(t *testing.T) {
-			t.Parallel()
-
-			result, err := interpret(tt.expression, tt.environment)
-			assert.NilError(t, err)
-
-			assert.DeepEqual(t, tt.expected, result)
-		})
-	}
-}
-
-func TestBinaryExpressions(t *testing.T) {
-	t.Parallel()
-
-	var tests = []struct {
-		expression  string
-		environment map[string]any
-		expected    bool
-	}{
-		// ===
-		// and
-		// ===
-		{"true and true", map[string]any{}, true},
-		{"true and false", map[string]any{}, false},
-		{"false and true", map[string]any{}, false},
-		{"false and false", map[string]any{}, false},
-
-		// 'and' short-circuits, shown here by not needing to reference the
-		// 'foo' variable that doesn't exist in the environment
-		{"false and foo", map[string]any{}, false},
-
-		// Alias is accepted
-		{"true AND false", map[string]any{}, false},
-
-		// Environment lookups work
-		{"true and foo", map[string]any{"foo": true}, true},
-		{"foo and false", map[string]any{"foo": true}, false},
-		{"true and foo", map[string]any{"foo": false}, false},
-
-		// ==
-		// or
-		// ==
-		{"true or true", map[string]any{}, true},
-		{"true or false", map[string]any{}, true},
-		{"false or true", map[string]any{}, true},
-		{"false or false", map[string]any{}, false},
-
-		// 'or' short-circuits, shown here by not needing to reference the 'foo'
-		// variable that doesn't exist in the environment
-		{"true or foo", map[string]any{}, true},
-
-		// Alias is accepted
-		{"false OR true", map[string]any{}, true},
-
-		// Environment lookups work
-		{"false or foo", map[string]any{"foo": true}, true},
-		{"foo or foo", map[string]any{"foo": false}, false},
-
-		// ===
-		// not
-		// ===
-		{"!true", map[string]any{}, false},
-		{"!false", map[string]any{}, true},
-		// not is an alias for !
-		{"not true", map[string]any{}, false},
-		{"not false", map[string]any{}, true},
-
-		// Environment works
-		{"not foo", map[string]any{"foo": true}, false},
-		{"!foo", map[string]any{"foo": true}, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.expression, func(t *testing.T) {
-			t.Parallel()
-
-			result, err := interpret(tt.expression, tt.environment)
-			assert.NilError(t, err)
-
-			assert.DeepEqual(t, tt.expected, result)
-		})
-	}
-}
-
-func TestNumericExpressionsRequireNumericOperands(t *testing.T) {
-	t.Parallel()
-
-	var tests = []struct {
-		expression  string
-		environment map[string]any
-	}{
-		{"5 > true", map[string]any{}},
-		{"false > 3", map[string]any{}},
-		{"\"hi\" > \"hi\"", map[string]any{}},
-		{"false > false", map[string]any{}},
-		{"foo > 10", map[string]any{"foo": "\"string\""}},
-
-		{"5 >= true", map[string]any{}},
-		{"false >= 3", map[string]any{}},
-		{"\"hi\" >= \"hi\"", map[string]any{}},
-		{"false >= false", map[string]any{}},
-		{"foo >= 10", map[string]any{"foo": "\"string\""}},
-
-		{"5 < true", map[string]any{}},
-		{"false < 3", map[string]any{}},
-		{"\"hi\" < \"hi\"", map[string]any{}},
-		{"false < false", map[string]any{}},
-		{"foo < 10", map[string]any{"foo": "\"string\""}},
-
-		{"5 <= true", map[string]any{}},
-		{"false <= 3", map[string]any{}},
-		{"\"hi\" <= \"hi\"", map[string]any{}},
-		{"false <= false", map[string]any{}},
-		{"foo <= 10", map[string]any{"foo": "\"string\""}},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.expression, func(t *testing.T) {
-			t.Parallel()
-
-			_, err := interpret(tt.expression, tt.environment)
-			assert.ErrorContains(t, err, "Expected numeric value")
-		})
-	}
-}
-
 func TestNumericTypeHandling(t *testing.T) {
 	t.Parallel()
 
@@ -341,6 +122,23 @@ func TestPrettyInterpreterErrors(t *testing.T) {
 				"Expected string operands to \"starts-with\" operator:",
 				"foo starts-with \"api\"",
 				"    ^^^^^^^^^^^"},
+			"\n")
+
+		assert.Equal(t, expected, err.(Error).AsErrorMessage(expression))
+	})
+
+	t.Run("Expected a pattern operand", func(t *testing.T) {
+		t.Parallel()
+		expression := "\"hello\" matches 5"
+
+		_, err := interpret(expression, map[string]any{})
+		assert.ErrorContains(t, err, "Expected regular expression value")
+
+		expected := strings.Join(
+			[]string{
+				"Expected the right operand to \"matches\" operator to be a pattern:",
+				"\"hello\" matches 5",
+				"        ^^^^^^^"},
 			"\n")
 
 		assert.Equal(t, expected, err.(Error).AsErrorMessage(expression))

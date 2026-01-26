@@ -1,0 +1,9 @@
+{
+  "input" : {
+    "expression" : "\"hello world\" matches /^world/",
+    "environment" : { }
+  },
+  "expected" : {
+    "result" : false
+  }
+}

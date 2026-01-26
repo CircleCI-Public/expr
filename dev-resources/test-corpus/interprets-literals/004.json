@@ -1,6 +1,6 @@
 {
   "input" : {
-    "expression" : "ident",
+    "expression" : "/pattern/",
     "environment" : {
       "ident" : 5
     }

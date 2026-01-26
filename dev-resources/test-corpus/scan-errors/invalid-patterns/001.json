@@ -1,0 +1,13 @@
+{
+  "input" : {
+    "expression" : "/foo(?:bar/",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "errorType" : "Scanner/INVALID_PATTERN",
+      "lexeme" : "/",
+      "charPos" : 0
+    }
+  }
+}

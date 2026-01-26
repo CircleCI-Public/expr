@@ -1,11 +1,11 @@
 {
   "input" : {
-    "expression" : "ident",
+    "expression" : "/pattern/",
     "environment" : {
       "ident" : 5
     }
   },
   "expected" : {
-    "result" : 5
+    "result" : "corpus/regexp:pattern"
   }
 }

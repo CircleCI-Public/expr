@@ -24,10 +24,10 @@ package parsers
  * expression -> logic_or
  * logic_or -> logic_and ( "or" logic_and )*;
  * logic_and -> equality ( "and" equality )*;
- * equality -> comparison ( ( "==" | "!=" "starts-with" ) comparison )*;
+ * equality -> comparison ( ( "==" | "!=" "starts-with" | "matches" ) comparison )*;
  * comparison -> unary ( ( ">=" | ">" | "<=" | "<" ) unary)*;
  * unary -> "not" unary | primary;
- * primary -> "true" | "false" | NUMBER | STRING | IDENTIFIER | "(" expression ")"
+ * primary -> "true" | "false" | NUMBER | STRING | IDENTIFIER | PATTERN | "(" expression ")"
  */
 
 import (
@@ -190,7 +190,7 @@ func (p *parser) equality() (Expr, error) {
 		return nil, err
 	}
 
-	for p.match(tokens.EQUAL, tokens.NOT_EQUAL, tokens.STARTS_WITH) {
+	for p.match(tokens.EQUAL, tokens.NOT_EQUAL, tokens.STARTS_WITH, tokens.MATCHES) {
 		operator := p.previous()
 		right, err := p.comparison()
 		if err != nil {
@@ -249,7 +249,7 @@ func (p *parser) primary() (Expr, error) {
 		return Literal{Value: true}, nil
 	}
 
-	if p.match(tokens.NUMBER, tokens.STRING) {
+	if p.match(tokens.NUMBER, tokens.STRING, tokens.PATTERN) {
 		return Literal{Value: p.previous().Literal}, nil
 	}
 

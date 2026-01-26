@@ -1,0 +1,13 @@
+{
+  "input" : {
+    "expression" : "/foo⏰/",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "errorType" : "Scanner/INVALID_PATTERN_CHARACTER",
+      "lexeme" : "⏰",
+      "charPos" : 4
+    }
+  }
+}

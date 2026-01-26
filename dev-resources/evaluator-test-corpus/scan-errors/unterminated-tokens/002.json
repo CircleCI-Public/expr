@@ -1,0 +1,13 @@
+{
+  "input" : {
+    "expression" : "/",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "errorType" : "Scanner/UNTERMINATED_PATTERN",
+      "lexeme" : "/",
+      "charPos" : 0
+    }
+  }
+}

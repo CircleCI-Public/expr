@@ -1,0 +1,13 @@
+{
+  "input" : {
+    "expression" : "text \"an unterminated string",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "errorType" : "Scanner/UNTERMINATED_STRING",
+      "lexeme" : "\"",
+      "charPos" : 5
+    }
+  }
+}

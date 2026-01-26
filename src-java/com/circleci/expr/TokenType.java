@@ -29,6 +29,7 @@ public enum TokenType {
   NOT_EQUAL,
   EQUAL,
   STARTS_WITH,
+  MATCHES,
   GREATER,
   GREATER_EQUAL,
   LESS,
@@ -38,6 +39,7 @@ public enum TokenType {
   IDENTIFIER,
   STRING,
   NUMBER,
+  PATTERN,
 
   // Keywords
   AND,

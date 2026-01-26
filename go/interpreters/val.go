@@ -2,9 +2,16 @@ package interpreters
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
+)
+
+var (
+	ErrNeedString  = errors.New("need string operand")
+	ErrNeedNumber  = errors.New("need numeric operand")
+	ErrNeedPattern = errors.New("need pattern operand")
 )
 
 type Val struct {
@@ -82,6 +89,8 @@ func (l Val) Undefined() bool {
 	case l.vn != nil:
 		return false
 	case l.vs != nil:
+		return false
+	case l.vp != nil:
 		return false
 	}
 	return true
@@ -173,7 +182,7 @@ func (l Val) StartsWith(r Val) (bool, error) {
 	left, lok := l.String()
 	right, rok := r.String()
 	if !lok || !rok {
-		return false, fmt.Errorf("need string operands, got (%v, %v)", left, right)
+		return false, ErrNeedString
 	}
 
 	return strings.HasPrefix(left, right), nil
@@ -183,7 +192,7 @@ func (l Val) Greater(r Val) (bool, error) {
 	left, lok := l.Number()
 	right, rok := r.Number()
 	if !lok || !rok {
-		return false, fmt.Errorf("need number operands, got (%v, %v)", left, right)
+		return false, ErrNeedNumber
 	}
 
 	return left > right, nil
@@ -193,7 +202,7 @@ func (l Val) GreaterEqual(r Val) (bool, error) {
 	left, lok := l.Number()
 	right, rok := r.Number()
 	if !lok || !rok {
-		return false, fmt.Errorf("need number operands, got (%v, %v)", left, right)
+		return false, ErrNeedNumber
 	}
 
 	return left >= right, nil
@@ -203,7 +212,7 @@ func (l Val) Less(r Val) (bool, error) {
 	left, lok := l.Number()
 	right, rok := r.Number()
 	if !lok || !rok {
-		return false, fmt.Errorf("need number operands, got (%v, %v)", left, right)
+		return false, ErrNeedNumber
 	}
 
 	return left < right, nil
@@ -213,10 +222,30 @@ func (l Val) LessEqual(r Val) (bool, error) {
 	left, lok := l.Number()
 	right, rok := r.Number()
 	if !lok || !rok {
-		return false, fmt.Errorf("need number operands, got (%v, %v)", left, right)
+		return false, ErrNeedNumber
 	}
 
 	return left <= right, nil
+}
+
+func (l Val) Matches(r Val) (bool, error) {
+	left, lok := l.Regexp()
+	if !lok {
+		return false, ErrNeedPattern
+	}
+
+	right, rok := r.String()
+	if !lok || !rok {
+		return false, ErrNeedString
+	}
+
+	// expr regexps have implicit ^ and $ anchors to match the existing uses of
+	// regular expressions in CircleCI config. Go's regexp package doesn't have
+	// an equivalent fn so assert that:
+	// 1. the pattern was found in the string
+	// 2. the length of the found region matches the length of the string
+	found := left.Find([]byte(right))
+	return found != nil && len(found) == len(right), nil
 }
 
 func (v *Val) UnmarshalJSON(input []byte) error {

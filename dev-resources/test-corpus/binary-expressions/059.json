@@ -1,0 +1,11 @@
+{
+  "input" : {
+    "expression" : "bar matches /fo+d/",
+    "environment" : {
+      "bar" : "fooooood"
+    }
+  },
+  "expected" : {
+    "result" : true
+  }
+}

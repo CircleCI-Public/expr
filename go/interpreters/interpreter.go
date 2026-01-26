@@ -21,6 +21,7 @@ IN THE SOFTWARE.
 package interpreters
 
 import (
+	go_errors "errors"
 	"fmt"
 
 	"github.com/circleci/expr/go/errors"
@@ -33,6 +34,7 @@ type errorType string
 const (
 	EXPECTED_NUMERIC_OPERAND errorType = "Expected numeric value."
 	EXPECTED_STRING_OPERAND  errorType = "Expected string value."
+	EXPECTED_PATTERN_OPERAND errorType = "Expected regular expression value."
 	UNKNOWN_VARIABLE         errorType = "Referred to a variable that is not set."
 )
 
@@ -42,6 +44,8 @@ func (et errorType) Symbol() string {
 		return "EXPECTED_NUMERIC_OPERAND"
 	case EXPECTED_STRING_OPERAND:
 		return "EXPECTED_STRING_OPERAND"
+	case EXPECTED_PATTERN_OPERAND:
+		return "EXPECTED_PATTERN_OPERAND"
 	case UNKNOWN_VARIABLE:
 		return "UNKNOWN_VARIABLE"
 	}
@@ -82,6 +86,12 @@ func (e Error) AsErrorMessage(expression string) string {
 
 	case EXPECTED_STRING_OPERAND:
 		return errors.ErrorMessage(fmt.Sprintf("Expected string operands to \"%s\" operator:", errorString),
+			expression,
+			e.Token.CharPos,
+			len(errorString))
+
+	case EXPECTED_PATTERN_OPERAND:
+		return errors.ErrorMessage(fmt.Sprintf("Expected the right operand to \"%s\" operator to be a pattern:", errorString),
 			expression,
 			e.Token.CharPos,
 			len(errorString))
@@ -188,6 +198,21 @@ func (i Interpreter) VisitBinaryExpr(expr parsers.Binary) (Val, error) {
 		if err != nil {
 			return UndefinedVal(), Error{
 				Type:  EXPECTED_STRING_OPERAND,
+				Token: expr.Operator,
+			}
+		}
+		return BoxBool(res), nil
+	case tokens.MATCHES:
+		res, err := right.Matches(left)
+		switch {
+		case go_errors.Is(err, ErrNeedString):
+			return UndefinedVal(), Error{
+				Type:  EXPECTED_STRING_OPERAND,
+				Token: expr.Operator,
+			}
+		case go_errors.Is(err, ErrNeedPattern):
+			return UndefinedVal(), Error{
+				Type:  EXPECTED_PATTERN_OPERAND,
 				Token: expr.Operator,
 			}
 		}

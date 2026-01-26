@@ -24,10 +24,10 @@ package com.circleci.expr;
  * expression -> logic_or
  * logic_or -> logic_and ( "or" logic_and )*;
  * logic_and -> equality ( "and" equality )*;
- * equality -> comparison ( ( "==" | "!=" "starts-with" ) comparison )*;
+ * equality -> comparison ( ( "==" | "!=" | "starts-with" | "matches" ) comparison )*;
  * comparison -> unary ( ( ">=" | ">" | "<=" | "<" ) unary)*;
  * unary -> "not" unary | primary;
- * primary -> "true" | "false" | NUMBER | STRING | IDENTIFIER | "(" expression ")"
+ * primary -> "true" | "false" | NUMBER | STRING | IDENTIFIER | PATTERN | "(" expression ")"
  */
 
 import java.util.List;
@@ -172,7 +172,7 @@ public class Parser {
   private Expr equality() {
     Expr expr = comparison();
 
-    while (match(EQUAL, NOT_EQUAL, STARTS_WITH)) {
+    while (match(EQUAL, NOT_EQUAL, STARTS_WITH, MATCHES)) {
       Token operator = previous();
       Expr right = comparison();
       expr = new Expr.Binary(expr, operator, right);
@@ -216,7 +216,7 @@ public class Parser {
     if (match(FALSE)) return new Expr.Literal(false);
     if (match(TRUE)) return new Expr.Literal(true);
 
-    if (match(NUMBER, STRING)) {
+    if (match(NUMBER, STRING, PATTERN)) {
       return new Expr.Literal(previous().literal);
     }
 
