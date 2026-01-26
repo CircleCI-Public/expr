@@ -6,7 +6,8 @@
             [expr.util :as util])
   (:import (com.circleci.expr Interpreter$Error
                               Parser$ParseError
-                              Scanner$ScanError)))
+                              Scanner$ScanError)
+           com.google.re2j.Pattern))
 
 (defn- test-files
   [dir]
@@ -39,6 +40,17 @@
                   "lexeme" (.-lexeme token)
                   "charPos" (.-charPos token)}}))))
 
+(defn- coerce-expected
+  "Coerce prefixed string results into concrete types.
+
+  So far supports converting strings in the form \"corpus/regexp:pattern\" into
+  regular expression Pattern objects that match `pattern`."
+  [{:strs [result] :as v}]
+  (if (and (string? result)
+           (string/starts-with? result "corpus/regexp:"))
+    (assoc v "result" (Pattern/compile (subs result 14)))
+    v))
+
 (deftest run-interpreter-test-corpus
   (let [run-interpreter-test (partial run-test (fn [expression environment]
                                                  (-> (util/scan expression)
@@ -46,7 +58,8 @@
                                                      (util/interpret environment))))]
     (doseq [{:strs [input expected]
              :keys [test-name]} (test-files "dev-resources/test-corpus")
-            :let [{:strs [expression environment]} input]]
+            :let [{:strs [expression environment]} input
+                  expected (coerce-expected expected)]]
       (is (= expected
              (run-interpreter-test expression environment))
           (format "%s: %s" test-name expression)))))
@@ -58,7 +71,8 @@
                                                    (util/evaluate environment))))]
     (doseq [{:strs [input expected]
              :keys [test-name]} (test-files "dev-resources/evaluator-test-corpus")
-            :let [{:strs [expression environment]} input]]
+            :let [{:strs [expression environment]} input
+                  expected (coerce-expected expected)]]
       (is (= expected
              (run-evaluator-test expression environment))
           (format "%s: %s" test-name expression)))))
