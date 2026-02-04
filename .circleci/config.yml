@@ -15,11 +15,12 @@ jobs:
       - run:
           name: Ensure corpus tests are generated
           command: |
+            rm -r dev-resources/test-corpus dev-resources/evaluator-test-corpus
             lein generate-corpus
             if git diff --exit-code; then
               echo "Test corpus up to date"
             else
-              echo "Regenerate corpus tests with 'lein generate-corpus' and check in the changes"
+              echo "Regenerate corpus tests with 'rm -r dev-resources/test-corpus dev-resources/evaluator-test-corpus && lein generate-corpus' and check in the changes"
               exit 1
             fi
       - run: lein test
