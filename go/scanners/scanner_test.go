@@ -537,4 +537,23 @@ func TestPrettyScanErrors(t *testing.T) {
 
 		assert.Equal(t, expected, err.(Error).AsErrorMessage(expression))
 	})
+
+	t.Run("Overly long pattern", func(t *testing.T) {
+		t.Parallel()
+		expression := "foo matches /xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/"
+
+		s := New(expression)
+		_, err := s.Scan()
+		assert.ErrorContains(t, err, "error scanning expression")
+
+		expected := strings.Join(
+			[]string{
+				"Pattern length exceeded, limit is 128 characters:",
+				"foo matches /xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/",
+				"            ^",
+			},
+			"\n")
+
+		assert.Equal(t, expected, err.(Error).AsErrorMessage(expression))
+	})
 }

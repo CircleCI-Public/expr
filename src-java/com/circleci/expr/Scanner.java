@@ -32,6 +32,8 @@ import static com.circleci.expr.Errors.ErrorMessage;
 import static com.circleci.expr.TokenType.*;
 
 public class Scanner {
+  private static final int MAX_PATTERN_LENGTH = 128;
+
   public static class ScanError extends RuntimeException implements ErrorMessage {
     static final long serialVersionUID = 1;
 
@@ -41,7 +43,8 @@ public class Scanner {
       UNTERMINATED_STRING("Unterminated string."),
       UNTERMINATED_PATTERN("Unterminated pattern."),
       INVALID_PATTERN_CHARACTER("Invalid pattern character."),
-      INVALID_PATTERN("Invalid pattern.");
+      INVALID_PATTERN("Invalid pattern."),
+      PATTERN_TOO_LONG("Pattern too long.");
 
       public final String message;
       private Type(String message) {
@@ -91,25 +94,31 @@ public class Scanner {
               1);
 
         case UNTERMINATED_STRING ->
-          Errors.errorMessage(String.format("Unterminated string starting here:", this.errorChar),
+          Errors.errorMessage("Unterminated string starting here:",
               expression,
               this.errorPos,
               1);
 
       case UNTERMINATED_PATTERN ->
-        Errors.errorMessage(String.format("Unterminated pattern starting here:", this.errorChar),
+        Errors.errorMessage("Unterminated pattern starting here:",
             expression,
             this.errorPos,
             1);
 
       case INVALID_PATTERN_CHARACTER ->
-        Errors.errorMessage(String.format("Invalid pattern character, only ASCII and Latin-1 are allowed in patterns:", this.errorChar),
+        Errors.errorMessage("Invalid pattern character, only ASCII and Latin-1 are allowed in patterns:",
             expression,
             this.errorPos,
             1);
 
       case INVALID_PATTERN ->
-        Errors.errorMessage(String.format("Syntax error in pattern:", this.errorChar),
+        Errors.errorMessage("Syntax error in pattern:",
+            expression,
+            this.errorPos,
+            1);
+
+      case PATTERN_TOO_LONG ->
+        Errors.errorMessage(String.format("Pattern length exceeded, limit is %d characters:", MAX_PATTERN_LENGTH),
             expression,
             this.errorPos,
             1);
@@ -252,6 +261,7 @@ public class Scanner {
     String value = source.substring(start + 1, current - 1)
                          .replace("\\\"", "\"")
                          .replace("\\\\", "\\");
+
     addToken(STRING, value);
   }
 
@@ -295,6 +305,11 @@ public class Scanner {
     // we deal with ourselves is the one we added, the pattern delimiter `/`
     String value = source.substring(start + 1, current - 1)
                          .replace("\\/", "/");
+
+    if (value.length() > MAX_PATTERN_LENGTH) {
+      throw new ScanError('/', start, ScanError.Type.PATTERN_TOO_LONG);
+    }
+
     try {
       Pattern pattern = Pattern.compile(value);
       addToken(PATTERN, pattern);

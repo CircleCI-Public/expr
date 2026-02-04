@@ -570,7 +570,13 @@
                       :charPos 4}
          "/foo\\u23f0/" {} {:errorType "Scanner/INVALID_PATTERN_CHARACTER"
                             :lexeme "\\"
-                            :charPos 4}]}
+                            :charPos 4}
+
+         "/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/"
+         {}
+         {:errorType "Scanner/PATTERN_TOO_LONG"
+          :lexeme "/"
+          :charPos 0}]}
 
 {:name ["scan-errors" "throws-for-unexpected-characters"]
  :tests ["&" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
