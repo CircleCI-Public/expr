@@ -354,7 +354,7 @@ func isEscapableChar(c rune) bool {
 }
 
 func isEscapablePatternChar(c rune) bool {
-	return c == '/' || c == '\\'
+	return c == '/'
 }
 
 func (s *scanner) number() error {
