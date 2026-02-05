@@ -299,6 +299,16 @@
                                             "       ^^^"])]}
            (expr/evaluate "foo >= bar" {"foo" 3})))))
 
+(deftest pushing-boundaries
+  (testing "many nots"
+    (let [expression (str (string/join (repeat 1000 "not "))
+                          "true")
+          start (System/nanoTime)
+          result (expr/interpret expression {})
+          end (System/nanoTime)]
+      (is (= {:result true} result))
+      (is (<= (- end start) 100e6)))))
+
 ;; If this test fails then re2j may have fixed the issue that can cause
 ;; infinite loops with case-folding in expressions.
 ;; If the fix is a permanent one that ensures the JVM's supported version of
