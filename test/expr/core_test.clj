@@ -118,6 +118,15 @@
       (is (= (string/join \newline ["Syntax error in pattern:"
                                     "foo matches /hello (world/"
                                     "            ^"])
+             (.asErrorMessage e expression)))))
+
+  (testing "Overly long pattern"
+    (let [expression "foo matches /xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/"
+          e (is (thrown-with-msg? Scanner$ScanError #"Pattern too long\."
+                  (util/scan expression)))]
+      (is (= (string/join \newline ["Pattern length exceeded, limit is 128 characters:"
+                                    "foo matches /xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/"
+                                    "            ^"])
              (.asErrorMessage e expression))))))
 
 (deftest pretty-parse-error

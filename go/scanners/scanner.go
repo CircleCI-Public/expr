@@ -39,7 +39,10 @@ const (
 	UNTERMINATED_PATTERN      errorType = "Unterminated pattern"
 	INVALID_PATTERN_CHARACTER errorType = "Invalid pattern character"
 	INVALID_PATTERN           errorType = "Invalid pattern"
+	PATTERN_TOO_LONG          errorType = "Pattern too long"
 )
+
+const MAX_PATTERN_LENGTH = 128
 
 func (et errorType) Symbol() string {
 	switch et {
@@ -55,6 +58,8 @@ func (et errorType) Symbol() string {
 		return "INVALID_PATTERN_CHARACTER"
 	case INVALID_PATTERN:
 		return "INVALID_PATTERN"
+	case PATTERN_TOO_LONG:
+		return "PATTERN_TOO_LONG"
 	}
 
 	panic("Encountered unknown Scanner errorType value")
@@ -111,6 +116,11 @@ func (e Error) AsErrorMessage(expression string) string {
 			1)
 	case INVALID_PATTERN:
 		return errors.ErrorMessage("Syntax error in pattern:",
+			expression,
+			e.Pos,
+			1)
+	case PATTERN_TOO_LONG:
+		return errors.ErrorMessage(fmt.Sprintf("Pattern length exceeded, limit is %d characters:", MAX_PATTERN_LENGTH),
 			expression,
 			e.Pos,
 			1)
@@ -322,6 +332,10 @@ func (s *scanner) pattern() error {
 	// we deal with ourselves is the one we added, the pattern delimiter `/`
 	v := string(s.source[s.start+1 : s.current-1])
 	v = strings.ReplaceAll(v, "\\/", "/")
+
+	if len(v) > MAX_PATTERN_LENGTH {
+		return Error{Type: PATTERN_TOO_LONG, Char: '/', Pos: s.start}
+	}
 
 	pattern, err := regexp.Compile(v)
 	if err != nil {
