@@ -1,0 +1,13 @@
+{
+  "input" : {
+    "expression" : "/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "errorType" : "Scanner/PATTERN_TOO_LONG",
+      "lexeme" : "/",
+      "charPos" : 0
+    }
+  }
+}

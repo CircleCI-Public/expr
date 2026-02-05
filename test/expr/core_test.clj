@@ -23,7 +23,8 @@
   (:import (com.circleci.expr Errors
                               Interpreter$Error
                               Parser$ParseError
-                              Scanner$ScanError)))
+                              Scanner$ScanError)
+           com.google.re2j.Pattern))
 
 (deftest build-error-message
   (testing "Pinpoints errors in single-line expressions"
@@ -297,3 +298,15 @@
                                             "foo >= bar"
                                             "       ^^^"])]}
            (expr/evaluate "foo >= bar" {"foo" 3})))))
+
+;; If this test fails then re2j may have fixed the issue that can cause
+;; infinite loops with case-folding in expressions.
+;; If the fix is a permanent one that ensures the JVM's supported version of
+;; Unicode is used for computing case folding tables at run time then we can
+;; remove the restriction on expr patterns which are only allowed to contain a
+;; subset of Unicode characters
+(deftest re2j-issue-168-canary
+  (let [f (future (doto (Pattern/compile "(?i)\u1c80")
+                    (.matches "c")))
+        v (deref f 200 ::timedout)]
+    (is (= v ::timedout) "re2j may have fixed https://github.com/google/re2j/issues/168")))
