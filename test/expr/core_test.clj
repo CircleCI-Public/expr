@@ -85,6 +85,15 @@
                                     "     ^"])
              (.asErrorMessage e expression)))))
 
+  (testing "Invalid numeric literal"
+    (let [expression "foo < 9223372036854775808"
+          e (is (thrown-with-msg? Scanner$ScanError #"Invalid numeric literal\."
+                  (util/scan expression)))]
+      (is (= (string/join \newline ["Invalid numeric literal, numbers can range from 0 to 2^63 - 1:"
+                                    "foo < 9223372036854775808"
+                                    "      ^"])
+             (.asErrorMessage e expression)))))
+
   (testing "Unterminated strings"
     (let [expression "foo == \"an unterminated string"
           e (is (thrown-with-msg? Scanner$ScanError #"Unterminated string\."
@@ -293,7 +302,7 @@
                                             "                ^"])]}
            (expr/evaluate "foo and (bar > 3" {}))))
 
-  (testing "evaluateer error"
+  (testing "evaluater error"
     (is (= {:errors [(string/join \newline ["Referred to a variable \"bar\" that does not exist:"
                                             "foo >= bar"
                                             "       ^^^"])]}

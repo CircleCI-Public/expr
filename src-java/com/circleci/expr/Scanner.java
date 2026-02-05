@@ -40,6 +40,7 @@ public class Scanner {
     public static enum Type {
       UNEXPECTED_CHARACTER("Unexpected character."),
       INCOMPLETE_EQUALS("Incomplete token, expected \"==\"."),
+      INVALID_NUMERIC_LITERAL("Invalid numeric literal."),
       UNTERMINATED_STRING("Unterminated string."),
       UNTERMINATED_PATTERN("Unterminated pattern."),
       INVALID_PATTERN_CHARACTER("Invalid pattern character."),
@@ -89,6 +90,12 @@ public class Scanner {
 
         case INCOMPLETE_EQUALS ->
           Errors.errorMessage(String.format("Incomplete token, expected \"==\", found '%s':", this.errorChar),
+              expression,
+              this.errorPos,
+              1);
+
+        case INVALID_NUMERIC_LITERAL ->
+          Errors.errorMessage("Invalid numeric literal, numbers can range from 0 to 2^63 - 1:",
               expression,
               this.errorPos,
               1);
@@ -337,7 +344,12 @@ public class Scanner {
       advance();
     }
 
-    addToken(NUMBER, Long.parseLong(lexeme()));
+    try {
+      addToken(NUMBER, Long.parseLong(lexeme()));
+    }
+    catch (NumberFormatException e) {
+      throw new ScanError(source.charAt(start), start, ScanError.Type.INVALID_NUMERIC_LITERAL);
+    }
   }
 
   /**
