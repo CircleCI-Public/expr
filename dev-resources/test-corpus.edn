@@ -218,7 +218,9 @@
          "bar matches /fo+d/" {"bar" "food"} true
          "bar matches /fo+d/" {"bar" "fooooood"} true
          "bar matches /fo+d/" {"bar" "fd"} false
-         "bar matches /fo+d/" {"bar" "hi"} false]}
+         "bar matches /fo+d/" {"bar" "hi"} false
+         "bar matches /(?i)\\..\\*/" {"bar" ".a*"} true
+         "bar matches /(?i)\\..\\*/" {"bar" "aa*"} false]}
 
 {:name "comparison-expressions-require-numeric-operands"
  :tests ["5 > true" {} {:tokenType "GREATER"
@@ -571,6 +573,14 @@
          "/foo\\u23f0/" {} {:errorType "Scanner/INVALID_PATTERN_CHARACTER"
                             :lexeme "\\"
                             :charPos 4}
+
+         ;; This specific case causes an infinite loop in pattern compilation
+         ;; with re2j 1.8's scheme for handling Unicode case folding when run
+         ;; on modern JVMs which support a higher version of Unicode.  Ensure
+         ;; that we get an error
+         "foo matches /(?i)bar \u1c80/" {"foo" "bar c"} {:errorType "Scanner/INVALID_PATTERN_CHARACTER"
+                                                         :lexeme "\u1c80"
+                                                         :charPos 21}
 
          "/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/"
          {}
