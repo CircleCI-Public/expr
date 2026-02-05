@@ -292,8 +292,23 @@ public class Scanner {
       if (c == '\\' && isEscapablePatternChar(cnext)) {
         advance();
       }
-      else if (c == '\\' && cnext == 'u') {
-        throw new ScanError('\\', current, ScanError.Type.INVALID_PATTERN_CHARACTER);
+      // There is a bug in re2j which causes problems when the pattern contains
+      // a Unicode codepoint from a Unicode release later than the one that
+      // re2j was built with.
+      // The 1.8 release of re2j was build with Unicode 6.0:
+      // https://github.com/google/re2j/blob/re2j-1.8/java/com/google/re2j/UnicodeTables.java#L7
+      //
+      // Disallow u and x escape sequences to prevent users entering codepoints
+      // from beyond Unicode 6.0.
+      // escape-u can be used to insert arbitrarily high Unicode codepoints in
+      // Java strings.
+      // escape-x can be used to insert arbitrarily high Unicode codepoints
+      // into RE2 patterns.
+      // Note that we will allow RE2's octal escapes. Octal escapes are limited
+      // to at most three digits, equivalent to 0x1FF. This codepoint was added
+      // in Unicode 1.1.0
+      else if (c == '\\' && (cnext == 'u' || cnext == 'x')) {
+        throw new ScanError(c, current, ScanError.Type.INVALID_PATTERN_CHARACTER);
       }
       else if (c > 0xff) {
         throw new ScanError(c, current, ScanError.Type.INVALID_PATTERN_CHARACTER);

@@ -1,13 +1,15 @@
 {
   "input" : {
-    "expression" : "/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/",
-    "environment" : { }
+    "expression" : "foo matches /(?i)bar ᲀ/",
+    "environment" : {
+      "foo" : "bar c"
+    }
   },
   "expected" : {
     "error" : {
-      "errorType" : "Scanner/PATTERN_TOO_LONG",
-      "lexeme" : "/",
-      "charPos" : 0
+      "errorType" : "Scanner/INVALID_PATTERN_CHARACTER",
+      "lexeme" : "ᲀ",
+      "charPos" : 21
     }
   }
 }

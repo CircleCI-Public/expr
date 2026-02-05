@@ -1,15 +1,13 @@
 {
   "input" : {
-    "expression" : "foo matches /(?i)bar ᲀ/",
-    "environment" : {
-      "foo" : "bar c"
-    }
+    "expression" : "/foo\\x{23f0}/",
+    "environment" : { }
   },
   "expected" : {
     "error" : {
       "errorType" : "Scanner/INVALID_PATTERN_CHARACTER",
-      "lexeme" : "ᲀ",
-      "charPos" : 21
+      "lexeme" : "\\",
+      "charPos" : 4
     }
   }
 }
