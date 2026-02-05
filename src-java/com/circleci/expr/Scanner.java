@@ -329,7 +329,7 @@ public class Scanner {
   }
 
   private boolean isEscapablePatternChar(char c) {
-    return c == '/' || c == '\\';
+    return c == '/';
   }
 
   private void number() {
