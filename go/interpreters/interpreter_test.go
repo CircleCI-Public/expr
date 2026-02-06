@@ -23,6 +23,7 @@ package interpreters
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"gotest.tools/v3/assert"
 
@@ -159,5 +160,22 @@ func TestPrettyInterpreterErrors(t *testing.T) {
 			"\n")
 
 		assert.Equal(t, expected, err.(Error).AsErrorMessage(expression))
+	})
+}
+
+func TestPushingBoundaries(t *testing.T) {
+	t.Parallel()
+
+	t.Run("many nots", func(t *testing.T) {
+		expression := strings.Repeat("not ", 1000) + "true"
+
+		start := time.Now()
+		result, err := interpret(expression, map[string]any{})
+		end := time.Now()
+
+		assert.NilError(t, err)
+
+		assert.Assert(t, result)
+		assert.Check(t, end.Sub(start) <= 100*time.Millisecond)
 	})
 }
