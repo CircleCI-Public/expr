@@ -573,6 +573,9 @@
          "/foo\\u23f0/" {} {:errorType "Scanner/INVALID_PATTERN_CHARACTER"
                             :lexeme "\\"
                             :charPos 4}
+         "/foo\\x{23f0}/" {} {:errorType "Scanner/INVALID_PATTERN_CHARACTER"
+                              :lexeme  "\\"
+                              :charPos 4}
 
          ;; This specific case causes an infinite loop in pattern compilation
          ;; with re2j 1.8's scheme for handling Unicode case folding when run

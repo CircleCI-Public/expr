@@ -321,7 +321,7 @@ func (s *scanner) pattern() error {
 		cnext := s.peekNext()
 		if c == '\\' && isEscapablePatternChar(cnext) {
 			s.advance()
-		} else if c == '\\' && cnext == 'u' {
+		} else if c == '\\' && (cnext == 'u' || cnext == 'x') {
 			return Error{Type: INVALID_PATTERN_CHARACTER, Char: c, Pos: s.current}
 		} else if c > 0xff {
 			return Error{Type: INVALID_PATTERN_CHARACTER, Char: c, Pos: s.current}
