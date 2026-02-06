@@ -584,6 +584,11 @@
           :lexeme "/"
           :charPos 0}]}
 
+{:name ["scan-errors" "invalid-numbers"]
+ :tests ["9223372036854775808" {} {:errorType "Scanner/INVALID_NUMERIC_LITERAL"
+                                   :lexeme "9"
+                                   :charPos 0}]}
+
 {:name ["scan-errors" "throws-for-unexpected-characters"]
  :tests ["&" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
                  :lexeme "&"

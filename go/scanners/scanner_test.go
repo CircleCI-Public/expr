@@ -466,6 +466,25 @@ func TestPrettyScanErrors(t *testing.T) {
 		assert.Equal(t, expected, err.(Error).AsErrorMessage(expression))
 	})
 
+	t.Run("Invalid numeric literal", func(t *testing.T) {
+		t.Parallel()
+		expression := "foo < 9223372036854775808"
+
+		s := New(expression)
+		_, err := s.Scan()
+		assert.ErrorContains(t, err, "error scanning expression")
+
+		expected := strings.Join(
+			[]string{
+				"Invalid numeric literal, numbers can range from 0 to 2^63 - 1:",
+				"foo < 9223372036854775808",
+				"      ^",
+			},
+			"\n")
+
+		assert.Equal(t, expected, err.(Error).AsErrorMessage(expression))
+	})
+
 	t.Run("Unterminated strings", func(t *testing.T) {
 		t.Parallel()
 		expression := "foo == \"an unterminated string"

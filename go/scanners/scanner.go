@@ -35,6 +35,7 @@ type errorType string
 const (
 	UNEXPECTED_CHARACTER      errorType = "Unexpected character"
 	INCOMPLETE_EQUALS         errorType = "Incomplete token, expected \"==\""
+	INVALID_NUMERIC_LITERAL   errorType = "Invalid numeric literal"
 	UNTERMINATED_STRING       errorType = "Unterminated string"
 	UNTERMINATED_PATTERN      errorType = "Unterminated pattern"
 	INVALID_PATTERN_CHARACTER errorType = "Invalid pattern character"
@@ -50,6 +51,8 @@ func (et errorType) Symbol() string {
 		return "UNEXPECTED_CHARACTER"
 	case INCOMPLETE_EQUALS:
 		return "INCOMPLETE_EQUALS"
+	case INVALID_NUMERIC_LITERAL:
+		return "INVALID_NUMERIC_LITERAL"
 	case UNTERMINATED_STRING:
 		return "UNTERMINATED_STRING"
 	case UNTERMINATED_PATTERN:
@@ -96,6 +99,11 @@ func (e Error) AsErrorMessage(expression string) string {
 			1)
 	case INCOMPLETE_EQUALS:
 		return errors.ErrorMessage(fmt.Sprintf("Incomplete token, expected \"==\", found %q:", e.Char),
+			expression,
+			e.Pos,
+			1)
+	case INVALID_NUMERIC_LITERAL:
+		return errors.ErrorMessage("Invalid numeric literal, numbers can range from 0 to 2^63 - 1:",
 			expression,
 			e.Pos,
 			1)
@@ -364,7 +372,8 @@ func (s *scanner) number() error {
 
 	v, err := strconv.ParseInt(s.lexeme(), 10, 64)
 	if err != nil {
-		return err
+		c := s.source[s.start]
+		return Error{Type: INVALID_NUMERIC_LITERAL, Char: c, Pos: s.start}
 	}
 
 	s.addTokenLiteral(tokens.NUMBER, v)
