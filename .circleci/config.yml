@@ -1,7 +1,7 @@
 version: 2.1
 
 lein_image: &lein_image
-  image: circleci/clojure-service:java21-0.12-dev
+  image: circleci/clojure-service:java21-0.13-dev
   auth:
     username: $DOCKER_HUB_USER
     password: $DOCKER_HUB_PASSWORD
