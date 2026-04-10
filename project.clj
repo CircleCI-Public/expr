@@ -13,4 +13,5 @@
                                        :username [:gpg :env/circle_jars_username]
                                        :passphrase [:gpg :env/circle_jars_password]
                                        :snapshots false}]]}}
+  :resource-paths ["resources" "go/domains/resources"]
   :java-source-paths ["src-java"])

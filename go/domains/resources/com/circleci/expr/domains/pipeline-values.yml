@@ -1,0 +1,425 @@
+# This is the authoritative reference for pipeline value fields. It should
+# eventually generate the following artifacts:
+#
+# * The default-pipeline-values var in
+#   https://github.com/circleci/orb-service/blob/main/server/src/orb_service/constants.clj
+# * The external docs
+#   https://github.com/circleci/circleci-docs/blob/main/docs/guides/modules/ROOT/partials/pipelines-and-triggers/pipeline-values.adoc
+# * The cli package config validation in
+#   https://github.com/CircleCI-Public/circleci-cli/blob/main/config/pipeline.go#
+#
+# It should also be consistent with or replace:
+#
+# * Some internal docs
+#   https://circleci.atlassian.net/wiki/spaces/PES/pages/7490338830/New+pipeline+values
+# * Notifactions uses
+#   https://circleci.atlassian.net/wiki/spaces/NOTIFY/pages/8019148862/Pipeline+Values
+# * Pipelines uses
+#   https://circleci.atlassian.net/wiki/spaces/CEI/pages/7089881300/Actor+Inputs+to+the+Pipelines+API
+#
+# These data are declared in the expr package so that exprs evaluated in a
+# pipeline values context can have default (nil) values for all valid pipeline
+# value fields, regardless of their presence in a build.
+
+version: 1.0
+
+# name: the primary name of the pipeline value
+# type: the scalar type of the value, defaults to string
+# domain: indicates constraints on valid types and specifies valid interpretations
+# defn: the definition, generally a sentence fragment beginning with the implicit prefix "The $name field..." ending with a period, suitable for presentation to system operators and users
+# aliases: a list of field aliases which repeat the pipeline value
+# notes: from and for system operators, critical uses or confusing terminology
+# private: boolean indicating the field is not publicly documented
+# source: the system responsible for populating the field. The default is assumed to be soc-integrations or circle
+fields:
+  - name: "pipeline.config.file_path"
+    defn: "The path to the CircleCI configuration file within the config repository, relative to the repo root."
+  - name: "pipeline.config.ref"
+    defn: "The full Git ref (e.g., refs/heads/main) used to fetch the configuration file from the config repository."
+  - name: "pipeline.config.repository.name"
+    defn: "The name of the config source repository, in the format owner/repo-name."
+  - name: "pipeline.config.repository.url"
+    defn: "The VCS provider URL of the config source repository."
+  - name: "pipeline.config.sha"
+    defn: "The Git SHA of the commit from which the configuration file was fetched."
+  - name: "pipeline.config_source"
+    domain: providers
+    defn: "Specifies the provider of the pipeline build config."
+    private: true
+  - name: "pipeline.definition.id"
+    type: uuid
+    domain: config-sources
+    defn: "Identifies the definition of the pipeline, including its checkout and config sources."
+    notes: "This identifies a config_source record in soc-integrations."
+  - name: "pipeline.deploy.component_name"
+    defn: "The name of the deployable component targeted by this pipeline, injected by the deploy orchestration system."
+    source: unknown
+  - name: "pipeline.deploy.current_version"
+    defn: "The version string of the currently deployed component, injected by the deploy orchestration system."
+    source: unknown
+  - name: "pipeline.deploy.environment_name"
+    defn: "The name of the target deployment environment (e.g., production, staging), injected by the deploy orchestration system."
+    source: unknown
+  - name: "pipeline.deploy.namespace"
+    defn: "The deployment namespace within the target environment, injected by the deploy orchestration system."
+    source: unknown
+  - name: "pipeline.deploy.reason"
+    defn: "A string describing why the deployment or rollback was triggered, injected by the deploy orchestration system."
+    source: unknown
+  - name: "pipeline.deploy.target_version"
+    defn: "The version string of the component to be deployed or rolled back to, injected by the deploy orchestration system."
+    source: unknown
+  - name: "pipeline.event.action"
+    defn: "The specific action associated with the triggering event (e.g., opened, synchronize, closed for pull request events). For event types with no action subtype, this value is identical to pipeline.event.name."
+  - name: "pipeline.event.circleci_actor_id"
+    type: uuid
+    domain: users
+    private: true
+  - name: "pipeline.event.context.github.pr_url"
+    defn: "The HTML URL of the associated pull request: for push events, the open PR whose head branch was pushed to; for pull request events, the PR that triggered the event."
+  - name: "pipeline.event.context.github.sha"
+    domain: git-shas
+    defn: "Identifies the commit to which the notification about the pipeline outcome will be sent."
+  - name: "pipeline.event.github.after"
+    defn: "The HEAD SHA of the branch after the push, from the GitHub push webhook payload's after field. Populated only for push events."
+  - name: "pipeline.event.github.comment.body"
+    defn: "The pull request comment body with leading/trailing whitespace removed, if a pipeline was triggered via PR comment. For pipelines triggered in other ways, this value is undefined."
+    type: string
+  - name: "pipeline.event.github.head_commit.url"
+    defn: "The URL of the HEAD commit from the push webhook payload. Populated only for push events."
+  - name: "pipeline.event.github.label.name"
+    defn: 'The name of the label applied to the pull request, from the GitHub webhook payload. Only present for pull_request events whose "action" field value is "labeled".'
+  - name: "pipeline.event.github.pull_request.base.ref"
+    domain: git-branches
+    defn: "The name of the base branch of the pull request, from the GitHub webhook payload."
+  - name: "pipeline.event.github.pull_request.base.sha"
+    domain: git-shas
+    defn: "The SHA of the HEAD of the base branch of the pull request, from the GitHub webhook payload."
+  - name: "pipeline.event.github.pull_request.draft"
+    type: boolean
+    defn: "Whether the pull request is in draft state, from the GitHub webhook payload."
+  - name: "pipeline.event.github.pull_request.head.ref"
+    domain: git-branches
+    defn: "The name of the head branch of the pull request, from the GitHub webhook payload."
+  - name: "pipeline.event.github.pull_request.head.sha"
+    domain: git-shas
+    defn: "The SHA of the HEAD of the head branch of the pull request, from the GitHub webhook payload."
+  - name: "pipeline.event.github.pull_request.merged"
+    type: boolean
+    defn: "Whether the pull request has been merged, from the GitHub webhook payload."
+  - name: "pipeline.event.github.pull_request.number"
+    type: uint
+    defn: "The numeric identifier of the pull request, from the GitHub webhook payload."
+  - name: "pipeline.event.github.pull_request.title"
+    defn: "The title of the pull request, from the GitHub webhook payload."
+  - name: "pipeline.event.github.pull_request.url"
+    domain: urls
+    defn: "The HTML URL of the pull request, from the GitHub webhook payload."
+  - name: "pipeline.event.github.ref"
+    defn: "The full Git ref (e.g., refs/heads/main, refs/tags/v1.0) from the GitHub push webhook payload's ref field. Populated only for push events."
+  - name: "pipeline.event.github.repository.name"
+    defn: "The repository name from the GitHub webhook payload's repository.name field."
+  - name: "pipeline.event.github.repository.owner.login"
+    defn: "The owner's GitHub login from the webhook payload's repository.owner.login field."
+  - name: "pipeline.event.github.repository.url"
+    defn: "The repository HTML URL from the GitHub webhook payload's repository.html_url field."
+  - name: "pipeline.event.github.sender.avatar_url"
+    defn: "The avatar URL of the GitHub user who sent the event, from the webhook payload's sender.avatar_url field."
+  - name: "pipeline.event.github.sender.login"
+    defn: "The GitHub login of the user who sent the event, from the webhook payload's sender.login field."
+  - name: "pipeline.event.github.sender.type"
+    defn: "The type of GitHub user that emitted the event triggering the pipeline. Possible values are User, Organization, and Bot."
+    type: string
+  - name: "pipeline.event.name"
+    defn: "Normalized event name string indicating the trigger event type (e.g., push, pull_request, api, schedule)."
+    notes: "Possibly an alias for pipeline.event.action"
+  - name: "pipeline.event.provider_actor_id"
+    defn: "Identifies the provider's user that triggered the pipeline."
+    private: true
+  - name: "pipeline.event.provider_login"
+  - name: "pipeline.git.base_revision"
+  - name: "pipeline.git.branch"
+    domain: git-branches
+    defn: "Specifies the git branch from which to checkout the project source."
+  - name: "pipeline.git.branch.is_default"
+    type: boolean
+    defn: "Indicates that the git branch from which to checkout the project source is the repository's default branch."
+  - name: "pipeline.git.commit.author_avatar_url"
+    domain: urls
+    defn: "The url of the avatar of the author of the last commit in the checkout branch."
+    private: true
+  - name: "pipeline.git.commit.author_email"
+    domain: emails
+    defn: "The email address of the author of the last commit in the checkout branch."
+    private: true
+  - name: "pipeline.git.commit.author_login"
+    defn: "The login name, at the vcs provider, of the author of the last commit in the checkout branch."
+  - name: "pipeline.git.commit.author_name"
+    defn: "The name of the author of the last commit in the checkout branch."
+    private: true
+  - name: "pipeline.git.commit.body"
+    defn: "The body of the message in the last commit in the checkout branch."
+  - name: "pipeline.git.commit.subject"
+    defn: "The subject of the message in the last commit in the checkout branch."
+  - name: "pipeline.git.commit.url"
+    domain: urls
+    defn: "The vcs provider url of the last commit in the checkout branch."
+  - name: "pipeline.git.repo_id"
+    type: uint
+    defn: "The vcs provider's identifier for the checkout repository."
+    notes: "The uint type may not be an accurate choice generally."
+  - name: "pipeline.git.repo_name"
+    domain: git-repo-names
+    defn: "The name of the checkout repository."
+  - name: "pipeline.git.repo_owner"
+    defn: "The vcs provider's name for the owner of the checkout repository."
+  - name: "pipeline.git.repo_url"
+    domain: urls
+    defn: "The vcs provider url of the checkout repository."
+  - name: "pipeline.git.revision"
+    domain: git-shas
+    defn: "The SHA of the last commit in the checkout branch."
+  - name: "pipeline.git.ssh_checkout_url"
+    domain: git-urls
+    defn: "The git url of the repository hosted by the vcs provider."
+    private: true
+  - name: "pipeline.git.tag"
+    domain: git-tags
+    defn: "The name of the git tag being checked out. Not populated when checking out a branch."
+  - name: "pipeline.id"
+    type: uuid
+    domain: pipelines
+    defn: "Identifies the triggered pipeline."
+    source: builds-service
+  - name: "pipeline.integration_source"
+    domain: providers
+    defn: "The pipeline type determined by checkout provider (e.g., github_app, github, bitbucket, bitbucket_dc, gitlab). Used by workflows-conductor to gate SSH key requirements, by execution to determine checkout strategy, and by notifications to determine commit status update behaviour."
+    notes: "Used by the workflows conductor to determine if a build should be blocked due to a missing SSH key. Also used by notifications to determine how to do commit status updates."
+  - name: "pipeline.name"
+    defn: "Human-readable name of the pipeline definition, as stored in the config source record in soc-integrations."
+  - name: "pipeline.number"
+    type: uint
+    defn: "Monotonically incrementing integer scoped to the project, assigned by builds-service at pipeline creation."
+    source: builds-service
+  - name: "pipeline.parameters.*"
+    defn: "The set of customer parameters that characterizes the pipeline. Multiple such entries can be present, with the wildcard being a non-empty string and the value a string, number, or boolean."
+  - name: "pipeline.project.git_url"
+    domain: urls
+  - name: "pipeline.project.slug"
+    domain: project-slugs
+    defn: "The unique slug for the project for which the pipeline is being run."
+  - name: "pipeline.project.type"
+    domain: providers
+    defn: "The type of the organization owning the project; one of github, circleci, or bitbucket."
+  - name: "pipeline.project.url"
+    domain: urls
+    defn: "The CircleCI URL of the project for which the pipeline is being run."
+    private: true
+  - name: "pipeline.schedule.id"
+    type: uuid
+    defn: "UUID of the schedule record that triggered the pipeline. Populated only for schedule-triggered pipelines."
+  - name: "pipeline.schedule.name"
+    defn: "Human-readable name of the schedule that triggered the pipeline. Populated only for schedule-triggered pipelines."
+  - name: "pipeline.trigger.id"
+    type: uuid
+    domain: triggers
+    defn: "Identifies the trigger that initiated the pipeline."
+  - name: "pipeline.trigger.name"
+    defn: "Names the trigger that initiated the pipeline."
+    private: true
+  - name: "pipeline.trigger.received_at"
+    type: timestamp
+    defn: "The moment at which the event which triggered the pipeline was received."
+  - name: "pipeline.trigger.type"
+    domain: providers
+    defn: "Specifies the type of trigger that initiated the pipeline; one of github_app, github, bitbucket_dc, schedule, or webhook."
+  - name: "pipeline.trigger_parameters.bitbucket_dc.actor_email"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.actor_id"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.actor_name"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.actor_type"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.commit_author_name"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.commit_message"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.commit_sha"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.commit_title"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.event_key"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.project_key"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.ref"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.ref_display_id"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.ref_id"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.ref_type"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.repo_slug"
+    private: true
+  - name: "pipeline.trigger_parameters.bitbucket_dc.user_name"
+    private: true
+  - name: "pipeline.trigger_parameters.circleci.actor_id"
+    type: uuid
+    private: true
+  - name: "pipeline.trigger_parameters.circleci.event_action"
+    private: true
+  - name: "pipeline.trigger_parameters.circleci.event_time"
+    deprecation_at: 2026-08-01
+    replaced_by: "pipeline.trigger.received_at"
+  - name: "pipeline.trigger_parameters.circleci.event_type"
+    deprecation_at: 2026-08-01
+    replaced_by: "pipeline.event.name"
+  - name: "pipeline.trigger_parameters.circleci.provider_actor_id"
+    private: true
+  - name: "pipeline.trigger_parameters.circleci.provider_login"
+    private: true
+  - name: "pipeline.trigger_parameters.circleci.provider_name"
+    private: true
+  - name: "pipeline.trigger_parameters.circleci.trigger_type"
+    deprecation_at: 2026-08-01
+    replaced_by: "pipeline.trigger.type"
+  - name: "pipeline.trigger_parameters.git.author_avatar_url"
+    private: true
+  - name: "pipeline.trigger_parameters.git.author_login"
+    private: true
+  - name: "pipeline.trigger_parameters.git.branch"
+    private: true
+  - name: "pipeline.trigger_parameters.git.checkout_sha"
+    private: true
+  - name: "pipeline.trigger_parameters.git.checkout_url"
+    private: true
+  - name: "pipeline.trigger_parameters.git.commit_author_email"
+    private: true
+  - name: "pipeline.trigger_parameters.git.commit_author_name"
+    private: true
+  - name: "pipeline.trigger_parameters.git.commit_message"
+    private: true
+  - name: "pipeline.trigger_parameters.git.default_branch"
+    private: true
+  - name: "pipeline.trigger_parameters.git.ref"
+    private: true
+  - name: "pipeline.trigger_parameters.git.repo_name"
+    private: true
+  - name: "pipeline.trigger_parameters.git.repo_owner"
+    private: true
+  - name: "pipeline.trigger_parameters.git.repo_url"
+    private: true
+  - name: "pipeline.trigger_parameters.git.tag"
+    private: true
+  - name: "pipeline.trigger_parameters.github_app.action"
+    private: true
+  - name: "pipeline.trigger_parameters.github_app.branch"
+    deprecation_at: 2026-08-01
+  - name: "pipeline.trigger_parameters.github_app.checkout_sha"
+    deprecation_at: 2026-08-01
+    replaced_by: "pipeline.git.revision"
+  - name: "pipeline.trigger_parameters.github_app.commit_author_email"
+    private: true
+  - name: "pipeline.trigger_parameters.github_app.commit_author_name"
+    deprecation_at: 2026-08-01
+  - name: "pipeline.trigger_parameters.github_app.commit_message"
+    deprecation_at: 2026-08-01
+    replaced_by: "pipeline.git.commit.body"
+  - name: "pipeline.trigger_parameters.github_app.commit_sha"
+    deprecation_at: 2026-08-01
+    replaced_by: "pipeline.event.github.after"
+  - name: "pipeline.trigger_parameters.github_app.commit_timestamp"
+    deprecation_at: 2026-08-01
+    replaced_by: "pipeline.trigger.received_at"
+  - name: "pipeline.trigger_parameters.github_app.commit_title"
+    deprecation_at: 2026-08-01
+    replaced_by: "pipeline.git.commit.subject"
+  - name: "pipeline.trigger_parameters.github_app.default_branch"
+    private: true
+  - name: "pipeline.trigger_parameters.github_app.forced"
+    private: true
+  - name: "pipeline.trigger_parameters.github_app.full_ref"
+    private: true
+  - name: "pipeline.trigger_parameters.github_app.label_name"
+    private: true
+  - name: "pipeline.trigger_parameters.github_app.owner"
+    private: true
+  - name: "pipeline.trigger_parameters.github_app.pull_request_head_sha"
+    private: true
+  - name: "pipeline.trigger_parameters.github_app.ref"
+    deprecation_at: 2026-08-01
+  - name: "pipeline.trigger_parameters.github_app.repo_full_name"
+    private: true
+  - name: "pipeline.trigger_parameters.github_app.repo_id"
+    private: true
+  - name: "pipeline.trigger_parameters.github_app.repo_name"
+    deprecation_at: 2026-08-01
+    replaced_by: "pipeline.event.github.repository.name"
+  - name: "pipeline.trigger_parameters.github_app.repo_url"
+    deprecation_at: 2026-08-01
+    replaced_by: "pipeline.event.github.repository.url"
+  - name: "pipeline.trigger_parameters.github_app.user_avatar"
+    deprecation_at: 2026-08-01
+    replaced_by: "pipeline.event.github.sender.avatar_url"
+  - name: "pipeline.trigger_parameters.github_app.user_id"
+    deprecation_at: 2026-08-01
+  - name: "pipeline.trigger_parameters.github_app.user_name"
+    deprecation_at: 2026-08-01
+    replaced_by: "pipeline.event.github.sender.login"
+  - name: "pipeline.trigger_parameters.github_app.user_username"
+    deprecation_at: 2026-08-01
+    replaced_by: "pipeline.event.github.sender.login"
+  - name: "pipeline.trigger_parameters.github_app.web_url"
+    deprecation_at: 2026-08-01
+    replaced_by: "pipeline.event.github.repository.url"
+  - name: "pipeline.trigger_parameters.gitlab.branch"
+  - name: "pipeline.trigger_parameters.gitlab.checkout_sha"
+  - name: "pipeline.trigger_parameters.gitlab.commit_author_email"
+  - name: "pipeline.trigger_parameters.gitlab.commit_author_name"
+  - name: "pipeline.trigger_parameters.gitlab.commit_message"
+  - name: "pipeline.trigger_parameters.gitlab.commit_sha"
+  - name: "pipeline.trigger_parameters.gitlab.commit_timestamp"
+  - name: "pipeline.trigger_parameters.gitlab.commit_title"
+  - name: "pipeline.trigger_parameters.gitlab.default_branch"
+  - name: "pipeline.trigger_parameters.gitlab.is_fork_merge_request"
+  - name: "pipeline.trigger_parameters.gitlab.project_id"
+    private: true
+  - name: "pipeline.trigger_parameters.gitlab.ref"
+  - name: "pipeline.trigger_parameters.gitlab.repo_name"
+  - name: "pipeline.trigger_parameters.gitlab.repo_url"
+  - name: "pipeline.trigger_parameters.gitlab.type"
+  - name: "pipeline.trigger_parameters.gitlab.user_id"
+  - name: "pipeline.trigger_parameters.gitlab.user_name"
+  - name: "pipeline.trigger_parameters.gitlab.user_avatar"
+  - name: "pipeline.trigger_parameters.gitlab.user_username"
+  - name: "pipeline.trigger_parameters.gitlab.web_url"
+  - name: "pipeline.trigger_parameters.gitlab.x_gitlab_event_id"
+  - name: "pipeline.trigger_parameters.webhook.body"
+    defn: "The request body of the custom webhook that triggered the pipeline run. This will be truncated if exceeds the maximum pipeline value length."
+  - name: "pipeline.trigger_source"
+    domain: trigger-sources
+    defn: "The trigger source category indicating how the pipeline was initiated; one of webhook, api, scheduled_pipeline, or schedule (the last being specific to schedule workflows)."
+  - name: "pipeline.vcs.event_type"
+    private: true
+  - name: "pipeline.vcs.origin_repository_id"
+    private: true
+  - name: "pipeline.vcs.origin_repository_url"
+    domain: urls
+    private: true
+  - name: "pipeline.vcs.repository_url"
+    domain: urls
+    defn: "The vcs provider url of the checkout source."
+    private: true
+  - name: "pipeline.vcs.revision"
+    domain: git-shas
+    private: true
+  - name: "pipeline.vcs.target_repository_id"
+    private: true
+  - name: "pipeline.vcs.target_repository_url"
+    domain: urls
+    private: true
+  - name: "pipeline.vcs.type"
+    domain: providers
+    private: true
