@@ -20,6 +20,12 @@
 # These data are declared in the expr package so that exprs evaluated in a
 # pipeline values context can have default (nil) values for all valid pipeline
 # value fields, regardless of their presence in a build.
+#
+# Deprecation dates (deprecation_at):
+#   2026-08-01 — GitHub App trigger_parameters migrated to pipeline.event.github.* / pipeline.git.*
+#   2026-09-01 — Blocked on outbound webhooks migration; remove once webhooks no longer depend on these fields
+#   2027-01-01 — Legacy trigger_parameters (circleci, git) and pipeline.project.git_url; needs deprecating, no replacement yet
+#   2027-08-01 — GitLab trigger_parameters retained until GitLab consolidation completes
 
 version: 1.0
 
@@ -148,6 +154,7 @@ fields:
     domain: urls
     defn: "The url of the avatar of the author of the last commit in the checkout branch."
     private: true
+  - name: "pipeline.git.commit.author_date"
   - name: "pipeline.git.commit.author_email"
     domain: emails
     defn: "The email address of the author of the last commit in the checkout branch."
@@ -159,11 +166,22 @@ fields:
     private: true
   - name: "pipeline.git.commit.body"
     defn: "The body of the message in the last commit in the checkout branch."
+  - name: "pipeline.git.commit.committer_date"
+    deprecation_at: 2026-09-01
+  - name: "pipeline.git.commit.committer_email"
+    deprecation_at: 2026-09-01
+  - name: "pipeline.git.commit.committer_login"
+    deprecation_at: 2026-09-01
+  - name: "pipeline.git.commit.committer_name"
+    deprecation_at: 2026-09-01
   - name: "pipeline.git.commit.subject"
     defn: "The subject of the message in the last commit in the checkout branch."
   - name: "pipeline.git.commit.url"
     domain: urls
     defn: "The vcs provider url of the last commit in the checkout branch."
+  - name: "pipeline.git.origin_repo_id"
+  - name: "pipeline.git.origin_repo_url"
+    domain: urls
   - name: "pipeline.git.repo_id"
     type: uint
     defn: "The vcs provider's identifier for the checkout repository."
@@ -186,6 +204,8 @@ fields:
   - name: "pipeline.git.tag"
     domain: git-tags
     defn: "The name of the git tag being checked out. Not populated when checking out a branch."
+  - name: "pipeline.git.target_repo_url"
+    domain: urls
   - name: "pipeline.id"
     type: uuid
     domain: pipelines
@@ -205,6 +225,7 @@ fields:
     defn: "The set of customer parameters that characterizes the pipeline. Multiple such entries can be present, with the wildcard being a non-empty string and the value a string, number, or boolean."
   - name: "pipeline.project.git_url"
     domain: urls
+    deprecation_at: 2027-01-01
   - name: "pipeline.project.slug"
     domain: project-slugs
     defn: "The unique slug for the project for which the pipeline is being run."
@@ -220,6 +241,8 @@ fields:
     defn: "UUID of the schedule record that triggered the pipeline. Populated only for schedule-triggered pipelines."
   - name: "pipeline.schedule.name"
     defn: "Human-readable name of the schedule that triggered the pipeline. Populated only for schedule-triggered pipelines."
+    deprecation_at: 2027-01-01
+    replaced_by: "pipeline.trigger.name"
   - name: "pipeline.trigger.id"
     type: uuid
     domain: triggers
@@ -233,43 +256,15 @@ fields:
   - name: "pipeline.trigger.type"
     domain: providers
     defn: "Specifies the type of trigger that initiated the pipeline; one of github_app, github, bitbucket_dc, schedule, or webhook."
-  - name: "pipeline.trigger_parameters.bitbucket_dc.actor_email"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.actor_id"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.actor_name"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.actor_type"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.commit_author_name"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.commit_message"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.commit_sha"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.commit_title"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.event_key"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.project_key"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.ref"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.ref_display_id"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.ref_id"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.ref_type"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.repo_slug"
-    private: true
-  - name: "pipeline.trigger_parameters.bitbucket_dc.user_name"
-    private: true
   - name: "pipeline.trigger_parameters.circleci.actor_id"
     type: uuid
     private: true
+    deprecation_at: 2027-01-01
+  - name: "pipeline.trigger_parameters.circleci.config_source_id"
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.circleci.event_action"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.circleci.event_time"
     deprecation_at: 2026-08-01
     replaced_by: "pipeline.trigger.received_at"
@@ -278,43 +273,67 @@ fields:
     replaced_by: "pipeline.event.name"
   - name: "pipeline.trigger_parameters.circleci.provider_actor_id"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.circleci.provider_login"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.circleci.provider_name"
     private: true
+    deprecation_at: 2026-09-01
+  - name: "pipeline.trigger_parameters.circleci.trigger_id"
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.circleci.trigger_type"
     deprecation_at: 2026-08-01
     replaced_by: "pipeline.trigger.type"
+  - name: "pipeline.trigger_parameters.event.description"
+    deprecation_at: 2026-09-01
+  - name: "pipeline.trigger_parameters.event.title"
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.git.author_avatar_url"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.git.author_login"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.git.branch"
     private: true
+    deprecation_at: 2027-01-01
   - name: "pipeline.trigger_parameters.git.checkout_sha"
     private: true
+    deprecation_at: 2027-01-01
   - name: "pipeline.trigger_parameters.git.checkout_url"
     private: true
+    deprecation_at: 2027-01-01
   - name: "pipeline.trigger_parameters.git.commit_author_email"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.git.commit_author_name"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.git.commit_message"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.git.default_branch"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.git.ref"
     private: true
+    deprecation_at: 2027-01-01
   - name: "pipeline.trigger_parameters.git.repo_name"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.git.repo_owner"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.git.repo_url"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.git.tag"
     private: true
+    deprecation_at: 2027-01-01
   - name: "pipeline.trigger_parameters.github_app.action"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.github_app.branch"
     deprecation_at: 2026-08-01
   - name: "pipeline.trigger_parameters.github_app.checkout_sha"
@@ -322,6 +341,7 @@ fields:
     replaced_by: "pipeline.git.revision"
   - name: "pipeline.trigger_parameters.github_app.commit_author_email"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.github_app.commit_author_name"
     deprecation_at: 2026-08-01
   - name: "pipeline.trigger_parameters.github_app.commit_message"
@@ -338,28 +358,42 @@ fields:
     replaced_by: "pipeline.git.commit.subject"
   - name: "pipeline.trigger_parameters.github_app.default_branch"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.github_app.forced"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.github_app.full_ref"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.github_app.label_name"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.github_app.owner"
     private: true
+    deprecation_at: 2026-09-01
+  - name: "pipeline.trigger_parameters.github_app.pull_request_draft"
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.github_app.pull_request_head_sha"
     private: true
+    deprecation_at: 2026-09-01
+  - name: "pipeline.trigger_parameters.github_app.pull_request_merged"
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.github_app.ref"
     deprecation_at: 2026-08-01
   - name: "pipeline.trigger_parameters.github_app.repo_full_name"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.github_app.repo_id"
     private: true
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.github_app.repo_name"
     deprecation_at: 2026-08-01
     replaced_by: "pipeline.event.github.repository.name"
   - name: "pipeline.trigger_parameters.github_app.repo_url"
     deprecation_at: 2026-08-01
     replaced_by: "pipeline.event.github.repository.url"
+  - name: "pipeline.trigger_parameters.github_app.tag"
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.github_app.user_avatar"
     deprecation_at: 2026-08-01
     replaced_by: "pipeline.event.github.sender.avatar_url"
@@ -374,52 +408,59 @@ fields:
   - name: "pipeline.trigger_parameters.github_app.web_url"
     deprecation_at: 2026-08-01
     replaced_by: "pipeline.event.github.repository.url"
+  - name: "pipeline.trigger_parameters.gitlab.action"
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.gitlab.branch"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.checkout_sha"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.commit_author_email"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.commit_author_name"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.commit_message"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.commit_sha"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.commit_timestamp"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.commit_title"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.default_branch"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.is_fork_merge_request"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.project_id"
     private: true
+    deprecation_at: 2027-01-01
   - name: "pipeline.trigger_parameters.gitlab.ref"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.repo_name"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.repo_url"
+    deprecation_at: 2027-08-01
+  - name: "pipeline.trigger_parameters.gitlab.tag"
+    deprecation_at: 2026-09-01
   - name: "pipeline.trigger_parameters.gitlab.type"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.user_id"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.user_name"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.user_avatar"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.user_username"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.web_url"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.gitlab.x_gitlab_event_id"
+    deprecation_at: 2027-08-01
   - name: "pipeline.trigger_parameters.webhook.body"
     defn: "The request body of the custom webhook that triggered the pipeline run. This will be truncated if exceeds the maximum pipeline value length."
   - name: "pipeline.trigger_source"
     domain: trigger-sources
     defn: "The trigger source category indicating how the pipeline was initiated; one of webhook, api, scheduled_pipeline, or schedule (the last being specific to schedule workflows)."
-  - name: "pipeline.vcs.event_type"
-    private: true
-  - name: "pipeline.vcs.origin_repository_id"
-    private: true
-  - name: "pipeline.vcs.origin_repository_url"
-    domain: urls
-    private: true
-  - name: "pipeline.vcs.repository_url"
-    domain: urls
-    defn: "The vcs provider url of the checkout source."
-    private: true
-  - name: "pipeline.vcs.revision"
-    domain: git-shas
-    private: true
-  - name: "pipeline.vcs.target_repository_id"
-    private: true
   - name: "pipeline.vcs.target_repository_url"
     domain: urls
     private: true
-  - name: "pipeline.vcs.type"
-    domain: providers
-    private: true
+    deprecation_at: 2026-09-01
