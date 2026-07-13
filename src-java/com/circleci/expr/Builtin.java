@@ -20,32 +20,19 @@ IN THE SOFTWARE.
 
 package com.circleci.expr;
 
-public enum TokenType {
-  // Grouping
-  LEFT_PAREN,
-  RIGHT_PAREN,
+import java.util.Set;
 
-  // Operators
-  NOT_EQUAL,
-  EQUAL,
-  GREATER,
-  GREATER_EQUAL,
-  LESS,
-  LESS_EQUAL,
+public enum Builtin {
+  MATCHES,
+  STARTS_WITH;
 
-  // Values
-  IDENTIFIER,
-  BUILTIN,
-  STRING,
-  NUMBER,
-  PATTERN,
-
-  // Keywords
-  AND,
-  OR,
-  NOT,
-  TRUE,
-  FALSE,
-
-  EOF
+  public static Builtin forLexeme(String lexeme) {
+    return switch (lexeme) {
+      case "matches" -> MATCHES;
+      case "MATCHES" -> MATCHES;
+      case "starts-with" -> STARTS_WITH;
+      case "STARTS-WITH" -> STARTS_WITH;
+      default -> null;
+    };
+  }
 }

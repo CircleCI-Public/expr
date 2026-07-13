@@ -16,14 +16,6 @@ Logical: `and`, `or`
 Equality: `==`, `!=`
 * string, numeric, and boolean equality
 
-Equality: `starts-with`
-* string prefix equality
-
-Matching: `matches`
-* regular expression string match. The left-hand side operand must be a string,
-  the right-hand side operand must be a pattern value. The `matches` operator
-  evaluates true if—and only if—the entire string matches the pattern.
-
 Comparison: `>=`, `>`, `<=`, `<`
 * Numeric comparisons
 
@@ -50,13 +42,24 @@ Expr expression.
 
 The boolean literals are `true`, and `false`.
 
+## Builtin functions
+Builtin functions are infix functions which are used like operators.
+
+Equality: `starts-with`
+* string prefix equality
+
+Matching: `matches`
+* regular expression string match. The left-hand side operand must be a string,
+  the right-hand side operand must be a pattern value. The `matches` operator
+  evaluates true if—and only if—the entire string matches the pattern.
+
 ## Grammar
 
 ```
 expression -> logic_or
 logic_or -> logic_and ( "or" logic_and )*;
 logic_and -> equality ( "and" equality )*;
-equality -> comparison ( ( "==" | "!=" | "starts-with" | "matches" ) comparison )*;
+equality -> comparison ( ( "==" | "!=" | BUILTIN ) comparison )*;
 comparison -> unary ( ( ">=" | ">" | "<=" | "<" ) unary)*;
 unary -> "not" unary | primary;
 primary -> "true" | "false" | NUMBER | STRING | IDENTIFIER | PATTERN | "(" expression ")"
@@ -65,7 +68,9 @@ NUMBER: /\d+/
 STRING: "\"" [\"]* "\""
 PATTERN: "/" [\/]* "/"
 IDENTIFIER: /[a-zA-Z][\w\-]*(?:\.[\w\-]+)*/
+BUILTIN: matches a named builtin function
 ```
+See [builtin functions](#builtin-functions) for valid builtin names.
 
 ### Note on strings
 The `\` character can be used to escape embedded `"` or `\` characters.
@@ -103,21 +108,21 @@ the parser.
 
 The precedence table, from weakest to strongest binding:
 ```
-+-------------+---------------+
-| Operator    | Associativity |
-+-------------+---------------+
-| or          | left          |
-+-------------+---------------+
-| and         | left          |
-+-------------+---------------+
-| == !=       | left          |
-| starts-with |               |
-| matches     |               |
-+-------------+---------------+
-| >= > <= <   | left          |
-+-------------+---------------+
-| not !       |               |
-+-------------+---------------+
++-----------+---------------+
+| Operator  | Associativity |
++-----------+---------------+
+| or        | left          |
++-----------+---------------+
+| and       | left          |
++-----------+---------------+
+| == !=     | left          |
+| builtin   |               |
+| functions |               |
++-----------+---------------+
+| >= > <= < | left          |
++-----------+---------------+
+| not !     |               |
++-----------+---------------+
 ```
 
 ## Variables
@@ -255,6 +260,8 @@ Errors with parsing have the following keys:
       consume all of the input expression.
     * `"Parser/EXPECTED_RIGHT_PAREN"` - There are unbalanced parentheses in the
       expression, a `(` was seen without a matching `)`.
+    * `"Parser/UNKNOWN_BUILTIN_FUNCTION"` - An identifier was used in the infix
+      operator position but isn't the name of a builtin function.
 * `tokenType` - The type of token being parsed when the error was encountered.
   See `TokenType.java` for a full list.
 * `lexeme` - The lexeme for the token being parsed.

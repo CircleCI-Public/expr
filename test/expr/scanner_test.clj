@@ -49,14 +49,14 @@
     "FALSE" [{:type TokenType/FALSE :lexeme "FALSE" :pos 0 :literal "FALSE"}
              {:type TokenType/EOF :lexeme "" :pos 5}]
 
-    "starts-with" [{:type TokenType/STARTS_WITH :lexeme "starts-with" :pos 0 :literal "starts-with"}
+    "starts-with" [{:type TokenType/BUILTIN :lexeme "starts-with" :pos 0 :literal "starts-with"}
                    {:type TokenType/EOF :lexeme "" :pos 11}]
-    "STARTS-WITH" [{:type TokenType/STARTS_WITH :lexeme "STARTS-WITH" :pos 0 :literal "STARTS-WITH"}
+    "STARTS-WITH" [{:type TokenType/BUILTIN :lexeme "STARTS-WITH" :pos 0 :literal "STARTS-WITH"}
                    {:type TokenType/EOF :lexeme "" :pos 11}]
 
-    "matches" [{:type TokenType/MATCHES :lexeme "matches" :pos 0 :literal "matches"}
+    "matches" [{:type TokenType/BUILTIN :lexeme "matches" :pos 0 :literal "matches"}
                {:type TokenType/EOF :lexeme "" :pos 7}]
-    "MATCHES" [{:type TokenType/MATCHES :lexeme "MATCHES" :pos 0 :literal "MATCHES"}
+    "MATCHES" [{:type TokenType/BUILTIN :lexeme "MATCHES" :pos 0 :literal "MATCHES"}
                {:type TokenType/EOF :lexeme "" :pos 7}]))
 
 (deftest scans-operators

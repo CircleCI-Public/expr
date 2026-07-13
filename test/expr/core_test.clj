@@ -165,6 +165,17 @@
       (is (= (string/join \newline ["Expected ')' after expression:"
                                     "foo and (bar > 3"
                                     "                ^"])
+             (.asErrorMessage e expression)))))
+
+  (testing "Unknown builtin infix function"
+    (let [expression "1 == 1 and foo invalid \"world\" or 42"
+          e (is (thrown-with-msg? Parser$ParseError #"Unknown infix function\."
+                  (-> (util/scan expression)
+                      (util/parse)
+                      (util/interpret {"foo" "hello"}))))]
+      (is (= (string/join \newline ["Unknown infix function:"
+                                    "1 == 1 and foo invalid \"world\" or 42"
+                                    "               ^^^^^^^"])
              (.asErrorMessage e expression))))))
 
 (deftest pretty-interpreter-error

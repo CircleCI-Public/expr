@@ -20,9 +20,11 @@ IN THE SOFTWARE.
 
 package com.circleci.expr;
 
+import java.util.function.BiFunction;
 import java.util.Map;
 import com.google.re2j.Pattern;
 
+import static com.circleci.expr.Builtin.*;
 import static com.circleci.expr.Errors.ErrorMessage;
 import static com.circleci.expr.TokenType.*;
 
@@ -167,13 +169,6 @@ public class Interpreter implements Expr.Visitor<Object> {
         return isEqual(left, right);
       case NOT_EQUAL:
         return !isEqual(left, right);
-      case STARTS_WITH:
-        assertStringOperands(expr.operator, left, right);
-        return ((String) left).startsWith((String) right);
-      case MATCHES:
-        assertRegexOperands(expr.operator, left, right);
-        var matcher = ((Pattern) right).matcher((String) left);
-        return matcher.matches();
       case GREATER:
         assertNumberOperands(expr.operator, left, right);
         return (long) left > (long) right;
@@ -188,6 +183,24 @@ public class Interpreter implements Expr.Visitor<Object> {
         return (long) left <= (long) right;
     }
     return null;
+  }
+
+  @Override
+  public Object visitInfixExpr(Expr.Infix expr) {
+    // eval left and right, apply the function, return it
+    Object left = eval(expr.left);
+    Object right = eval(expr.right);
+
+    // This implementation uses `null` for undefined variables. Undefined
+    // variables "infect" infix expressions, if either operand is undefined
+    // then the result of the function is undefined, no matter what the
+    // function is.
+    if (left == null || right == null) {
+      return null;
+    }
+
+    var fn = implFor(expr);
+    return fn.apply(left, right);
   }
 
   @Override
@@ -259,20 +272,53 @@ public class Interpreter implements Expr.Visitor<Object> {
     return a.equals(b);
   }
 
-  private boolean assertStringOperands(Token operator, Object left, Object right) {
+  private static boolean assertStringOperands(Token operator, Object left, Object right) {
     if (left instanceof String && right instanceof String) return true;
     throw new Error(operator, Error.Type.EXPECTED_STRING_OPERAND);
   }
 
-  private boolean assertNumberOperands(Token operator, Object left, Object right) {
+  private static boolean assertNumberOperands(Token operator, Object left, Object right) {
     if (left instanceof Long && right instanceof Long) return true;
     throw new Error(operator, Error.Type.EXPECTED_NUMERIC_OPERAND);
   }
 
-  private boolean assertRegexOperands(Token operator, Object left, Object right) {
+  private static boolean assertRegexOperands(Token operator, Object left, Object right) {
     if (!(left instanceof String)) throw new Error(operator, Error.Type.EXPECTED_STRING_OPERAND);
     if (!(right instanceof Pattern)) throw new Error(operator, Error.Type.EXPECTED_PATTERN_OPERAND);
 
     return true;
+  }
+
+  private static BiFunction<Object, Object, Object> implFor(Expr.Infix expr) {
+    return switch (expr.builtin) {
+      case MATCHES -> new MatchesFn(expr);
+      case STARTS_WITH ->  new StartsWithFn(expr);
+    };
+  }
+
+
+  private static class StartsWithFn implements BiFunction<Object, Object, Object> {
+    final Expr.Infix expr;
+    public StartsWithFn(Expr.Infix expr) {
+      this.expr = expr;
+    }
+
+    public Object apply(Object left, Object right) {
+      assertStringOperands(expr.operator, left, right);
+      return ((String) left).startsWith((String) right);
+    }
+  }
+
+  private static class MatchesFn implements BiFunction<Object, Object, Object> {
+    final Expr.Infix expr;
+    public MatchesFn(Expr.Infix expr) {
+      this.expr = expr;
+    }
+
+    public Object apply(Object left, Object right) {
+      assertRegexOperands(expr.operator, left, right);
+      var matcher = ((Pattern) right).matcher((String) left);
+      return matcher.matches();
+    }
   }
 }
