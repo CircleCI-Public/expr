@@ -66,6 +66,20 @@ func (v sExpVisitor) VisitBinaryExpr(expr Binary) (string, error) {
 	return fmt.Sprintf("(%s %s %s)", expr.Operator.Lexeme, l, r), nil
 }
 
+func (v sExpVisitor) VisitInfixExpr(expr Infix) (string, error) {
+	l, err := v.convert(expr.Left)
+	if err != nil {
+		return "", err
+	}
+
+	r, err := v.convert(expr.Right)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("(%s %s %s)", expr.Operator.Lexeme, l, r), nil
+}
+
 func (v sExpVisitor) VisitUnaryExpr(expr Unary) (string, error) {
 	r, err := v.convert(expr.Right)
 	if err != nil {
@@ -181,6 +195,29 @@ func TestBinaryExpressions(t *testing.T) {
 		{"3 != 14", "(!= (literal 3) (literal 14))"},
 		{"4 > 3 < 2", "(< (> (literal 4) (literal 3)) (literal 2))"},
 		{"18 >= 10 <= 16", "(<= (>= (literal 18) (literal 10)) (literal 16))"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expression, func(t *testing.T) {
+			t.Parallel()
+
+			sExp, err := parse(tt.expression)
+			assert.NilError(t, err)
+
+			assert.DeepEqual(t, tt.expected, sExp)
+		})
+	}
+}
+
+func TestInfixExpressions(t *testing.T) {
+	t.Parallel()
+
+	var tests = []struct {
+		expression string
+		expected   string
+	}{
+		{`"str" starts-with foo`, "(starts-with (literal str) (identifier foo))"},
+		{"foo matches bar", "(matches (identifier foo) (identifier bar))"},
 	}
 
 	for _, tt := range tests {

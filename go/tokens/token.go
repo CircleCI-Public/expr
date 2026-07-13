@@ -34,8 +34,6 @@ const (
 	// Operators
 	NOT_EQUAL
 	EQUAL
-	STARTS_WITH
-	MATCHES
 	GREATER
 	GREATER_EQUAL
 	LESS
@@ -43,6 +41,7 @@ const (
 
 	// Values
 	IDENTIFIER
+	BUILTIN
 	STRING
 	NUMBER
 	PATTERN
@@ -69,10 +68,6 @@ func (tt TokenType) String() string {
 		return "NOT_EQUAL"
 	case EQUAL:
 		return "EQUAL"
-	case STARTS_WITH:
-		return "STARTS_WITH"
-	case MATCHES:
-		return "MATCHES"
 	case GREATER:
 		return "GREATER"
 	case GREATER_EQUAL:
@@ -85,6 +80,8 @@ func (tt TokenType) String() string {
 	// Values
 	case IDENTIFIER:
 		return "IDENTIFIER"
+	case BUILTIN:
+		return "BUILTIN"
 	case STRING:
 		return "STRING"
 	case NUMBER:
