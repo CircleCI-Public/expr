@@ -1,7 +1,7 @@
 (defproject circleci/expr (or (System/getenv "VERSION")
                               "0.1.0-SNAPSHOT")
   :dependencies [[com.google.re2j/re2j "1.8"]]
-  :profiles {:dev {:dependencies [[org.clojure/clojure "1.12.1"]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.12.5"]
                                   [cheshire "6.0.0"]]
                    :aliases {"generate-corpus" ["run" "-m" "expr.generate-corpus"]}}
              :cljfmt {:plugins [[dev.weavejester/lein-cljfmt "0.13.1"]]
