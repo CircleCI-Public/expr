@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "true or hello world bar",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "IDENTIFIER",
+      "errorType" : "Parser/UNKNOWN_BUILTIN_FUNCTION",
+      "lexeme" : "world",
+      "charPos" : 14
+    }
+  }
+}

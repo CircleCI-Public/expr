@@ -5,7 +5,7 @@
   },
   "expected" : {
     "error" : {
-      "tokenType" : "STARTS_WITH",
+      "tokenType" : "BUILTIN",
       "errorType" : "Interpreter/EXPECTED_STRING_OPERAND",
       "lexeme" : "starts-with",
       "charPos" : 6

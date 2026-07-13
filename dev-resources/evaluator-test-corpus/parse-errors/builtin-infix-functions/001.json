@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "1 > 2 and hello world",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "errorType" : "Parser/UNEXPECTED_ADDITIONAL_INPUT",
+      "tokenType" : "IDENTIFIER",
+      "lexeme" : "world",
+      "charPos" : 16
+    }
+  }
+}
