@@ -53,6 +53,13 @@ public class VariableAnalyser implements Expr.Visitor<List<Token>> {
   }
 
   @Override
+  public List<Token> visitInfixExpr(Expr.Infix expr) {
+    var l = check(expr.left);
+    l.addAll(check(expr.right));
+    return l;
+  }
+
+  @Override
   public List<Token> visitUnaryExpr(Expr.Unary expr) {
     return check(expr.right);
   }

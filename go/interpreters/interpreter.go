@@ -24,6 +24,7 @@ import (
 	go_errors "errors"
 	"fmt"
 
+	"github.com/circleci/expr/go/builtins"
 	"github.com/circleci/expr/go/errors"
 	"github.com/circleci/expr/go/parsers"
 	"github.com/circleci/expr/go/tokens"
@@ -193,30 +194,6 @@ func (i Interpreter) VisitBinaryExpr(expr parsers.Binary) (Val, error) {
 		return BoxBool(left.Equal(right)), nil
 	case tokens.NOT_EQUAL:
 		return BoxBool(!left.Equal(right)), nil
-	case tokens.STARTS_WITH:
-		res, err := left.StartsWith(right)
-		if err != nil {
-			return UndefinedVal(), Error{
-				Type:  EXPECTED_STRING_OPERAND,
-				Token: expr.Operator,
-			}
-		}
-		return BoxBool(res), nil
-	case tokens.MATCHES:
-		res, err := right.Matches(left)
-		switch {
-		case go_errors.Is(err, ErrNeedString):
-			return UndefinedVal(), Error{
-				Type:  EXPECTED_STRING_OPERAND,
-				Token: expr.Operator,
-			}
-		case go_errors.Is(err, ErrNeedPattern):
-			return UndefinedVal(), Error{
-				Type:  EXPECTED_PATTERN_OPERAND,
-				Token: expr.Operator,
-			}
-		}
-		return BoxBool(res), nil
 	case tokens.GREATER:
 		res, err := left.Greater(right)
 		if err != nil {
@@ -258,6 +235,29 @@ func (i Interpreter) VisitBinaryExpr(expr parsers.Binary) (Val, error) {
 	}
 }
 
+func (i Interpreter) VisitInfixExpr(expr parsers.Infix) (Val, error) {
+	// Evaluate left and right, apply the function, return it
+	left, err := i.Evaluate(expr.Left)
+	if err != nil {
+		return UndefinedVal(), err
+	}
+	right, err := i.Evaluate(expr.Right)
+	if err != nil {
+		return UndefinedVal(), err
+	}
+
+	// This implementation uses `NewUndefined()` for undefined variables.
+	// Undefined variables "infect" binary expressions, if either operand is
+	// undefined then the result of the operator is undefined, no matter what the
+	// operator is.
+	if left.Undefined() || right.Undefined() {
+		return UndefinedVal(), nil
+	}
+
+	fn := implFor(expr)
+	return fn(left, right)
+}
+
 func (i Interpreter) VisitUnaryExpr(expr parsers.Unary) (Val, error) {
 	v, err := i.Evaluate(expr.Right)
 	if err != nil {
@@ -293,4 +293,49 @@ func (i Interpreter) VisitGroupingExpr(expr parsers.Grouping) (Val, error) {
 		return UndefinedVal(), err
 	}
 	return v, nil
+}
+
+type infixFunction func(left, right Val) (Val, error)
+
+func implFor(expr parsers.Infix) infixFunction {
+	switch expr.Builtin {
+	case builtins.MATCHES:
+		return matches(expr)
+	case builtins.STARTS_WITH:
+		return startsWith(expr)
+	}
+
+	panic("Encountered unknown builtins.Type value")
+}
+
+func startsWith(expr parsers.Infix) infixFunction {
+	return func(left, right Val) (Val, error) {
+		res, err := left.StartsWith(right)
+		if err != nil {
+			return UndefinedVal(), Error{
+				Type:  EXPECTED_STRING_OPERAND,
+				Token: expr.Operator,
+			}
+		}
+		return BoxBool(res), nil
+	}
+}
+
+func matches(expr parsers.Infix) infixFunction {
+	return func(left, right Val) (Val, error) {
+		res, err := right.Matches(left)
+		switch {
+		case go_errors.Is(err, ErrNeedString):
+			return UndefinedVal(), Error{
+				Type:  EXPECTED_STRING_OPERAND,
+				Token: expr.Operator,
+			}
+		case go_errors.Is(err, ErrNeedPattern):
+			return UndefinedVal(), Error{
+				Type:  EXPECTED_PATTERN_OPERAND,
+				Token: expr.Operator,
+			}
+		}
+		return BoxBool(res), nil
+	}
 }

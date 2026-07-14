@@ -56,6 +56,11 @@ func TestIdentifierVisitor(t *testing.T) {
 			identifiers: []string{"a"},
 		},
 		{
+			name:        "infix builtin function",
+			input:       "a matches /hi/",
+			identifiers: []string{"a"},
+		},
+		{
 			name:        "logical and",
 			input:       "a == 1 and b == 2",
 			identifiers: []string{"a", "b"},

@@ -18,34 +18,41 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 */
 
-package com.circleci.expr;
+package builtins
 
-public enum TokenType {
-  // Grouping
-  LEFT_PAREN,
-  RIGHT_PAREN,
+type Type int
 
-  // Operators
-  NOT_EQUAL,
-  EQUAL,
-  GREATER,
-  GREATER_EQUAL,
-  LESS,
-  LESS_EQUAL,
+const (
+	NOT_FOUND Type = iota
 
-  // Values
-  IDENTIFIER,
-  BUILTIN,
-  STRING,
-  NUMBER,
-  PATTERN,
+	MATCHES
+	STARTS_WITH
+)
 
-  // Keywords
-  AND,
-  OR,
-  NOT,
-  TRUE,
-  FALSE,
+func (bt Type) String() string {
+	switch bt {
+	case MATCHES:
+		return "MATCHES"
+	case STARTS_WITH:
+		return "STARTS_WITH"
+	}
 
-  EOF
+	// This can only occur if the switch above isn't exhaustive, if it does,
+	// that's a programming error.
+	panic("Encountered unknown builtin Type value")
+}
+
+func ForLexeme(lexeme string) Type {
+	switch lexeme {
+	case "matches":
+		return MATCHES
+	case "MATCHES":
+		return MATCHES
+	case "starts-with":
+		return STARTS_WITH
+	case "STARTS-WITH":
+		return STARTS_WITH
+	default:
+		return NOT_FOUND
+	}
 }

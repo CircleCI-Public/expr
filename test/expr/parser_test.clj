@@ -60,6 +60,13 @@
                               (literal 10))
                           (literal 16))))
 
+(deftest infix-function-expressions
+  (are [expression expected] (= expected (parse expression))
+    "\"str\" starts-with foo" '(starts-with (literal "str")
+                                            (identifier "foo"))
+    "foo matches bar" '(matches (identifier "foo")
+                                (identifier "bar"))))
+
 (deftest grouping
   (is (= '(>= (literal 18)
               (grouping (<= (literal 10)

@@ -60,6 +60,20 @@ func (a analyser) VisitBinaryExpr(expr parsers.Binary) ([]string, error) {
 	return append(l, r...), nil
 }
 
+func (a analyser) VisitInfixExpr(expr parsers.Infix) ([]string, error) {
+	l, err := a.check(expr.Left)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := a.check(expr.Right)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(l, r...), nil
+}
+
 func (a analyser) VisitUnaryExpr(expr parsers.Unary) ([]string, error) {
 	return a.check(expr.Right)
 }

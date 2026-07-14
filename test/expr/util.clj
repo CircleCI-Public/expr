@@ -18,6 +18,7 @@
 (ns expr.util
   (:import (com.circleci.expr Expr
                               Expr$Binary
+                              Expr$Infix
                               Expr$Grouping
                               Expr$Identifier
                               Expr$Literal
@@ -41,6 +42,11 @@
       (list (symbol (.-lexeme (.-operator binary)))
             (.accept (.-left binary) this)
             (.accept (.-right binary) this)))
+
+    (visitInfixExpr [this ^Expr$Infix infix]
+      (list (symbol (.-lexeme (.-operator infix)))
+            (.accept (.-left infix) this)
+            (.accept (.-right infix) this)))
 
     (visitUnaryExpr [this ^Expr$Unary unary]
       (list (symbol (.-lexeme (.-operator unary)))

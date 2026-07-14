@@ -5,7 +5,7 @@
   },
   "expected" : {
     "error" : {
-      "tokenType" : "MATCHES",
+      "tokenType" : "BUILTIN",
       "errorType" : "Interpreter/EXPECTED_STRING_OPERAND",
       "lexeme" : "matches",
       "charPos" : 2

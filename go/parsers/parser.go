@@ -24,7 +24,7 @@ package parsers
  * expression -> logic_or
  * logic_or -> logic_and ( "or" logic_and )*;
  * logic_and -> equality ( "and" equality )*;
- * equality -> comparison ( ( "==" | "!=" "starts-with" | "matches" ) comparison )*;
+ * equality -> comparison ( ( "==" | "!=" | BUILTIN ) comparison )*;
  * comparison -> unary ( ( ">=" | ">" | "<=" | "<" ) unary)*;
  * unary -> "not" unary | primary;
  * primary -> "true" | "false" | NUMBER | STRING | IDENTIFIER | PATTERN | "(" expression ")"
@@ -33,6 +33,7 @@ package parsers
 import (
 	"fmt"
 
+	"github.com/circleci/expr/go/builtins"
 	"github.com/circleci/expr/go/errors"
 	"github.com/circleci/expr/go/tokens"
 )
@@ -43,6 +44,7 @@ const (
 	UNEXPECTED_ADDITIONAL_INPUT errorType = "Unexpected additional input."
 	EXPECTED_EXPRESSION         errorType = "Expected expression."
 	EXPECTED_RIGHT_PAREN        errorType = "Expected ')' after expression."
+	UNKNOWN_BUILTIN_FUNCTION    errorType = "Unknown infix function."
 )
 
 func (et errorType) Symbol() string {
@@ -53,6 +55,8 @@ func (et errorType) Symbol() string {
 		return "EXPECTED_EXPRESSION"
 	case EXPECTED_RIGHT_PAREN:
 		return "EXPECTED_RIGHT_PAREN"
+	case UNKNOWN_BUILTIN_FUNCTION:
+		return "UNKNOWN_BUILTIN_FUNCTION"
 	}
 
 	panic("Encountered unknown Parser errorType value")
@@ -101,6 +105,12 @@ func (e Error) AsErrorMessage(expression string) string {
 			e.Token.CharPos,
 			1)
 
+	case UNKNOWN_BUILTIN_FUNCTION:
+		return errors.ErrorMessage("Unknown infix function:",
+			expression,
+			e.Token.CharPos,
+			len(errorString))
+
 	default:
 		return fmt.Sprintf("Unknown error parsing expression: '%s'", expression)
 	}
@@ -129,10 +139,46 @@ func (p *parser) Parse() (Expr, error) {
 	}
 
 	if !p.eof() {
+		if err := p.checkUnrecognisedFunction(); err != nil {
+			return nil, err
+		}
 		return nil, Error{Type: UNEXPECTED_ADDITIONAL_INPUT, Token: p.peek()}
 	}
 
 	return expr, nil
+}
+
+// Throw ParseError if remaining tokens match the shape of a builtin function
+// call.
+//
+// If an invalid name is used for a builtin function the stream of tokens
+// will look like:
+// [...tokens that parse as `comparison`..., IDENT, ...more tokens...]
+//
+// The tokens to the left of IDENT can terminate an expression. IDENT and the
+// following tokens (if any) are extra input.
+//
+// If the tokens following IDENT also parse as a `comparison` then it's very
+// likely that IDENT is a misspelled builtin function name.
+func (p *parser) checkUnrecognisedFunction() error {
+	pos := p.save()
+
+	// Might be an unrecognised function name
+	if p.match(tokens.IDENTIFIER) {
+		potentialBuiltin := p.previous()
+
+		_, err := p.comparison()
+		if err == nil {
+			// If the rest of the token stream parses as a valid operand then we
+			// probably have an invalid function name in potentialBuiltin.
+			return Error{Type: UNKNOWN_BUILTIN_FUNCTION, Token: potentialBuiltin}
+		}
+	}
+
+	// If the rest of the token stream doesn't parse as a valid operand
+	// then we can't assume anything, undo any token consumption
+	p.restore(pos)
+	return nil
 }
 
 // Match an 'expression' production.
@@ -190,13 +236,23 @@ func (p *parser) equality() (Expr, error) {
 		return nil, err
 	}
 
-	for p.match(tokens.EQUAL, tokens.NOT_EQUAL, tokens.STARTS_WITH, tokens.MATCHES) {
+	for p.match(tokens.EQUAL, tokens.NOT_EQUAL, tokens.BUILTIN) {
 		operator := p.previous()
-		right, err := p.comparison()
-		if err != nil {
-			return nil, err
+
+		if operator.Type == tokens.BUILTIN {
+			builtin := builtins.ForLexeme(operator.Lexeme)
+			right, err := p.comparison()
+			if err != nil {
+				return nil, err
+			}
+			expr = Infix{Left: expr, Operator: operator, Builtin: builtin, Right: right}
+		} else {
+			right, err := p.comparison()
+			if err != nil {
+				return nil, err
+			}
+			expr = Binary{Left: expr, Operator: operator, Right: right}
 		}
-		expr = Binary{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr, nil
@@ -325,6 +381,19 @@ func (p *parser) advance() tokens.Token {
 	}
 
 	return p.previous()
+}
+
+// Restore the position in the token stream to one returned by save().
+func (p *parser) restore(pos int) {
+	if pos >= 0 && pos < len(p.tokens) {
+		p.current = pos
+	}
+}
+
+// Returns the current position in the token stream. Can revert to this
+// position in the stream with restore().
+func (p *parser) save() int {
+	return p.current
 }
 
 // Returns true if the next token that would be returned by 'advance' is EOF.

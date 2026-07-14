@@ -24,13 +24,15 @@ package com.circleci.expr;
  * expression -> logic_or
  * logic_or -> logic_and ( "or" logic_and )*;
  * logic_and -> equality ( "and" equality )*;
- * equality -> comparison ( ( "==" | "!=" | "starts-with" | "matches" ) comparison )*;
+ * equality -> comparison ( ( "==" | "!=" | BUILTIN ) comparison )*;
  * comparison -> unary ( ( ">=" | ">" | "<=" | "<" ) unary)*;
  * unary -> "not" unary | primary;
  * primary -> "true" | "false" | NUMBER | STRING | IDENTIFIER | PATTERN | "(" expression ")"
  */
 
 import java.util.List;
+
+import com.circleci.expr.Builtin;
 
 import static com.circleci.expr.Errors.ErrorMessage;
 import static com.circleci.expr.TokenType.*;
@@ -45,7 +47,8 @@ public class Parser {
     public static enum Type {
       UNEXPECTED_ADDITIONAL_INPUT("Unexpected additional input."),
       EXPECTED_EXPRESSION("Expected expression."),
-      EXPECTED_RIGHT_PAREN("Expected ')' after expression.");
+      EXPECTED_RIGHT_PAREN("Expected ')' after expression."),
+      UNKNOWN_BUILTIN_FUNCTION("Unknown infix function.");
 
       public final String message;
       private Type(String message) {
@@ -99,6 +102,12 @@ public class Parser {
               expression,
               this.token.charPos,
               1);
+
+        case UNKNOWN_BUILTIN_FUNCTION ->
+          Errors.errorMessage("Unknown infix function:",
+              expression,
+              this.token.charPos,
+              errorString.length());
       };
     }
   }
@@ -124,9 +133,50 @@ public class Parser {
    */
   public Expr parse() {
     Expr expr =  expression();
-    if (!eof()) throw new ParseError(peek(), ParseError.Type.UNEXPECTED_ADDITIONAL_INPUT);
+    if (!eof()) {
+      checkUnrecognisedFunction();
+
+      throw new ParseError(peek(), ParseError.Type.UNEXPECTED_ADDITIONAL_INPUT);
+    }
 
     return expr;
+  }
+
+  /**
+   * Throw ParseError if remaining tokens match the shape of a builtin function
+   * call.
+   *
+   * If an invalid name is used for a builtin function the stream of tokens
+   * will look like:
+   * [...tokens that parse as `comparison`..., IDENT, ...more tokens...]
+   *
+   * The tokens to the left of IDENT can terminate an expression. IDENT and the
+   * following tokens (if any) are extra input.
+   *
+   * If the tokens following IDENT also parse as a `comparison` then it's very
+   * likely that IDENT is a misspelled builtin function name.
+   */
+  private void checkUnrecognisedFunction() {
+    var pos = save();
+
+    // Might be an unrecognised function name
+    if (match(IDENTIFIER)) {
+      Token potentialBuiltin = previous();
+
+      try {
+        // If the rest of the token stream parses as a valid operand then we
+        // probably have an invalid function name in potentialBuiltin.
+        Expr rest = comparison();
+      }
+      catch (ParseError pe) {
+        // If the rest of the token stream doesn't parse as a valid operand
+        // then we can't assume anything, undo any token consumption
+        restore(pos);
+        return;
+      }
+
+      throw new ParseError(potentialBuiltin, ParseError.Type.UNKNOWN_BUILTIN_FUNCTION);
+    }
   }
 
   /**
@@ -172,10 +222,19 @@ public class Parser {
   private Expr equality() {
     Expr expr = comparison();
 
-    while (match(EQUAL, NOT_EQUAL, STARTS_WITH, MATCHES)) {
+    while (match(EQUAL, NOT_EQUAL, BUILTIN)) {
       Token operator = previous();
-      Expr right = comparison();
-      expr = new Expr.Binary(expr, operator, right);
+
+      if (operator.type == BUILTIN) {
+        var builtin = Builtin.forLexeme(operator.lexeme);
+
+        Expr right = comparison();
+        expr = new Expr.Infix(expr, operator, builtin, right);
+      }
+      else {
+        Expr right = comparison();
+        expr = new Expr.Binary(expr, operator, right);
+      }
     }
 
     return expr;
@@ -288,6 +347,23 @@ public class Parser {
   private Token advance() {
     if (!eof()) current++;
     return previous();
+  }
+
+  /**
+   * Restore the position in the token stream to one returned by save().
+   */
+  private void restore(int pos) {
+    if (pos >= 0 && pos < tokens.size()) {
+      current = pos;
+    }
+  }
+
+  /**
+   * Returns the current position in the token stream. Can revert to this
+   * position in the stream with restore().
+   */
+  private int save() {
+    return current;
   }
 
   /**

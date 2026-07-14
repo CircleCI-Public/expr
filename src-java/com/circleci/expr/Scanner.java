@@ -136,10 +136,6 @@ public class Scanner {
   private static final Map<String, TokenType> keywords;
   static {
     keywords = new HashMap<>();
-    keywords.put("starts-with", STARTS_WITH);
-    keywords.put("STARTS-WITH", STARTS_WITH);
-    keywords.put("matches", MATCHES);
-    keywords.put("MATCHES", MATCHES);
     keywords.put("and", AND);
     keywords.put("AND", AND);
     keywords.put("or", OR);
@@ -384,8 +380,15 @@ public class Scanner {
     }
 
     String identifier = lexeme();
-    TokenType type = keywords.getOrDefault(identifier, IDENTIFIER);
-    addToken(type, identifier);
+
+    var builtin = Builtin.forLexeme(identifier);
+    if (builtin != null) {
+      addToken(BUILTIN, identifier);
+    }
+    else {
+      TokenType type = keywords.getOrDefault(identifier, IDENTIFIER);
+      addToken(type, identifier);
+    }
   }
 
   /**

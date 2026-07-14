@@ -87,12 +87,21 @@ func TestScansKeywords(t *testing.T) {
 
 		{"starts-with",
 			[]tokens.Token{
-				{Type: tokens.STARTS_WITH, Lexeme: "starts-with", CharPos: 0, Literal: "starts-with"},
+				{Type: tokens.BUILTIN, Lexeme: "starts-with", CharPos: 0, Literal: "starts-with"},
 				{Type: tokens.EOF, Lexeme: "", CharPos: 11}}},
 		{"STARTS-WITH",
 			[]tokens.Token{
-				{Type: tokens.STARTS_WITH, Lexeme: "STARTS-WITH", CharPos: 0, Literal: "STARTS-WITH"},
+				{Type: tokens.BUILTIN, Lexeme: "STARTS-WITH", CharPos: 0, Literal: "STARTS-WITH"},
 				{Type: tokens.EOF, Lexeme: "", CharPos: 11}}},
+
+		{"matches",
+			[]tokens.Token{
+				{Type: tokens.BUILTIN, Lexeme: "matches", CharPos: 0, Literal: "matches"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 7}}},
+		{"MATCHES",
+			[]tokens.Token{
+				{Type: tokens.BUILTIN, Lexeme: "MATCHES", CharPos: 0, Literal: "MATCHES"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 7}}},
 	}
 
 	for _, tt := range tests {

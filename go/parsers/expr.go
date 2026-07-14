@@ -20,11 +20,15 @@ IN THE SOFTWARE.
 
 package parsers
 
-import "github.com/circleci/expr/go/tokens"
+import (
+	"github.com/circleci/expr/go/builtins"
+	"github.com/circleci/expr/go/tokens"
+)
 
 type Visitor[T any] interface {
 	VisitLogicalExpr(expr Logical) (T, error)
 	VisitBinaryExpr(expr Binary) (T, error)
+	VisitInfixExpr(expr Infix) (T, error)
 	VisitUnaryExpr(expr Unary) (T, error)
 	VisitLiteralExpr(expr Literal) (T, error)
 	VisitIdentifierExpr(expr Identifier) (T, error)
@@ -53,6 +57,8 @@ func (v *Visitable[T]) Accept(visitor Visitor[T]) (T, error) {
 		return visitor.VisitLogicalExpr(expr)
 	case Binary:
 		return visitor.VisitBinaryExpr(expr)
+	case Infix:
+		return visitor.VisitInfixExpr(expr)
 	case Unary:
 		return visitor.VisitUnaryExpr(expr)
 	case Literal:
@@ -83,6 +89,16 @@ type Binary struct {
 }
 
 func (b Binary) isExpr() {}
+
+// An infix builtin function node in the AST.
+type Infix struct {
+	Left     Expr
+	Operator tokens.Token
+	Builtin  builtins.Type
+	Right    Expr
+}
+
+func (i Infix) isExpr() {}
 
 // A unary operator node in the AST.
 type Unary struct {

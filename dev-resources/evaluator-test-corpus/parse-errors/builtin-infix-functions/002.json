@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "hello invalid world",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "IDENTIFIER",
+      "errorType" : "Parser/UNKNOWN_BUILTIN_FUNCTION",
+      "lexeme" : "invalid",
+      "charPos" : 6
+    }
+  }
+}

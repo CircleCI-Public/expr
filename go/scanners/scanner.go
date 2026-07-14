@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/circleci/expr/go/builtins"
 	"github.com/circleci/expr/go/errors"
 	"github.com/circleci/expr/go/tokens"
 )
@@ -138,20 +139,16 @@ func (e Error) AsErrorMessage(expression string) string {
 }
 
 var keywords = map[string]tokens.TokenType{
-	"starts-with": tokens.STARTS_WITH,
-	"STARTS-WITH": tokens.STARTS_WITH,
-	"matches":     tokens.MATCHES,
-	"MATCHES":     tokens.MATCHES,
-	"and":         tokens.AND,
-	"AND":         tokens.AND,
-	"or":          tokens.OR,
-	"OR":          tokens.OR,
-	"not":         tokens.NOT,
-	"NOT":         tokens.NOT,
-	"true":        tokens.TRUE,
-	"TRUE":        tokens.TRUE,
-	"false":       tokens.FALSE,
-	"FALSE":       tokens.FALSE,
+	"and":   tokens.AND,
+	"AND":   tokens.AND,
+	"or":    tokens.OR,
+	"OR":    tokens.OR,
+	"not":   tokens.NOT,
+	"NOT":   tokens.NOT,
+	"true":  tokens.TRUE,
+	"TRUE":  tokens.TRUE,
+	"false": tokens.FALSE,
+	"FALSE": tokens.FALSE,
 }
 
 type scanner struct {
@@ -396,12 +393,17 @@ func (s *scanner) identifier() {
 	}
 
 	identifier := s.lexeme()
-	tokenType := keywords[identifier]
-	if tokenType == tokens.NOT_FOUND {
-		tokenType = tokens.IDENTIFIER
-	}
 
-	s.addTokenLiteral(tokenType, identifier)
+	builtin := builtins.ForLexeme(identifier)
+	if builtin != builtins.NOT_FOUND {
+		s.addTokenLiteral(tokens.BUILTIN, identifier)
+	} else {
+		tokenType := keywords[identifier]
+		if tokenType == tokens.NOT_FOUND {
+			tokenType = tokens.IDENTIFIER
+		}
+		s.addTokenLiteral(tokenType, identifier)
+	}
 }
 
 // Add a token without a literal value to the `tokens` list.

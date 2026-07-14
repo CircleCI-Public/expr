@@ -306,41 +306,41 @@
                                            :charPos 4}]}
 
 {:name "starts-with-requires-string-operands"
- :tests ["\"string\" starts-with 5" {} {:tokenType "STARTS_WITH"
+ :tests ["\"string\" starts-with 5" {} {:tokenType "BUILTIN"
                                         :errorType "Interpreter/EXPECTED_STRING_OPERAND"
                                         :lexeme "starts-with"
                                         :charPos 9}
-         "false starts-with \"string\"" {} {:tokenType "STARTS_WITH"
+         "false starts-with \"string\"" {} {:tokenType "BUILTIN"
                                             :errorType "Interpreter/EXPECTED_STRING_OPERAND"
                                             :lexeme "starts-with"
                                             :charPos 6}
-         "55 starts-with 5" {} {:tokenType "STARTS_WITH"
+         "55 starts-with 5" {} {:tokenType "BUILTIN"
                                 :errorType "Interpreter/EXPECTED_STRING_OPERAND"
                                 :lexeme "starts-with"
                                 :charPos 3}
-         "false starts-with false" {} {:tokenType "STARTS_WITH"
+         "false starts-with false" {} {:tokenType "BUILTIN"
                                        :errorType "Interpreter/EXPECTED_STRING_OPERAND"
                                        :lexeme "starts-with"
                                        :charPos 6}
-         "foo starts-with \"f\"" {"foo" 55} {:tokenType "STARTS_WITH"
+         "foo starts-with \"f\"" {"foo" 55} {:tokenType "BUILTIN"
                                              :errorType "Interpreter/EXPECTED_STRING_OPERAND"
                                              :lexeme "starts-with"
                                              :charPos 4}]}
 
 {:name "matches-requires-correct-operands"
- :tests ["5 matches /pattern/" {} {:tokenType "MATCHES"
+ :tests ["5 matches /pattern/" {} {:tokenType "BUILTIN"
                                    :errorType "Interpreter/EXPECTED_STRING_OPERAND"
                                    :lexeme "matches"
                                    :charPos 2}
-         "foo matches /pattern/" {"foo" 55} {:tokenType "MATCHES"
+         "foo matches /pattern/" {"foo" 55} {:tokenType "BUILTIN"
                                              :errorType "Interpreter/EXPECTED_STRING_OPERAND"
                                              :lexeme "matches"
                                              :charPos 4}
-         "\"string\" matches true" {} {:tokenType "MATCHES"
+         "\"string\" matches true" {} {:tokenType "BUILTIN"
                                        :errorType "Interpreter/EXPECTED_PATTERN_OPERAND"
                                        :lexeme "matches"
                                        :charPos 9}
-         "foo matches 12" {"foo" "string"} {:tokenType "MATCHES"
+         "foo matches 12" {"foo" "string"} {:tokenType "BUILTIN"
                                             :errorType "Interpreter/EXPECTED_PATTERN_OPERAND"
                                             :lexeme "matches"
                                             :charPos 4}]}
@@ -700,3 +700,21 @@
                                       :tokenType "EOF"
                                       :lexeme ""
                                       :charPos 22}]}
+
+{:name ["parse-errors" "builtin-infix-functions"]
+ :tests ["1 > 2 and hello world" {} {:errorType "Parser/UNEXPECTED_ADDITIONAL_INPUT"
+                                     :tokenType "IDENTIFIER"
+                                     :lexeme "world"
+                                     :charPos 16}
+         "hello invalid world" {} {:tokenType "IDENTIFIER"
+                                   :errorType "Parser/UNKNOWN_BUILTIN_FUNCTION"
+                                   :lexeme "invalid"
+                                   :charPos 6}
+         "true or hello world bar" {} {:tokenType "IDENTIFIER"
+                                       :errorType "Parser/UNKNOWN_BUILTIN_FUNCTION"
+                                       :lexeme "world"
+                                       :charPos 14}
+         "4 invalid 5" {} {:tokenType "IDENTIFIER"
+                           :errorType "Parser/UNKNOWN_BUILTIN_FUNCTION"
+                           :lexeme "invalid"
+                           :charPos 2}]}

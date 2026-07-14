@@ -42,6 +42,7 @@ public abstract class Expr {
   public interface Visitor<T> {
     T visitLogicalExpr(Logical expr);
     T visitBinaryExpr(Binary expr);
+    T visitInfixExpr(Infix expr);
     T visitUnaryExpr(Unary expr);
     T visitLiteralExpr(Literal expr);
     T visitIdentifierExpr(Identifier expr);
@@ -85,6 +86,28 @@ public abstract class Expr {
     @Override
     public <T> T accept(Visitor<T> visitor) {
       return visitor.visitBinaryExpr(this);
+    }
+  }
+
+  /**
+   * An infix builtin function node in the AST.
+   */
+  public static class Infix extends Expr {
+    public final Expr left;
+    public final Token operator;
+    public final Builtin builtin;
+    public final Expr right;
+
+    public Infix(Expr left, Token operator, Builtin builtin, Expr right) {
+      this.left = left;
+      this.operator = operator;
+      this.builtin = builtin;
+      this.right = right;
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitInfixExpr(this);
     }
   }
 
