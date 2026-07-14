@@ -8,8 +8,10 @@ tasks:
 
   test:
     desc: Run the tests
+    vars:
+      ARGS: '{{default "./..." .CLI_ARGS}}'
     cmds:
-      - go tool gotestsum ./... -- -race
+      - go tool gotestsum -- -race {{.ARGS}}
 
   fmt:
     desc: Fmt the code
