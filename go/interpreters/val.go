@@ -198,6 +198,16 @@ func (l Val) Equal(r Val) bool {
 	return l.Unbox() == r.Unbox()
 }
 
+func (l Val) Contains(r Val) (bool, error) {
+	left, lok := l.String()
+	right, rok := r.String()
+	if !lok || !rok {
+		return false, ErrNeedString
+	}
+
+	return strings.Contains(left, right), nil
+}
+
 func (l Val) StartsWith(r Val) (bool, error) {
 	left, lok := l.String()
 	right, rok := r.String()

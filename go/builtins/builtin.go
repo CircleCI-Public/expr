@@ -25,12 +25,15 @@ type Type int
 const (
 	NOT_FOUND Type = iota
 
+	CONTAINS
 	MATCHES
 	STARTS_WITH
 )
 
 func (bt Type) String() string {
 	switch bt {
+	case CONTAINS:
+		return "CONTAINS"
 	case MATCHES:
 		return "MATCHES"
 	case STARTS_WITH:
@@ -44,6 +47,10 @@ func (bt Type) String() string {
 
 func ForLexeme(lexeme string) Type {
 	switch lexeme {
+	case "contains":
+		return CONTAINS
+	case "CONTAINS":
+		return CONTAINS
 	case "matches":
 		return MATCHES
 	case "MATCHES":

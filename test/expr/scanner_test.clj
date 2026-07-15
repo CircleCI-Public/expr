@@ -49,6 +49,11 @@
     "FALSE" [{:type TokenType/FALSE :lexeme "FALSE" :pos 0 :literal "FALSE"}
              {:type TokenType/EOF :lexeme "" :pos 5}]
 
+    "contains" [{:type TokenType/BUILTIN :lexeme "contains" :pos 0 :literal "contains"}
+                {:type TokenType/EOF :lexeme "" :pos 8}]
+    "CONTAINS" [{:type TokenType/BUILTIN :lexeme "CONTAINS" :pos 0 :literal "CONTAINS"}
+                {:type TokenType/EOF :lexeme "" :pos 8}]
+
     "starts-with" [{:type TokenType/BUILTIN :lexeme "starts-with" :pos 0 :literal "starts-with"}
                    {:type TokenType/EOF :lexeme "" :pos 11}]
     "STARTS-WITH" [{:type TokenType/BUILTIN :lexeme "STARTS-WITH" :pos 0 :literal "STARTS-WITH"}

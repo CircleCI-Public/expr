@@ -23,11 +23,14 @@ package com.circleci.expr;
 import java.util.Set;
 
 public enum Builtin {
+  CONTAINS,
   MATCHES,
   STARTS_WITH;
 
   public static Builtin forLexeme(String lexeme) {
     return switch (lexeme) {
+      case "contains" -> CONTAINS;
+      case "CONTAINS" -> CONTAINS;
       case "matches" -> MATCHES;
       case "MATCHES" -> MATCHES;
       case "starts-with" -> STARTS_WITH;

@@ -197,6 +197,15 @@
          "5 <= foo" {"foo" 4} false
          "foo <= 5" {"foo" 1} true
 
+         ;; ========
+         ;; contains
+         ;; ========
+         "\"hello world\" contains \"hello\"" {} true
+         "\"hello world\" contains \"api\"" {} false
+         "\"hello world\" contains foo" {"foo" "lo wo"} true
+         "foo contains \"ello\"" {"foo" "hello world"} true
+         "foo contains \"api\"" {"foo" "hello world"} false
+
          ;; ===========
          ;; starts-with
          ;; ===========
@@ -306,6 +315,28 @@
                                            :errorType "Interpreter/EXPECTED_NUMERIC_OPERAND"
                                            :lexeme "<="
                                            :charPos 4}]}
+
+{:name "contains-requires-string-operands"
+ :tests ["\"string\" contains 5" {} {:tokenType "BUILTIN"
+                                     :errorType "Interpreter/EXPECTED_STRING_OPERAND"
+                                     :lexeme "contains"
+                                     :charPos 9}
+         "false contains \"string\"" {} {:tokenType "BUILTIN"
+                                         :errorType "Interpreter/EXPECTED_STRING_OPERAND"
+                                         :lexeme "contains"
+                                         :charPos 6}
+         "55 contains 5" {} {:tokenType "BUILTIN"
+                             :errorType "Interpreter/EXPECTED_STRING_OPERAND"
+                             :lexeme "contains"
+                             :charPos 3}
+         "false contains false" {} {:tokenType "BUILTIN"
+                                    :errorType "Interpreter/EXPECTED_STRING_OPERAND"
+                                    :lexeme "contains"
+                                    :charPos 6}
+         "foo contains \"f\"" {"foo" 55} {:tokenType "BUILTIN"
+                                          :errorType "Interpreter/EXPECTED_STRING_OPERAND"
+                                          :lexeme "contains"
+                                          :charPos 4}]}
 
 {:name "starts-with-requires-string-operands"
  :tests ["\"string\" starts-with 5" {} {:tokenType "BUILTIN"
