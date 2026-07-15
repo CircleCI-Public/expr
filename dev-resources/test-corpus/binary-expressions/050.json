@@ -1,6 +1,6 @@
 {
   "input" : {
-    "expression" : "foo starts-with \"hello\"",
+    "expression" : "foo contains \"ello\"",
     "environment" : {
       "foo" : "hello world"
     }

@@ -1,6 +1,6 @@
 {
   "input" : {
-    "expression" : "\"hello world\" matches /hello\\s\\w+/",
+    "expression" : "\"hello world\" starts-with \"hello\"",
     "environment" : { }
   },
   "expected" : {

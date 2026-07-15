@@ -1,9 +1,9 @@
 {
   "input" : {
-    "expression" : "\"hello world\" matches /\\w+ world/",
+    "expression" : "\"hello world\" starts-with \"api\"",
     "environment" : { }
   },
   "expected" : {
-    "result" : true
+    "result" : false
   }
 }

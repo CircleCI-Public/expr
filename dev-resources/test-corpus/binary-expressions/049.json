@@ -1,8 +1,8 @@
 {
   "input" : {
-    "expression" : "\"hello world\" starts-with foo",
+    "expression" : "\"hello world\" contains foo",
     "environment" : {
-      "foo" : "he"
+      "foo" : "lo wo"
     }
   },
   "expected" : {

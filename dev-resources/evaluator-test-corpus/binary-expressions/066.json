@@ -1,8 +1,8 @@
 {
   "input" : {
-    "expression" : "foo starts-with \"api\"",
+    "expression" : "bar matches /fo+d/",
     "environment" : {
-      "foo" : "hello world"
+      "bar" : "hi"
     }
   },
   "expected" : {

@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "false contains \"string\"",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "BUILTIN",
+      "errorType" : "Interpreter/EXPECTED_STRING_OPERAND",
+      "lexeme" : "contains",
+      "charPos" : 6
+    }
+  }
+}
