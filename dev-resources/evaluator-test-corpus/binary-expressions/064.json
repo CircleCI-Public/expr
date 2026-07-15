@@ -1,8 +1,8 @@
 {
   "input" : {
-    "expression" : "\"hello world\" contains foo",
+    "expression" : "bar matches /fo+d/",
     "environment" : {
-      "foo" : "lo wo"
+      "bar" : "fooooood"
     }
   },
   "expected" : {

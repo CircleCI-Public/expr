@@ -1,11 +1,9 @@
 {
   "input" : {
-    "expression" : "bar matches /(?i)\\..\\*/",
-    "environment" : {
-      "bar" : ".a*"
-    }
+    "expression" : "\"hello world\" matches /world$/",
+    "environment" : { }
   },
   "expected" : {
-    "result" : true
+    "result" : false
   }
 }

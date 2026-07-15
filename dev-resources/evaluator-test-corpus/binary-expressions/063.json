@@ -1,11 +1,11 @@
 {
   "input" : {
-    "expression" : "bar matches /(?i)\\..\\*/",
+    "expression" : "bar matches /fo+d/",
     "environment" : {
-      "bar" : "aa*"
+      "bar" : "food"
     }
   },
   "expected" : {
-    "result" : false
+    "result" : true
   }
 }

@@ -85,6 +85,15 @@ func TestScansKeywords(t *testing.T) {
 				{Type: tokens.FALSE, Lexeme: "FALSE", CharPos: 0, Literal: "FALSE"},
 				{Type: tokens.EOF, Lexeme: "", CharPos: 5}}},
 
+		{"contains",
+			[]tokens.Token{
+				{Type: tokens.BUILTIN, Lexeme: "contains", CharPos: 0, Literal: "contains"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 8}}},
+		{"CONTAINS",
+			[]tokens.Token{
+				{Type: tokens.BUILTIN, Lexeme: "CONTAINS", CharPos: 0, Literal: "CONTAINS"},
+				{Type: tokens.EOF, Lexeme: "", CharPos: 8}}},
+
 		{"starts-with",
 			[]tokens.Token{
 				{Type: tokens.BUILTIN, Lexeme: "starts-with", CharPos: 0, Literal: "starts-with"},

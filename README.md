@@ -45,13 +45,17 @@ The boolean literals are `true`, and `false`.
 ## Builtin functions
 Builtin functions are infix functions which are used like operators.
 
+Simple matching: `contains`
+* left and right operands must be strings. The `contains` function evaluates
+  true if—and only if—the right operand is a substring of the left operand.
+
 Equality: `starts-with`
 * string prefix equality
 
 Matching: `matches`
-* regular expression string match. The left-hand side operand must be a string,
-  the right-hand side operand must be a pattern value. The `matches` operator
-  evaluates true if—and only if—the entire string matches the pattern.
+* regular expression string match. The left operand must be a string, the right
+  operand must be a pattern value. The `matches` function evaluates true if—and
+  only if—the entire string matches the pattern.
 
 ## Grammar
 

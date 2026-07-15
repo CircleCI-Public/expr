@@ -1,9 +1,7 @@
 {
   "input" : {
-    "expression" : "bar matches /fo+d/",
-    "environment" : {
-      "bar" : "fd"
-    }
+    "expression" : "\"hello world\" matches /^world/",
+    "environment" : { }
   },
   "expected" : {
     "result" : false

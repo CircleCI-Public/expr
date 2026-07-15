@@ -299,6 +299,8 @@ type infixFunction func(left, right Val) (Val, error)
 
 func implFor(expr parsers.Infix) infixFunction {
 	switch expr.Builtin {
+	case builtins.CONTAINS:
+		return contains(expr)
 	case builtins.MATCHES:
 		return matches(expr)
 	case builtins.STARTS_WITH:
@@ -306,6 +308,19 @@ func implFor(expr parsers.Infix) infixFunction {
 	}
 
 	panic("Encountered unknown builtins.Type value")
+}
+
+func contains(expr parsers.Infix) infixFunction {
+	return func(left, right Val) (Val, error) {
+		res, err := left.Contains(right)
+		if err != nil {
+			return UndefinedVal(), Error{
+				Type:  EXPECTED_STRING_OPERAND,
+				Token: expr.Operator,
+			}
+		}
+		return BoxBool(res), nil
+	}
 }
 
 func startsWith(expr parsers.Infix) infixFunction {

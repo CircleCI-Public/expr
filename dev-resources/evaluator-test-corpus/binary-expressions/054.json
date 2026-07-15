@@ -1,9 +1,11 @@
 {
   "input" : {
-    "expression" : "\"hello world\" matches /^hello/",
-    "environment" : { }
+    "expression" : "\"hello world\" starts-with foo",
+    "environment" : {
+      "foo" : "he"
+    }
   },
   "expected" : {
-    "result" : false
+    "result" : true
   }
 }

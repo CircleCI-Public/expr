@@ -291,6 +291,7 @@ public class Interpreter implements Expr.Visitor<Object> {
 
   private static BiFunction<Object, Object, Object> implFor(Expr.Infix expr) {
     return switch (expr.builtin) {
+      case CONTAINS -> new ContainsFn(expr);
       case MATCHES -> new MatchesFn(expr);
       case STARTS_WITH ->  new StartsWithFn(expr);
     };
@@ -306,6 +307,18 @@ public class Interpreter implements Expr.Visitor<Object> {
     public Object apply(Object left, Object right) {
       assertStringOperands(expr.operator, left, right);
       return ((String) left).startsWith((String) right);
+    }
+  }
+
+  private static class ContainsFn implements BiFunction<Object, Object, Object> {
+    final Expr.Infix expr;
+    public ContainsFn(Expr.Infix expr) {
+      this.expr = expr;
+    }
+
+    public Object apply(Object left, Object right) {
+      assertStringOperands(expr.operator, left, right);
+      return ((String) left).contains((String) right);
     }
   }
 

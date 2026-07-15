@@ -1,0 +1,16 @@
+{
+  "input" : {
+    "expression" : "foo contains \"f\"",
+    "environment" : {
+      "foo" : 55
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "BUILTIN",
+      "errorType" : "Interpreter/EXPECTED_STRING_OPERAND",
+      "lexeme" : "contains",
+      "charPos" : 4
+    }
+  }
+}
