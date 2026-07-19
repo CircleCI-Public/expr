@@ -44,7 +44,7 @@ jobs:
 
   test-go:
     docker:
-      - image: cimg/go:1.25
+      - image: cimg/go:1.26
         auth:
           username: $DOCKER_HUB_USER
           password: $DOCKER_HUB_PASSWORD
