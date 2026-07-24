@@ -458,6 +458,7 @@ fields:
   - name: "pipeline.trigger_parameters.webhook.body"
     defn: "The request body of the custom webhook that triggered the pipeline run. This will be truncated if exceeds the maximum pipeline value length."
   - name: "pipeline.trigger_source"
+    deprecation_at: 2026-08-01
     domain: trigger-sources
     defn: "The trigger source category indicating how the pipeline was initiated; one of webhook, api, scheduled_pipeline, or schedule (the last being specific to schedule workflows)."
   - name: "pipeline.vcs.target_repository_url"
