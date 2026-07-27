@@ -4,7 +4,7 @@
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.12.5"]
                                   [cheshire "6.2.0"]]
                    :aliases {"generate-corpus" ["run" "-m" "expr.generate-corpus"]}}
-             :cljfmt {:plugins [[dev.weavejester/lein-cljfmt "0.16.4"]]
+             :cljfmt {:plugins [[dev.weavejester/lein-cljfmt "0.16.5"]]
                       :cljfmt {:load-config-file? true}}
              :deploy {:plugins [[circle/s3-wagon-private "1.2.2" :exclusions [commons-codec]]]
                       :repositories [["circle-s3"
