@@ -183,9 +183,7 @@ fields:
   - name: "pipeline.git.origin_repo_url"
     domain: urls
   - name: "pipeline.git.repo_id"
-    type: uint
     defn: "The vcs provider's identifier for the checkout repository."
-    notes: "The uint type may not be an accurate choice generally."
   - name: "pipeline.git.repo_name"
     domain: git-repo-names
     defn: "The name of the checkout repository."
