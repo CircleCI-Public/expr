@@ -23,6 +23,7 @@
 #
 # Deprecation dates (deprecation_at):
 #   2026-08-01 — GitHub App trigger_parameters migrated to pipeline.event.github.* / pipeline.git.*
+#   2026-08-02 — pipeline.vcs.* fields temporarily retained in the registry; still in use, remove once fully migrated away
 #   2026-09-01 — Blocked on outbound webhooks migration; remove once webhooks no longer depend on these fields
 #   2027-01-01 — Legacy trigger_parameters (circleci, git) and pipeline.project.git_url; needs deprecating, no replacement yet
 #   2027-08-01 — GitLab trigger_parameters retained until GitLab consolidation completes
@@ -459,7 +460,33 @@ fields:
     deprecation_at: 2026-08-01
     domain: trigger-sources
     defn: "The trigger source category indicating how the pipeline was initiated; one of webhook, api, scheduled_pipeline, or schedule (the last being specific to schedule workflows)."
+  - name: "pipeline.vcs.event_type"
+    private: true
+    deprecation_at: 2026-08-02
+  - name: "pipeline.vcs.origin_repository_id"
+    private: true
+    deprecation_at: 2026-08-02
+  - name: "pipeline.vcs.origin_repository_url"
+    domain: urls
+    private: true
+    deprecation_at: 2026-08-02
+  - name: "pipeline.vcs.repository_url"
+    domain: urls
+    defn: "The vcs provider url of the checkout source."
+    private: true
+    deprecation_at: 2026-08-02
+  - name: "pipeline.vcs.revision"
+    domain: git-shas
+    private: true
+    deprecation_at: 2026-08-02
+  - name: "pipeline.vcs.target_repository_id"
+    private: true
+    deprecation_at: 2026-08-02
   - name: "pipeline.vcs.target_repository_url"
     domain: urls
     private: true
     deprecation_at: 2026-09-01
+  - name: "pipeline.vcs.type"
+    domain: providers
+    private: true
+    deprecation_at: 2026-08-02
