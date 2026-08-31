@@ -47,6 +47,8 @@ fields:
     defn: "The name of the config source repository, in the format owner/repo-name."
   - name: "pipeline.config.repository.url"
     defn: "The VCS provider URL of the config source repository."
+  - name: "pipeline.config.file_type"
+    defn: "The config file type, defaults to circleci."
   - name: "pipeline.config.sha"
     defn: "The Git SHA of the commit from which the configuration file was fetched."
   - name: "pipeline.config_source"
