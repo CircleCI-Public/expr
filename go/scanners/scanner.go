@@ -44,7 +44,7 @@ const (
 	PATTERN_TOO_LONG          errorType = "Pattern too long"
 )
 
-const MAX_PATTERN_LENGTH = 128
+const MAX_PATTERN_LENGTH = 256
 
 func (et errorType) Symbol() string {
 	switch et {
