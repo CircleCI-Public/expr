@@ -32,7 +32,7 @@ import static com.circleci.expr.Errors.ErrorMessage;
 import static com.circleci.expr.TokenType.*;
 
 public class Scanner {
-  private static final int MAX_PATTERN_LENGTH = 128;
+  private static final int MAX_PATTERN_LENGTH = 256;
 
   public static class ScanError extends RuntimeException implements ErrorMessage {
     static final long serialVersionUID = 1;
