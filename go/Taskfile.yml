@@ -4,14 +4,14 @@ tasks:
   lint:
     desc: Lint code
     cmds:
-      - go tool golangci-lint run
+      - go tool -modfile=tools/go.mod golangci-lint run
 
   test:
     desc: Run the tests
     vars:
       ARGS: '{{default "./..." .CLI_ARGS}}'
     cmds:
-      - go tool gotestsum -- -race {{.ARGS}}
+      - go tool -modfile=tools/go.mod gotestsum -- -race {{.ARGS}}
 
   fmt:
     desc: Fmt the code
@@ -22,3 +22,4 @@ tasks:
     desc: Tidy up
     cmds:
       - go mod tidy
+      - go mod tidy -C tools
