@@ -1,10 +1,7 @@
 version: 2.1
 
 lein_image: &lein_image
-  image: circleci/clojure-service:java21-0.13-dev
-  auth:
-    username: $DOCKER_HUB_USER
-    password: $DOCKER_HUB_PASSWORD
+  image: cimg/clojure:1.12.6-openjdk-21.0
 
 jobs:
   test:
@@ -45,9 +42,6 @@ jobs:
   test-go:
     docker:
       - image: cimg/go:1.27
-        auth:
-          username: $DOCKER_HUB_USER
-          password: $DOCKER_HUB_PASSWORD
     steps:
       - checkout
       - run:
@@ -60,14 +54,10 @@ jobs:
 workflows:
   build-and-deploy:
     jobs:
-      - test:
-          context: org-global
-      - test-go:
-          context: org-global
+      - test
+      - test-go
       - deploy-jar:
-          context:
-            - org-global
-            - circle-jars-publisher
+          context: circle-jars-publisher
           requires:
             - test
           filters:
