@@ -43,7 +43,7 @@ Expr expression.
 The boolean literals are `true`, and `false`.
 
 ## Builtin functions
-Builtin functions are infix functions which are used like operators.
+Builtin functions are infix functions that are used like operators.
 
 Simple matching: `contains`
 * left and right operands must be strings. The `contains` function evaluates
@@ -133,14 +133,14 @@ The precedence table, from weakest to strongest binding:
 The interpreter looks in the environment (a mapping of identifiers to values)
 when it encounters an identifier.
 
-If the identifier is found in the environment the value is used. It is an error
+If the identifier is found in the environment, the value is used. It is an error
 to refer to a variable that isn't found in the environment.
 
 If the variable is found but the value is `null` then the variable is treated
 as being declared but not defined and is given the special `undefined` value.
 
 This has the following behaviour:
-* `undefined` isn't a value, so it is neither equal, nor not-equal with
+* `undefined` isn't a value, so it is neither equal nor not-equal with
   `undefined`.
   * `foo == foo` is false
   * `foo != foo` is false
@@ -188,7 +188,7 @@ Keys:
 * `expected` - the expected outcome, the content differs if the test case is
   expected to successfully interpret the expression and return a result, or if
   there should be an error reported.
-    * If the expression is expected to be interpreted successfully this is a
+    * If the expression is expected to be interpreted successfully, this is a
       JSON object with a single key `result` that maps to the outcome.
     * If the expression is expected to cause an error, this is a JSON object
       with a single key `error` which maps to a JSON object describing the
