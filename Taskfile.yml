@@ -110,4 +110,10 @@ tasks:
           git config --global user.name '{{.GH_NAME}}'
         fi
       - git tag -a '{{.RELEASE_VERSION}}' -m 'Release {{.RELEASE_VERSION}}'
-      - git push origin '{{.RELEASE_VERSION}}'
+      # The checkout key is read-only, so CI pushes over HTTPS with the token.
+      - |
+        if [ -n "${GITHUB_TOKEN:-}" ]; then
+          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/CircleCI-Public/expr.git" '{{.RELEASE_VERSION}}'
+        else
+          git push origin '{{.RELEASE_VERSION}}'
+        fi
