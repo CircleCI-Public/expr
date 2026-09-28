@@ -1,6 +1,2 @@
-/target
-/.lein-*
-/.nrepl-port
-/.cpcache
 /.idea
 *.iml
