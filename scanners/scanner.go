@@ -26,9 +26,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/circleci/expr/go/builtins"
-	"github.com/circleci/expr/go/errors"
-	"github.com/circleci/expr/go/tokens"
+	"github.com/CircleCI-Public/expr/builtins"
+	"github.com/CircleCI-Public/expr/errors"
+	"github.com/CircleCI-Public/expr/tokens"
 )
 
 type errorType string

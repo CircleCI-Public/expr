@@ -28,7 +28,7 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"github.com/circleci/expr/go/scanners"
+	"github.com/CircleCI-Public/expr/scanners"
 )
 
 type sExpVisitor struct{}

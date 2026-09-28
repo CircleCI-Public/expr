@@ -1,0 +1,92 @@
+version: '3'
+
+vars:
+  RESULTS_DIR: test-reports
+  LINT_REPORT: test-reports/lint.xml
+
+tasks:
+  test:
+    desc: Run unit and acceptance tests
+    vars:
+      ARGS: '{{default "./..." .CLI_ARGS}}'
+    cmds:
+      - go tool -modfile tools/go.mod gotestsum -- -race -count=1 {{.ARGS}}
+
+  lint:
+    desc: Run golangci-lint
+    vars:
+      ARGS: '{{default "./..." .CLI_ARGS}}'
+    cmds:
+      - go tool -modfile tools/go.mod golangci-lint run {{.ARGS}}
+
+  fmt:
+    desc: Format the code
+    vars:
+      ARGS: '{{default "./..." .CLI_ARGS}}'
+    cmds:
+      - go tool -modfile tools/go.mod golangci-lint fmt {{.ARGS}}
+
+  mod-tidy:
+    desc: Run 'go mod tidy'
+    vars:
+      ARGS: '{{default "-v" .CLI_ARGS}}'
+    cmds:
+      - go mod tidy {{.ARGS}}
+      - go -C tools mod tidy {{.ARGS}}
+
+  check:
+    desc: Run all static checks
+    cmds:
+      - task: fmt
+        vars:
+          CLI_ARGS: ./... --diff
+      - task: lint
+      - task: mod-tidy
+        vars:
+          CLI_ARGS: -diff
+
+  fix:
+    desc: Auto-fix static checks
+    cmds:
+      - task: fmt
+      - task: mod-tidy
+      - task: lint
+        vars:
+          CLI_ARGS: ./... --fix
+
+  # CI tasks
+
+  ci:lint:
+    desc: Lint with JUnit output
+    cmds:
+      - mkdir -p "{{.RESULTS_DIR}}"
+      - task: lint
+        vars:
+          CLI_ARGS: |
+            ./... \
+            --output.junit-xml.path "{{.LINT_REPORT}}" --output.junit-xml.extended \
+            --output.text.path=stdout --output.text.colors=true
+
+  ci:test:
+    desc: Run tests with JUnit output
+    vars:
+      SUITE: '{{if eq OS "windows"}}windows tests{{else}}ci tests{{end}}'
+      # Windows has no C compiler for cgo, so it gets the pinned Zig.
+      CC:
+        sh: '{{if eq OS "windows"}}echo "$(go run ./cmd/ci/install_zig) cc -target x86_64-windows-gnu"{{else}}go env CC{{end}}'
+    env:
+      CC: '{{.CC}}'
+    cmds:
+      - mkdir -p "{{.RESULTS_DIR}}"
+      - circleci testsuite run "{{.SUITE}}"
+
+  ci:check:
+    desc: Run all static checks, with JUnit output
+    cmds:
+      - task: fmt
+        vars:
+          CLI_ARGS: ./... --diff
+      - task: ci:lint
+      - task: mod-tidy
+        vars:
+          CLI_ARGS: -diff

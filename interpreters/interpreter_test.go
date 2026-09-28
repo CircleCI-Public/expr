@@ -27,8 +27,8 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"github.com/circleci/expr/go/parsers"
-	"github.com/circleci/expr/go/scanners"
+	"github.com/CircleCI-Public/expr/parsers"
+	"github.com/CircleCI-Public/expr/scanners"
 )
 
 func interpret(expression string, env map[string]any) (bool, error) {

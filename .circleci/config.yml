@@ -1,10 +1,52 @@
 version: 2.1
 
+parameters:
+  setup_go:
+    type: string
+    default: github.com/circleci-functions/setup-go@v0.5.3-4edeb2a
+
 lein_image: &lein_image
   image: cimg/clojure:1.12.6-openjdk-21.0
 
+executors:
+  default:
+    docker:
+      - image: cimg/base:current
+
+commands:
+  setup:
+    steps:
+      - checkout
+      - install-go
+      - install-task
+
+  install-go:
+    steps:
+      - run: circleci run << pipeline.parameters.setup_go >> --
+          --version-file go.mod
+          --golangci-lint-cache
+          --checksum '{{ checksum "go.sum" }}_{{ checksum "tools/go.sum" }}'
+      - run: go version
+
+  install-task:
+    steps:
+      - run:
+          name: Install go-task
+          # The curlrc also makes the script's own release download retry.
+          command: |
+            export CURL_HOME="$(mktemp -d)"
+            printf '%s\n' retry=5 retry-delay=2 retry-all-errors > "$CURL_HOME/.curlrc"
+            curl --fail --silent --show-error --location https://taskfile.dev/install.sh -o "$CURL_HOME/install.sh"
+            sh "$CURL_HOME/install.sh" -d -b "$HOME/.local/bin"
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$BASH_ENV"
+
+  store_results:
+    steps:
+      - store_test_results:
+          path: ./test-reports
+
 jobs:
-  test:
+  clj/test:
     docker:
       - *lein_image
     steps:
@@ -39,27 +81,29 @@ jobs:
       - run: lein jar
       - run: lein with-profile +deploy deploy circle-s3
 
-  test-go:
-    docker:
-      - image: cimg/go:1.27
+  go/check:
+    executor: default
     steps:
-      - checkout
-      - run:
-          command: task lint
-          working_directory: go
-      - run:
-          command: task test
-          working_directory: go
+      - setup
+      - run: task ci:check
+      - store_results
+
+  go/test:
+    executor: default
+    steps:
+      - setup
+      - run: task ci:test
+      - store_results
 
 workflows:
   build-and-deploy:
     jobs:
       - test
       - test-go
-      - deploy-jar:
-          context: circle-jars-publisher
-          requires:
-            - test
-          filters:
-            branches:
-              only: main
+#      - deploy-jar:
+#          context: circle-jars-publisher
+#          requires:
+#            - test
+#          filters:
+#            branches:
+#              only: main

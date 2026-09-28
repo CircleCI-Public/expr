@@ -23,9 +23,9 @@ package variableanalyser_test
 import (
 	"testing"
 
-	"github.com/circleci/expr/go/interpreters/variableanalyser"
-	"github.com/circleci/expr/go/parsers"
-	"github.com/circleci/expr/go/scanners"
+	"github.com/CircleCI-Public/expr/interpreters/variableanalyser"
+	"github.com/CircleCI-Public/expr/parsers"
+	"github.com/CircleCI-Public/expr/scanners"
 	"gotest.tools/v3/assert"
 )
 

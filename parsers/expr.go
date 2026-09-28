@@ -21,8 +21,8 @@ IN THE SOFTWARE.
 package parsers
 
 import (
-	"github.com/circleci/expr/go/builtins"
-	"github.com/circleci/expr/go/tokens"
+	"github.com/CircleCI-Public/expr/builtins"
+	"github.com/CircleCI-Public/expr/tokens"
 )
 
 type Visitor[T any] interface {

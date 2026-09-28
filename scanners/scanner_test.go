@@ -29,7 +29,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"gotest.tools/v3/assert"
 
-	"github.com/circleci/expr/go/tokens"
+	"github.com/CircleCI-Public/expr/tokens"
 )
 
 func TestScansKeywords(t *testing.T) {
