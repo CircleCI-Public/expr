@@ -5,13 +5,14 @@ parameters:
     type: string
     default: github.com/circleci-functions/setup-go@v0.5.3-4edeb2a
 
-lein_image: &lein_image
-  image: cimg/clojure:1.12.6-openjdk-21.0
-
 executors:
   default:
     docker:
       - image: cimg/base:current
+
+  clj:
+    docker:
+      - image: cimg/clojure:1.12.6-openjdk-21.0
 
 commands:
   setup:
@@ -46,9 +47,8 @@ commands:
           path: ./test-reports
 
 jobs:
-  clj/test:
-    docker:
-      - *lein_image
+  clj-test:
+    executor: clj
     steps:
       - checkout
       - run:
@@ -65,9 +65,8 @@ jobs:
       - run: lein test
       - run: lein with-profile +cljfmt cljfmt check
 
-  deploy-jar:
-    docker:
-      - *lein_image
+  clj-deploy:
+    executor: clj
     steps:
       - checkout
       - run:
@@ -81,14 +80,14 @@ jobs:
       - run: lein jar
       - run: lein with-profile +deploy deploy circle-s3
 
-  go/check:
+  go-check:
     executor: default
     steps:
       - setup
       - run: task ci:check
       - store_results
 
-  go/test:
+  go-test:
     executor: default
     steps:
       - setup
@@ -98,9 +97,10 @@ jobs:
 workflows:
   build-and-deploy:
     jobs:
-      - test
-      - test-go
-#      - deploy-jar:
+      - go-check
+      - go-test
+      - clj-test
+#      - clj-deploy:
 #          context: circle-jars-publisher
 #          requires:
 #            - test

@@ -1,6 +1,6 @@
 module github.com/CircleCI-Public/expr/tools
 
-go 1.27.1
+go 1.26.8
 
 tool (
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
