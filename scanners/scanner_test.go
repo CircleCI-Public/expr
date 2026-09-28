@@ -594,3 +594,17 @@ func TestPrettyScanErrors(t *testing.T) {
 		assert.Equal(t, expected, err.(Error).AsErrorMessage(expression))
 	})
 }
+
+func TestScanReturnsTheTokensBeforeAnError(t *testing.T) {
+	t.Parallel()
+
+	toks, err := New("branch == \"main\" and pipeline.").Scan()
+	assert.ErrorContains(t, err, "at 29")
+
+	types := []tokens.TokenType{}
+	for _, tok := range toks {
+		types = append(types, tok.Type)
+	}
+	assert.DeepEqual(t, types, []tokens.TokenType{tokens.IDENTIFIER, tokens.EQUAL, tokens.STRING, tokens.AND, tokens.IDENTIFIER})
+	assert.Equal(t, toks[4].Lexeme, "pipeline")
+}
