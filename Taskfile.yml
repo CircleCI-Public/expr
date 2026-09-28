@@ -4,6 +4,15 @@ vars:
   RESULTS_DIR: test-reports
   LINT_REPORT: test-reports/lint.xml
 
+  GH_NAME: 'circleci'
+  GH_EMAIL: 'ops+deploy-bot@circleci.com'
+
+  # Every merge to main tags a release, so the patch component is the CI build
+  # number: unique and increasing without manual bookkeeping. Bump
+  # RELEASE_SERIES for a minor or major release.
+  RELEASE_SERIES: '0.1'
+  RELEASE_VERSION: 'v{{.RELEASE_SERIES}}.{{env "CIRCLE_BUILD_NUM" | default "0"}}'
+
 tasks:
   test:
     desc: Run unit and acceptance tests
@@ -90,3 +99,15 @@ tasks:
       - task: mod-tidy
         vars:
           CLI_ARGS: -diff
+
+  ci:deploy:
+    desc: Tag a release of the Go module
+    cmds:
+      # Only set the deploy-bot identity in CI; never clobber a local git config.
+      - |
+        if [ -n "${CI:-}" ]; then
+          git config --global user.email '{{.GH_EMAIL}}'
+          git config --global user.name '{{.GH_NAME}}'
+        fi
+      - git tag -a '{{.RELEASE_VERSION}}' -m 'Release {{.RELEASE_VERSION}}'
+      - git push origin '{{.RELEASE_VERSION}}'
