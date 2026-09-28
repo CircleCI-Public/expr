@@ -30,9 +30,9 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"github.com/circleci/expr/go/interpreters"
-	"github.com/circleci/expr/go/parsers"
-	"github.com/circleci/expr/go/scanners"
+	"github.com/CircleCI-Public/expr/interpreters"
+	"github.com/CircleCI-Public/expr/parsers"
+	"github.com/CircleCI-Public/expr/scanners"
 )
 
 type rawInput struct {
@@ -191,7 +191,7 @@ func TestCorpus(t *testing.T) {
 	// is not enabled for parallel running
 	t.Parallel()
 
-	tests, err := loadTestData("../dev-resources/test-corpus")
+	tests, err := loadTestData("dev-resources/test-corpus")
 	assert.NilError(t, err, "Unable to load test corpus")
 
 	for name, tt := range tests {
@@ -216,7 +216,7 @@ func TestCorpus(t *testing.T) {
 func TestEvaluatorCorpus(t *testing.T) {
 	t.Parallel()
 
-	tests, err := loadTestData("../dev-resources/evaluator-test-corpus")
+	tests, err := loadTestData("dev-resources/evaluator-test-corpus")
 	assert.NilError(t, err, "Unable to load evaluator test corpus")
 
 	for name, tt := range tests {

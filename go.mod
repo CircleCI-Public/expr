@@ -1,4 +1,4 @@
-module github.com/circleci/expr/go
+module github.com/CircleCI-Public/expr
 
 go 1.26.0
 

@@ -1,4 +1,4 @@
-module github.com/circleci/expr/go/tools
+module github.com/CircleCI-Public/expr/tools
 
 go 1.27.1
 

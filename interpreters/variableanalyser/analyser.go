@@ -20,7 +20,7 @@ IN THE SOFTWARE.
 
 package variableanalyser
 
-import "github.com/circleci/expr/go/parsers"
+import "github.com/CircleCI-Public/expr/parsers"
 
 type analyser struct{}
 
