@@ -168,13 +168,17 @@ func New(source string) *scanner {
 // String.
 //
 // Returns an Error if an error is detected while scanning the source
-// string. See errorType for possible error cases.
+// string, along with the tokens scanned before it, which an editor can use
+// to complete a half-written expression. See errorType for possible error
+// cases.
 func (s *scanner) Scan() ([]tokens.Token, error) {
 	for !s.eof() {
 		s.start = s.current
 		err := s.scanToken()
 		if err != nil {
-			return nil, err
+			toks := make([]tokens.Token, len(s.tokens))
+			copy(toks, s.tokens)
+			return toks, err
 		}
 	}
 
