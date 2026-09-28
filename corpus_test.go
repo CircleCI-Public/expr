@@ -191,7 +191,7 @@ func TestCorpus(t *testing.T) {
 	// is not enabled for parallel running
 	t.Parallel()
 
-	tests, err := loadTestData("dev-resources/test-corpus")
+	tests, err := loadTestData("clj/dev-resources/test-corpus")
 	assert.NilError(t, err, "Unable to load test corpus")
 
 	for name, tt := range tests {
@@ -216,7 +216,7 @@ func TestCorpus(t *testing.T) {
 func TestEvaluatorCorpus(t *testing.T) {
 	t.Parallel()
 
-	tests, err := loadTestData("dev-resources/evaluator-test-corpus")
+	tests, err := loadTestData("clj/dev-resources/evaluator-test-corpus")
 	assert.NilError(t, err, "Unable to load evaluator test corpus")
 
 	for name, tt := range tests {

@@ -13,6 +13,7 @@ executors:
   clj:
     docker:
       - image: cimg/clojure:1.12.6-openjdk-21.0
+    working_directory: ~/project/clj
 
 commands:
   setup:
@@ -26,6 +27,7 @@ commands:
       - run: circleci run << pipeline.parameters.setup_go >> --
           --version-file go.mod
           --golangci-lint-cache
+          --key v2
           --checksum '{{ checksum "go.sum" }}_{{ checksum "tools/go.sum" }}'
       - run: go version
 
@@ -50,7 +52,8 @@ jobs:
   clj-test:
     executor: clj
     steps:
-      - checkout
+      - checkout:
+          path: ~/project
       - run:
           name: Ensure corpus tests are generated
           command: |
@@ -59,7 +62,7 @@ jobs:
             if git diff --exit-code; then
               echo "Test corpus up to date"
             else
-              echo "Regenerate corpus tests with 'rm -r dev-resources/test-corpus dev-resources/evaluator-test-corpus && lein generate-corpus' and check in the changes"
+              echo "Regenerate corpus tests with 'cd clj && rm -r dev-resources/test-corpus dev-resources/evaluator-test-corpus && lein generate-corpus' and check in the changes"
               exit 1
             fi
       - run: lein test
@@ -68,7 +71,8 @@ jobs:
   clj-deploy:
     executor: clj
     steps:
-      - checkout
+      - checkout:
+          path: ~/project
       - run:
           name: Compute version
           command: |
@@ -103,7 +107,7 @@ workflows:
 #      - clj-deploy:
 #          context: circle-jars-publisher
 #          requires:
-#            - test
+#            - clj-test
 #          filters:
 #            branches:
 #              only: main

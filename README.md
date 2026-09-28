@@ -169,13 +169,15 @@ This has the following behaviour:
     return `false`.
 
 ## Building
+The Clojure/Java implementation lives in `clj/`; run `lein` commands from there.
+
 Build the Java sources with `lein javac`
 
 ## Tests
 Run tests with `lein test`
 
 ## Test corpus
-There is a corpus of test cases in `dev-resources/test-corpus` which can be
+There is a corpus of test cases in `clj/dev-resources/test-corpus` which can be
 used to assert that implementations in different languages have the same
 behaviours as the original Java implementation.
 
