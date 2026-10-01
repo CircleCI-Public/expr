@@ -1,4 +1,4 @@
-(defproject circleci/expr (or (System/getenv "VERSION")
+(defproject com.circleci/expr (or (System/getenv "VERSION")
                               "0.1.0-SNAPSHOT")
   :description "A boolean expression evaluator for CircleCI pipeline expressions"
   :url "https://github.com/CircleCI-Public/expr"
