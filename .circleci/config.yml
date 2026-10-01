@@ -71,7 +71,8 @@ jobs:
   clj-deploy:
     executor: clj
     steps:
-      - checkout
+      - checkout:
+          path: ~/project
       - run:
           name: Compute version
           command: |
@@ -80,9 +81,9 @@ jobs:
             version="1.0.<<pipeline.number>>-${CIRCLE_SHA1:0:7}"
             echo "export VERSION=\"${version}\"" >> ${CIRCLE_SHELL_ENV}
             echo $version
-      - run: lein jar
-        # TODO: Clojars setup
-        # - run: lein with-profile +deploy deploy circle-s3
+      - run:
+          name: Publish to Clojars
+          command: lein deploy releases
 
   go-check:
     executor: default
@@ -123,7 +124,7 @@ workflows:
             - go-test
             - clj-test
       - clj-deploy:
-          context: devex-release
+          context: clojars-publish
           requires:
             - ok-to-deploy
       - go-deploy:
