@@ -1,6 +1,8 @@
 module github.com/CircleCI-Public/expr
 
-go 1.26.8
+go 1.26.0
+
+toolchain go1.26.8
 
 require (
 	github.com/google/go-cmp v0.7.0
