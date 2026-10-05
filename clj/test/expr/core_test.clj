@@ -64,7 +64,24 @@
            (Errors/errorMessage "Preamble message:"
                                 "foo.bar.baz == (1 > 5"
                                 21
-                                1)))))
+                                1))))
+
+  (testing "Error is on a newline"
+    (is (= (string/join \newline ["Preamble message:"
+                                  "foo ="
+                                  "bar"
+                                  "     ^"])
+           (Errors/errorMessage "Preamble message:"
+                                (string/join \newline ["foo =" "bar"])
+                                5
+                                1))))
+
+  (testing "Error is on a newline from interpreting"
+    (is (= {:errors [(string/join \newline ["Incomplete token, expected \"==\", found '\n':"
+                                            "a ="
+                                            "b"
+                                            "   ^"])]}
+           (expr/interpret "a =\nb" {})))))
 
 (deftest pretty-scan-error
   (testing "Unexpected characters"

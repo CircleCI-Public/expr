@@ -259,10 +259,6 @@ function invalidPatternAt(o: Outcome): number | undefined {
 const causes: { label: string; matches: (c: Case, o: Outcomes) => boolean }[] =
   [
     {
-      label: 'java: asErrorMessage throws on an error at a newline',
-      matches: (_, o) => o.java.kind === 'E' && o.java.message.startsWith('!!'),
-    },
-    {
       label:
         'java: the pattern length limit is in UTF-16 code units, not UTF-8 bytes',
       matches: (_, o) =>
