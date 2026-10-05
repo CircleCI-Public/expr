@@ -54,14 +54,25 @@ public class Scanner {
     }
 
     public final Type type;
+    /**
+     * The character the error was detected at, or its first UTF-16 code unit
+     * if it's outside the BMP. See `errorCodePoint`.
+     */
     public final char errorChar;
+    /** The character the error was detected at. */
+    public final int errorCodePoint;
     public final int errorPos;
 
-    public ScanError(char errorChar, int errorPos, Type type) {
+    public ScanError(int errorCodePoint, int errorPos, Type type) {
       super(type.message);
       this.type = type;
-      this.errorChar = errorChar;
+      this.errorChar = Character.toChars(errorCodePoint)[0];
+      this.errorCodePoint = errorCodePoint;
       this.errorPos = errorPos;
+    }
+
+    public ScanError(char errorChar, int errorPos, Type type) {
+      this((int) errorChar, errorPos, type);
     }
 
     /**
@@ -83,13 +94,13 @@ public class Scanner {
     public String asErrorMessage(String expression) {
       return switch (this.type) {
         case UNEXPECTED_CHARACTER ->
-          Errors.errorMessage(String.format("Unexpected character '%s':" , this.errorChar),
+          Errors.errorMessage(String.format("Unexpected character %s:", Errors.quoteCodePoint(this.errorCodePoint)),
               expression,
               this.errorPos,
               1);
 
         case INCOMPLETE_EQUALS ->
-          Errors.errorMessage(String.format("Incomplete token, expected \"==\", found '%s':", this.errorChar),
+          Errors.errorMessage(String.format("Incomplete token, expected \"==\", found %s:", Errors.quoteCodePoint(this.errorCodePoint)),
               expression,
               this.errorPos,
               1);
@@ -214,7 +225,7 @@ public class Scanner {
         }
         else {
           // after advance(), current points at the _next_ character
-          throw new ScanError(c, current - 1, ScanError.Type.UNEXPECTED_CHARACTER);
+          throw new ScanError(source.codePointAt(current - 1), current - 1, ScanError.Type.UNEXPECTED_CHARACTER);
         }
         break;
     }
@@ -228,7 +239,7 @@ public class Scanner {
   private void equal() {
     char c = peek();
     if (c != '=') {
-      throw new ScanError(c, current, ScanError.Type.INCOMPLETE_EQUALS);
+      throw new ScanError(eof() ? c : source.codePointAt(current), current, ScanError.Type.INCOMPLETE_EQUALS);
     }
     advance();
     addToken(EQUAL);
@@ -307,7 +318,7 @@ public class Scanner {
         throw new ScanError(c, current, ScanError.Type.INVALID_PATTERN_CHARACTER);
       }
       else if (c > 0xff) {
-        throw new ScanError(c, current, ScanError.Type.INVALID_PATTERN_CHARACTER);
+        throw new ScanError(source.codePointAt(current), current, ScanError.Type.INVALID_PATTERN_CHARACTER);
       }
       advance();
     }

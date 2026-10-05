@@ -244,3 +244,11 @@
              (.-type e)))
       (is (= c (.-errorChar e)))
       (is (= 0 (.-errorPos e))))))
+
+(deftest throws-for-characters-outside-the-bmp
+  (let [e (is (thrown? Scanner$ScanError (util/scan "a 😀")))]
+    (is (= Scanner$ScanError$Type/UNEXPECTED_CHARACTER (.-type e)))
+    (is (= (.codePointAt "😀" 0) (.-errorCodePoint e)))
+    (is (= (char 0xD83D) (.-errorChar e)))
+    (is (= 2 (.-errorPos e)))
+    (is (= "Unexpected character '😀':\na 😀\n  ^" (.asErrorMessage e "a 😀")))))

@@ -23,7 +23,9 @@ with `from`/`to` offsets and `asErrorMessage(expression)` for the same
 multi-line messages as the Go and Clojure implementations.
 
 `scan` never throws: on error it returns the tokens scanned so far with the
-error.
+error. Parsing and evaluating recurse for each level of nesting, so `compile`,
+`parse`, `interpret` and `evaluate` throw a `RangeError` for an expression
+nested too deeply, from about 1,000 levels.
 
 ### In CodeMirror
 

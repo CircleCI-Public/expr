@@ -376,7 +376,11 @@
          "foo matches 12" {"foo" "string"} {:tokenType "BUILTIN"
                                             :errorType "Interpreter/EXPECTED_PATTERN_OPERAND"
                                             :lexeme "matches"
-                                            :charPos 4}]}
+                                            :charPos 4}
+         "5 matches 6" {} {:tokenType "BUILTIN"
+                           :errorType "Interpreter/EXPECTED_PATTERN_OPERAND"
+                           :lexeme "matches"
+                           :charPos 2}]}
 
 {:name "throws-when-variable-lookup-fails"
  :tests ["foo > 5" {} {:tokenType "IDENTIFIER"
@@ -620,7 +624,29 @@
          {}
          {:errorType "Scanner/PATTERN_TOO_LONG"
           :lexeme "/"
+          :charPos 0}
+
+         ;; The limit is in characters, not bytes of UTF-8
+         "/éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé/"
+         {}
+         true
+
+         "/ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé/"
+         {}
+         {:errorType "Scanner/PATTERN_TOO_LONG"
+          :lexeme "/"
           :charPos 0}]}
+
+{:name ["scan-errors" "characters-outside-the-bmp"]
+ :tests ["😀" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme "😀"
+                 :charPos 0}
+         "=😀" {} {:errorType "Scanner/INCOMPLETE_EQUALS"
+                  :lexeme "😀"
+                  :charPos 1}
+         "/😀/" {} {:errorType "Scanner/INVALID_PATTERN_CHARACTER"
+                   :lexeme "😀"
+                   :charPos 1}]}
 
 {:name ["scan-errors" "invalid-numbers"]
  :tests ["9223372036854775808" {} {:errorType "Scanner/INVALID_NUMERIC_LITERAL"

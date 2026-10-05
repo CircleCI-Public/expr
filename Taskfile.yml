@@ -21,6 +21,11 @@ tasks:
     cmds:
       - go tool -modfile tools/go.mod gotestsum -- -race -count=1 {{.ARGS}}
 
+  fuzz:
+    desc: Fuzz the Go implementation; e.g. task fuzz -- -fuzztime 10m
+    cmds:
+      - go test -run '^$' -fuzz FuzzExpr {{.CLI_ARGS}} .
+
   lint:
     desc: Run golangci-lint
     vars:

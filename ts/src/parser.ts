@@ -67,7 +67,9 @@ export class ParseError extends ExprError {
 /**
  * Parse a list of tokens, ending in EOF, into an abstract syntax tree.
  *
- * Throws ParseError if the tokens don't form a valid expression.
+ * Throws ParseError if the tokens don't form a valid expression, or a
+ * RangeError if they're too deeply nested, as parsing recurses for each level
+ * of nesting.
  */
 export function parse(tokens: readonly Token[]): Expr {
   return new Parser(tokens).parse();

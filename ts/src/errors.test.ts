@@ -64,6 +64,14 @@ describe('errorMessage', () => {
 });
 
 describe('errors', () => {
+  it('throw a RangeError for deeply nested expressions', () => {
+    const n = 100_000;
+    assert.throws(
+      () => compile(`${'('.repeat(n)}true${')'.repeat(n)}`),
+      RangeError,
+    );
+  });
+
   it('quote characters as Go does', () => {
     // From Go's fmt.Sprintf("%q", r).
     const cases: [string, string][] = [

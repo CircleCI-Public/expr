@@ -173,6 +173,9 @@ importers:
       '@types/node':
         specifier: ^24.19.1
         version: 24.19.1
+      fast-check:
+        specifier: ^4.10.2
+        version: 4.10.2
       oxfmt:
         specifier: ^0.71.0
         version: 0.71.0
@@ -555,6 +558,10 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  fast-check@4.10.2:
+    resolution: {integrity: sha512-iK2f+YrcmoeGqk6fA0ea2bptcu/itMIm4NfEozq6N25+aG6h7s5HZbB/k1aV7b5w5sFLMCbbtRUsTVR+BgC3xw==}
+    engines: {node: '>=12.17.0'}
+
   oxfmt@0.71.0:
     resolution: {integrity: sha512-lUPUl0d/+Io5pDrsPXWs6rB4N/bpB78oj9CTDpnbulfDz+0r3XXcHPlQ7kRPJ2GjIT4nX+/mcqunOeP9BvsEtg==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -580,6 +587,9 @@ packages:
         optional: true
       vite-plus:
         optional: true
+
+  pure-rand@8.4.2:
+    resolution: {integrity: sha512-vvuOGgcuPJAirlHvuQw1TrOiw7ptaIXXmIbNuiNOY6lNGJJH49PQ1Kj4nd783nPdQhQdicgOjVI2yI/9BD6/Ng==}
 
   re2js@2.8.6:
     resolution: {integrity: sha512-xLgQil4kIUCrAzVk9fRSkxkFNwmygLFjVxXrLc65aE1F0+Zsb8rxumFBy4XKyvgMCTL6kilDq3EZ0piE2dP/Dg==}
@@ -782,6 +792,10 @@ snapshots:
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
 
+  fast-check@4.10.2:
+    dependencies:
+      pure-rand: 8.4.2
+
   oxfmt@0.71.0:
     dependencies:
       tinypool: 2.2.0
@@ -827,6 +841,8 @@ snapshots:
       '@oxlint/binding-win32-arm64-msvc': 1.86.0
       '@oxlint/binding-win32-ia32-msvc': 1.86.0
       '@oxlint/binding-win32-x64-msvc': 1.86.0
+
+  pure-rand@8.4.2: {}
 
   re2js@2.8.6: {}
 

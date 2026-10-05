@@ -21,6 +21,7 @@ IN THE SOFTWARE.
 package errors
 
 import (
+	"slices"
 	"strings"
 )
 
@@ -28,35 +29,47 @@ type Errors interface {
 	AsErrorMessage(expression string) string
 }
 
+// ErrorMessage returns a multi-line message pointing at an error. errorPos
+// and errorLength are in runes, as token positions are.
 func ErrorMessage(preamble, expression string, errorPos, errorLength int) string {
+	runes := []rune(expression)
+
 	// This `+ 1` needs a little bit of explaining.
-	// The call to `strings.LastIndexByte` returns the index of the last
-	// occurrence of a newline before the error position. If there isn't a
-	// newline preceding the error position then `strings.LastIndexByte` returns
-	// -1
+	// The call to `lastIndex` returns the index of the last occurrence of a
+	// newline before the error position. If there isn't a newline preceding
+	// the error position then `lastIndex` returns -1
 	//
-	// In either case, incrementing the result of `strings.LastIndexByte` gets
-	// the start index of the line the error occurred on:
-	// 1. A newline was found: `.LastIndexByte` is the index of the newline, the
+	// In either case, incrementing the result of `lastIndex` gets the start
+	// index of the line the error occurred on:
+	// 1. A newline was found: `lastIndex` is the index of the newline, the
 	//    next index is the start of the line.
-	// 2. A newline was not found: `.LastIndexByte` is -1, the next index (0) is
-	//		the start of the line.
-	lineStart := strings.LastIndexByte(expression[:errorPos], '\n') + 1
-	lineEndOffset := strings.IndexByte(expression[errorPos:], '\n')
+	// 2. A newline was not found: `lastIndex` is -1, the next index (0) is
+	//    the start of the line.
+	lineStart := lastIndex(runes[:errorPos], '\n') + 1
+	lineEndOffset := slices.Index(runes[errorPos:], '\n')
 
 	var errorEnd int
 	if lineEndOffset > 0 {
 		// lineEndOffset is the offset of the first newline from the error
 		// position. Add errorPos to lineEnd to find the index of the newline in
-		// the expression string
+		// the expression
 		errorEnd = errorPos + lineEndOffset
 	} else {
-		errorEnd = len(expression)
+		errorEnd = len(runes)
 	}
 
-	errorLine := expression[lineStart:errorEnd]
+	errorLine := string(runes[lineStart:errorEnd])
 
 	markerLine := strings.Repeat(" ", errorPos-lineStart) + strings.Repeat("^", errorLength)
 
 	return strings.Join([]string{preamble, errorLine, markerLine}, "\n")
+}
+
+func lastIndex(runes []rune, r rune) int {
+	for i := len(runes) - 1; i >= 0; i-- {
+		if runes[i] == r {
+			return i
+		}
+	}
+	return -1
 }

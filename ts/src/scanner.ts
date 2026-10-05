@@ -252,8 +252,9 @@ class Scanner {
       .slice(this.start + 1, this.current - 1)
       .replaceAll('\\/', '/');
 
-    // The limit is in bytes of UTF-8, as in the Go implementation.
-    if (utf8Length(v) > MAX_PATTERN_LENGTH) {
+    // The limit is in characters. Patterns are Latin-1, so that's their
+    // length in UTF-16 code units.
+    if (v.length > MAX_PATTERN_LENGTH) {
       throw new ScanError(ScanErrorType.PATTERN_TOO_LONG, '/', this.start);
     }
 
@@ -360,15 +361,6 @@ class Scanner {
 function charAt(s: string, i: number): string {
   const cp = s.codePointAt(i);
   return cp === undefined ? '\0' : String.fromCodePoint(cp);
-}
-
-function utf8Length(s: string): number {
-  let n = 0;
-  for (const c of s) {
-    const cp = c.codePointAt(0) ?? 0;
-    n += cp < 0x80 ? 1 : cp < 0x800 ? 2 : cp < 0x10000 ? 3 : 4;
-  }
-  return n;
 }
 
 function isEscapableChar(c: string): boolean {

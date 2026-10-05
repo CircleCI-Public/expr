@@ -23,6 +23,7 @@ package interpreters
 import (
 	go_errors "errors"
 	"fmt"
+	"unicode/utf8"
 
 	"github.com/CircleCI-Public/expr/builtins"
 	"github.com/CircleCI-Public/expr/errors"
@@ -83,25 +84,25 @@ func (e Error) AsErrorMessage(expression string) string {
 		return errors.ErrorMessage(fmt.Sprintf("Expected numeric operands to \"%s\" operator:", errorString),
 			expression,
 			e.Token.CharPos,
-			len(errorString))
+			utf8.RuneCountInString(errorString))
 
 	case EXPECTED_STRING_OPERAND:
 		return errors.ErrorMessage(fmt.Sprintf("Expected string operands to \"%s\" operator:", errorString),
 			expression,
 			e.Token.CharPos,
-			len(errorString))
+			utf8.RuneCountInString(errorString))
 
 	case EXPECTED_PATTERN_OPERAND:
 		return errors.ErrorMessage(fmt.Sprintf("Expected the right operand to \"%s\" operator to be a pattern:", errorString),
 			expression,
 			e.Token.CharPos,
-			len(errorString))
+			utf8.RuneCountInString(errorString))
 
 	case UNKNOWN_VARIABLE:
 		return errors.ErrorMessage(fmt.Sprintf("Referred to a variable \"%s\" that does not exist:", errorString),
 			expression,
 			e.Token.CharPos,
-			len(errorString))
+			utf8.RuneCountInString(errorString))
 
 	default:
 		return fmt.Sprintf("Unknown error interpreting expression: '%s'", expression)

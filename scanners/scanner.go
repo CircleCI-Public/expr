@@ -25,6 +25,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/CircleCI-Public/expr/builtins"
 	"github.com/CircleCI-Public/expr/errors"
@@ -342,7 +343,8 @@ func (s *scanner) pattern() error {
 	v := string(s.source[s.start+1 : s.current-1])
 	v = strings.ReplaceAll(v, "\\/", "/")
 
-	if len(v) > MAX_PATTERN_LENGTH {
+	// The limit is in characters, not bytes of UTF-8.
+	if utf8.RuneCountInString(v) > MAX_PATTERN_LENGTH {
 		return Error{Type: PATTERN_TOO_LONG, Char: '/', Pos: s.start}
 	}
 

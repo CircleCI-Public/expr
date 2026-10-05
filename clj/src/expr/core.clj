@@ -24,6 +24,11 @@
                               Interpreter$Error
                               VariableAnalyser)))
 
+(def ^:private too-deeply-nested
+  ;; Parsing, analysing and interpreting recurse for each level of nesting,
+  ;; so a deeply nested expression overflows the stack.
+  {:errors ["Expression is too deeply nested"]})
+
 (defn parse
   [^String expression]
   (try
@@ -33,7 +38,9 @@
     (catch Scanner$ScanError e
       {:errors [(.asErrorMessage e expression)]})
     (catch Parser$ParseError e
-      {:errors [(.asErrorMessage e expression)]})))
+      {:errors [(.asErrorMessage e expression)]})
+    (catch StackOverflowError _
+      too-deeply-nested)))
 
 (defn- variable-token->map
   [token]
@@ -60,7 +67,9 @@
     (catch Scanner$ScanError e
       {:errors [(.asErrorMessage e expression)]})
     (catch Parser$ParseError e
-      {:errors [(.asErrorMessage e expression)]})))
+      {:errors [(.asErrorMessage e expression)]})
+    (catch StackOverflowError _
+      too-deeply-nested)))
 
 (defn interpret
   "Interpret an expression.
@@ -82,7 +91,9 @@
     (catch Parser$ParseError e
       {:errors [(.asErrorMessage e expression)]})
     (catch Interpreter$Error e
-      {:errors [(.asErrorMessage e expression)]})))
+      {:errors [(.asErrorMessage e expression)]})
+    (catch StackOverflowError _
+      too-deeply-nested)))
 
 (defn evaluate
   "Evaluate an expression.
@@ -105,4 +116,6 @@
     (catch Parser$ParseError e
       {:errors [(.asErrorMessage e expression)]})
     (catch Interpreter$Error e
-      {:errors [(.asErrorMessage e expression)]})))
+      {:errors [(.asErrorMessage e expression)]})
+    (catch StackOverflowError _
+      too-deeply-nested)))

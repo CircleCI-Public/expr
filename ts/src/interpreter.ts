@@ -59,9 +59,10 @@ export class InterpreterError extends ExprError {
  * Interpret an expression in an environment, returning the truthiness of its
  * value.
  *
- * Throws InterpreterError if the expression can't be interpreted, or a
- * TypeError if it refers to a variable whose value has no expr equivalent (see
- * toValue).
+ * Throws InterpreterError if the expression can't be interpreted, a TypeError
+ * if it refers to a variable whose value has no expr equivalent (see
+ * toValue), or a RangeError if it's too deeply nested, as evaluation recurses
+ * for each level of nesting.
  */
 export function interpret(expr: Expr, env: Environment): boolean {
   return isTruthy(evaluate(expr, env));
@@ -70,9 +71,10 @@ export function interpret(expr: Expr, env: Environment): boolean {
 /**
  * Evaluate an expression in an environment, returning its value.
  *
- * Throws InterpreterError if the expression can't be evaluated, or a
- * TypeError if it refers to a variable whose value has no expr equivalent (see
- * toValue).
+ * Throws InterpreterError if the expression can't be evaluated, a TypeError
+ * if it refers to a variable whose value has no expr equivalent (see
+ * toValue), or a RangeError if it's too deeply nested, as evaluation recurses
+ * for each level of nesting.
  */
 export function evaluate(expr: Expr, env: Environment): Value {
   const lookup =

@@ -64,7 +64,42 @@
            (Errors/errorMessage "Preamble message:"
                                 "foo.bar.baz == (1 > 5"
                                 21
-                                1)))))
+                                1))))
+
+  (testing "Error is on a newline"
+    (is (= (string/join \newline ["Preamble message:"
+                                  "foo ="
+                                  "bar"
+                                  "     ^"])
+           (Errors/errorMessage "Preamble message:"
+                                (string/join \newline ["foo =" "bar"])
+                                5
+                                1))))
+
+  (testing "Error is on a newline from interpreting"
+    (is (= {:errors [(string/join \newline ["Incomplete token, expected \"==\", found '\\n':"
+                                            "a ="
+                                            "b"
+                                            "   ^"])]}
+           (expr/interpret "a =\nb" {})))))
+
+(deftest quote-code-point
+  (testing "Quotes characters as Go does"
+    (doseq [[c quoted] [[" " "' '"]
+                        ["\u00a0" "'\\u00a0'"]
+                        ["\u200b" "'\\u200b'"]
+                        ["\u0085" "'\\u0085'"]
+                        ["\u0000" "'\\x00'"]
+                        ["\u007f" "'\\x7f'"]
+                        ["\udb40\udc01" "'\\U000e0001'"]
+                        ["é" "'é'"]
+                        ["£" "'£'"]
+                        ["\u2028" "'\\u2028'"]
+                        ["\ufeff" "'\\ufeff'"]
+                        ["😀" "'😀'"]
+                        ["'" "'\\''"]
+                        ["\n" "'\\n'"]]]
+      (is (= quoted (Errors/quoteCodePoint (.codePointAt ^String c 0))) c))))
 
 (deftest pretty-scan-error
   (testing "Unexpected characters"
@@ -340,3 +375,11 @@
                     (.matches "c")))
         v (deref f 200 ::timedout)]
     (is (= v ::timedout) "re2j may have fixed https://github.com/google/re2j/issues/168")))
+
+(deftest deeply-nested-expressions
+  (let [expression (str (string/join (repeat 100000 "(")) "true" (string/join (repeat 100000 ")")))
+        expected {:errors ["Expression is too deeply nested"]}]
+    (is (= expected (expr/parse expression)))
+    (is (= expected (expr/analyse expression)))
+    (is (= expected (expr/interpret expression {})))
+    (is (= expected (expr/evaluate expression {})))))
