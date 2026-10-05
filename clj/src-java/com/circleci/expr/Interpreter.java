@@ -283,8 +283,8 @@ public class Interpreter implements Expr.Visitor<Object> {
   }
 
   private static boolean assertRegexOperands(Token operator, Object left, Object right) {
-    if (!(left instanceof String)) throw new Error(operator, Error.Type.EXPECTED_STRING_OPERAND);
     if (!(right instanceof Pattern)) throw new Error(operator, Error.Type.EXPECTED_PATTERN_OPERAND);
+    if (!(left instanceof String)) throw new Error(operator, Error.Type.EXPECTED_STRING_OPERAND);
 
     return true;
   }

@@ -260,15 +260,6 @@ const causes: { label: string; matches: (c: Case, o: Outcomes) => boolean }[] =
   [
     {
       label:
-        'java: matches checks the left operand is a string before the right is a pattern',
-      matches: (_, o) =>
-        o.java.kind === 'E' &&
-        o.java.errorType === 'Interpreter/EXPECTED_STRING_OPERAND' &&
-        o.go.kind === 'E' &&
-        o.go.errorType === 'Interpreter/EXPECTED_PATTERN_OPERAND',
-    },
-    {
-      label:
         're2: Go accepts duplicate capture group names, re2j and re2js reject them',
       matches: (c, o) =>
         /\(\?P?<(\w+)>.*\(\?P?<\1>/s.test(c.expression) &&
