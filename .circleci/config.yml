@@ -145,10 +145,13 @@ jobs:
             echo $version
       - run:
           name: Publish to npm
-          # Scoped packages publish as restricted unless told otherwise.
+          # Trusted publishing: npm (>= 11.5.1) exchanges the CircleCI OIDC token
+          # for a short-lived publish token. Scoped packages publish as
+          # restricted unless told otherwise.
           command: |
-            echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-            pnpm publish --access public --no-git-checks
+            npm --version
+            export NPM_ID_TOKEN="$(circleci run oidc get --claims '{"aud": "npm:registry.npmjs.org"}')"
+            npm publish --access public
 
   go-check:
     executor: default
