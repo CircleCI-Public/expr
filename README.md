@@ -9,6 +9,9 @@ foo and not bar or baz == "qux" or (12 > 14 or not true)
 An environment mapping identifiers to values can be supplied to the
 interpreter for variable lookup.
 
+There are implementations in Go (this module), Clojure/Java in [`clj/`](clj/),
+and TypeScript in [`ts/`](ts/), which share a test corpus.
+
 ## Operators
 Logical: `and`, `or`
 * These are short-circuiting boolean operators

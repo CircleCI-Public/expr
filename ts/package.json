@@ -1,0 +1,49 @@
+{
+  "name": "@circleci/expr",
+  "version": "0.1.0",
+  "description": "A boolean expression evaluator for CircleCI pipeline expressions",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CircleCI-Public/expr.git",
+    "directory": "ts"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./pipeline-values": {
+      "types": "./dist/pipeline-values.d.ts",
+      "default": "./dist/pipeline-values.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "packageManager": "pnpm@12.9.1",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc",
+    "test": "node --test 'src/**/*.test.ts'",
+    "test:ci": "mkdir -p test-reports && node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=test-reports/junit.xml 'src/**/*.test.ts'",
+    "lint": "oxlint",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "generate": "node scripts/generate-pipeline-values.ts && oxfmt src/pipeline-values.generated.ts",
+    "generate:re2-cases": "node scripts/re2-oracle/update.ts && oxfmt src/testdata/re2-cases.json",
+    "prepack": "pnpm build"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.1",
+    "oxfmt": "^0.71.0",
+    "oxlint": "^1.86.0",
+    "typescript": "^7.0.2",
+    "yaml": "^2.9.1"
+  },
+  "dependencies": {
+    "re2js": "^2.8.6"
+  }
+}
