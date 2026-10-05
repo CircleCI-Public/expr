@@ -198,7 +198,6 @@ workflows:
           requires:
             - ok-to-deploy
       - ts-deploy:
-          context: cci-config-sdk-publishing
           requires:
             - ok-to-deploy
       - go-deploy:
