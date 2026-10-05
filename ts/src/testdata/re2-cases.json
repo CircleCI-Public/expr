@@ -1,0 +1,2573 @@
+[
+  {
+    "pattern": "",
+    "inputs": ["", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "abc",
+    "inputs": ["abc", "ab", "abcd", "ABC"],
+    "go": {
+      "valid": true,
+      "matches": [true, false, false, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false, false, false]
+    }
+  },
+  {
+    "pattern": "a|ab",
+    "inputs": ["a", "ab", "b"],
+    "go": {
+      "valid": true,
+      "matches": [true, false, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true, false]
+    }
+  },
+  {
+    "pattern": "ab|a",
+    "inputs": ["a", "ab"],
+    "go": {
+      "valid": true,
+      "matches": [true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "a*",
+    "inputs": ["", "aaa", "b"],
+    "go": {
+      "valid": true,
+      "matches": [true, true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true, false]
+    }
+  },
+  {
+    "pattern": "a+?b",
+    "inputs": ["ab", "aab"],
+    "go": {
+      "valid": true,
+      "matches": [true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "a??",
+    "inputs": ["", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "(a|b)*c",
+    "inputs": ["abac", "c", "abd"],
+    "go": {
+      "valid": true,
+      "matches": [true, true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true, false]
+    }
+  },
+  {
+    "pattern": "x{2}",
+    "inputs": ["xx", "x", "xxx"],
+    "go": {
+      "valid": true,
+      "matches": [true, false, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false, false]
+    }
+  },
+  {
+    "pattern": "x{2,}",
+    "inputs": ["x", "xx", "xxxxx"],
+    "go": {
+      "valid": true,
+      "matches": [false, true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [false, true, true]
+    }
+  },
+  {
+    "pattern": "x{2,3}",
+    "inputs": ["xx", "xxx", "xxxx"],
+    "go": {
+      "valid": true,
+      "matches": [true, true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true, false]
+    }
+  },
+  {
+    "pattern": "x{0}",
+    "inputs": ["", "x"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "x{,3}",
+    "inputs": ["x{,3}", "xxx"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "x{01}",
+    "inputs": ["x{01}", "x"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "x{a}",
+    "inputs": ["x{a}"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "{",
+    "inputs": ["{"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "}",
+    "inputs": ["}"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "]",
+    "inputs": ["]"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "a{2",
+    "inputs": ["a{2"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "x{1000}",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "x{1001}",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid repeat count: `{1001}`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid repeat count: `{1001}`"
+    }
+  },
+  {
+    "pattern": "x{2,1}",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid repeat count: `{2,1}`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid repeat count: `{2,1}`"
+    }
+  },
+  {
+    "pattern": "x{99999999999}",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid repeat count: `{99999999999}`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid repeat count: `{99999999999}`"
+    }
+  },
+  {
+    "pattern": "(x{100}){10}",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "(x{100}){11}",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid repeat count: `{11}`"
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "((x{10}){10}){10}",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "((x{10}){10}){11}",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid repeat count: `{11}`"
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "(x{500})*",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "((x{500})*){3}",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid repeat count: `{3}`"
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "(x{0}){1000}",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "(x{2,}){500}",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "(x{2,}){501}",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid repeat count: `{501}`"
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "(x{0,}){1000}",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "*",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: missing argument to repetition operator: `*`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: missing argument to repetition operator: `*`"
+    }
+  },
+  {
+    "pattern": "a**",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid nested repetition operator: `**`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid nested repetition operator: `**`"
+    }
+  },
+  {
+    "pattern": "a*+",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid nested repetition operator: `*+`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid nested repetition operator: `*+`"
+    }
+  },
+  {
+    "pattern": "a*?",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "a*??",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid nested repetition operator: `*??`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid nested repetition operator: `*??`"
+    }
+  },
+  {
+    "pattern": "a{2}*",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid nested repetition operator: `{2}*`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid nested repetition operator: `{2}*`"
+    }
+  },
+  {
+    "pattern": "a*{2}",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid nested repetition operator: `*{2}`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid nested repetition operator: `*{2}`"
+    }
+  },
+  {
+    "pattern": "(*)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: missing argument to repetition operator: `*`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: missing argument to repetition operator: `*`"
+    }
+  },
+  {
+    "pattern": "a|*",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: missing argument to repetition operator: `*`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: missing argument to repetition operator: `*`"
+    }
+  },
+  {
+    "pattern": "^*",
+    "inputs": ["", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "$+",
+    "inputs": [""],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\b*",
+    "inputs": [""],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?i)*",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: missing argument to repetition operator: `*`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: missing argument to repetition operator: `*`"
+    }
+  },
+  {
+    "pattern": "a(?i)*",
+    "inputs": ["", "aaa", "AAA"],
+    "go": {
+      "valid": true,
+      "matches": [true, true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true, false]
+    }
+  },
+  {
+    "pattern": "a*(?i)*",
+    "inputs": ["", "aa"],
+    "go": {
+      "valid": true,
+      "matches": [true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": ".",
+    "inputs": ["a", "\n", "\r", " ", "é"],
+    "go": {
+      "valid": true,
+      "matches": [true, false, true, true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false, true, true, true]
+    }
+  },
+  {
+    "pattern": "(?s).",
+    "inputs": ["\n"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "a.c",
+    "inputs": ["abc", "a\nc"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "^abc$",
+    "inputs": ["abc"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "a^b",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "(?m)^a$\\nb",
+    "inputs": ["a\nb"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?m)a$",
+    "inputs": ["a"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\Aab\\z",
+    "inputs": ["ab"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\Z",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\Z`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\Z`"
+    }
+  },
+  {
+    "pattern": "\\G",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\G`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\G`"
+    }
+  },
+  {
+    "pattern": "\\C",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\C`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\C`"
+    }
+  },
+  {
+    "pattern": "a\\bb",
+    "inputs": ["ab"],
+    "go": {
+      "valid": true,
+      "matches": [false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [false]
+    }
+  },
+  {
+    "pattern": "\\bfoo\\b",
+    "inputs": ["foo"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\Bo\\B",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "\\.",
+    "inputs": [".", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\^\\$",
+    "inputs": ["*+?()[]{}|^$"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\-\\_\\#\\!\\\"\\'\\<\\>\\@\\%\\&\\~\\`\\=\\:\\;\\,",
+    "inputs": ["-_#!\"'<>@%&~`=:;,"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\ ",
+    "inputs": [" "],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\/",
+    "inputs": ["/"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\\\",
+    "inputs": ["\\"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\a\\f\\t\\n\\r\\v",
+    "inputs": ["\u0007\f\t\n\r\u000b"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\e",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\e`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\e`"
+    }
+  },
+  {
+    "pattern": "\\y",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\y`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\y`"
+    }
+  },
+  {
+    "pattern": "\\0",
+    "inputs": ["\u0000"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\07",
+    "inputs": ["\u0007"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\101",
+    "inputs": ["A"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\1018",
+    "inputs": ["A8"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\1",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\1`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\1`"
+    }
+  },
+  {
+    "pattern": "\\12",
+    "inputs": ["\n"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\8",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\8`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\8`"
+    }
+  },
+  {
+    "pattern": "\\x41",
+    "inputs": ["A"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\x4",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\x4`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\x4`"
+    }
+  },
+  {
+    "pattern": "\\xZZ",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\xZZ`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\xZZ`"
+    }
+  },
+  {
+    "pattern": "\\x{41}",
+    "inputs": ["A"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\x{}",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\x{}`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\x{}`"
+    }
+  },
+  {
+    "pattern": "\\x{110000}",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\x{110000`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\x{110000`"
+    }
+  },
+  {
+    "pattern": "\\x{10FFFF}",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "a\\Qb*c\\Ed",
+    "inputs": ["ab*cd"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\Qa.b",
+    "inputs": ["a.b", "axb"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "\\Q\\E*",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: missing argument to repetition operator: `*`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: missing argument to repetition operator: `*`"
+    }
+  },
+  {
+    "pattern": "a\\Q\\E*",
+    "inputs": ["", "aa"],
+    "go": {
+      "valid": true,
+      "matches": [true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "\\",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: trailing backslash at end of expression: ``"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: trailing backslash at end of expression"
+    }
+  },
+  {
+    "pattern": "a\\\\",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "\\é",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\é`"
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "\\d+",
+    "inputs": ["123", "12a", "١"],
+    "go": {
+      "valid": true,
+      "matches": [true, false, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false, false]
+    }
+  },
+  {
+    "pattern": "\\D",
+    "inputs": ["a", "1"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "\\s",
+    "inputs": [" ", "\t", "\n", "\u000b", " ", " "],
+    "go": {
+      "valid": true,
+      "matches": [true, true, true, false, false, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true, true, false, false, false]
+    }
+  },
+  {
+    "pattern": "\\S",
+    "inputs": ["a", " ", "\u000b"],
+    "go": {
+      "valid": true,
+      "matches": [true, false, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false, true]
+    }
+  },
+  {
+    "pattern": "\\w+",
+    "inputs": ["a_1", "é"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "\\W",
+    "inputs": ["-", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "\\pL",
+    "inputs": ["a", "é", "1"],
+    "go": {
+      "valid": true,
+      "matches": [true, true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true, false]
+    }
+  },
+  {
+    "pattern": "\\pN",
+    "inputs": ["1"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\p{L}",
+    "inputs": ["a"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\p{Lu}",
+    "inputs": ["A", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "\\PL",
+    "inputs": ["1", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "\\p{^L}",
+    "inputs": ["1", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "\\P{^L}",
+    "inputs": ["a"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\p{Greek}",
+    "inputs": ["α", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "\\p{Latin}",
+    "inputs": ["a"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\p{Han}",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "\\p{Any}",
+    "inputs": ["a", "\n"],
+    "go": {
+      "valid": true,
+      "matches": [true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "\\p{greek}",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{greek}`"
+    }
+  },
+  {
+    "pattern": "\\p{Letter}",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{Letter}`"
+    }
+  },
+  {
+    "pattern": "\\pl",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\pl`"
+    }
+  },
+  {
+    "pattern": "\\p{ L }",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{ L }`"
+    }
+  },
+  {
+    "pattern": "\\p{Grek}",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{Grek}`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{Grek}`"
+    }
+  },
+  {
+    "pattern": "\\p{Script=Greek}",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{Script=Greek}`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{Script=Greek}`"
+    }
+  },
+  {
+    "pattern": "\\p{Nope}",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{Nope}`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{Nope}`"
+    }
+  },
+  {
+    "pattern": "\\p{Lu",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{Lu`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{Lu`"
+    }
+  },
+  {
+    "pattern": "\\p",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p`"
+    }
+  },
+  {
+    "pattern": "\\p{}",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{}`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{}`"
+    }
+  },
+  {
+    "pattern": "\\p{Cn}",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{Cn}`"
+    }
+  },
+  {
+    "pattern": "\\p{LC}",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{LC}`"
+    }
+  },
+  {
+    "pattern": "\\p{ASCII}",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `\\p{ASCII}`"
+    }
+  },
+  {
+    "pattern": "\\p{Old_Italic}",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": true
+    }
+  },
+  {
+    "pattern": "(?i)\\p{Lu}",
+    "inputs": ["a"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "[\\p{Lu}\\d]",
+    "inputs": ["A", "1", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true, false]
+    }
+  },
+  {
+    "pattern": "[^\\pL]",
+    "inputs": ["1", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "[abc]",
+    "inputs": ["a", "d"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "[^abc]",
+    "inputs": ["d", "a", "\n"],
+    "go": {
+      "valid": true,
+      "matches": [true, false, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false, true]
+    }
+  },
+  {
+    "pattern": "[a-z]+",
+    "inputs": ["hello", "Hello"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "[z-a]",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `z-a`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `z-a`"
+    }
+  },
+  {
+    "pattern": "[]a]",
+    "inputs": ["]", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "[^]a]",
+    "inputs": ["b", "]"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "[]",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: missing closing ]: `[]`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: missing closing ]: `[]`"
+    }
+  },
+  {
+    "pattern": "[^]",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: missing closing ]: `[^]`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: missing closing ]: `[^]`"
+    }
+  },
+  {
+    "pattern": "[a",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: missing closing ]: `[a`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: missing closing ]: `[a`"
+    }
+  },
+  {
+    "pattern": "[a-]",
+    "inputs": ["-", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "[-a]",
+    "inputs": ["-"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "[a-b-c]",
+    "inputs": ["-", "c"],
+    "go": {
+      "valid": true,
+      "matches": [true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "[a\\-z]",
+    "inputs": ["-", "b"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "[\\d-z]",
+    "inputs": ["-", "5", "z"],
+    "go": {
+      "valid": true,
+      "matches": [true, true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true, true]
+    }
+  },
+  {
+    "pattern": "[a-\\d]",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\d`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\d`"
+    }
+  },
+  {
+    "pattern": "[\\]]",
+    "inputs": ["]"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "[\\[]",
+    "inputs": ["["],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "[[]",
+    "inputs": ["["],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "[a[]",
+    "inputs": ["["],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "[\\\\]",
+    "inputs": ["\\"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "[.]",
+    "inputs": [".", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "[\\b]",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\b`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\b`"
+    }
+  },
+  {
+    "pattern": "[\\n]",
+    "inputs": ["\n"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "[\\x41-\\x43]",
+    "inputs": ["B"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "[\\0-\\x{10FFFF}]",
+    "inputs": ["a"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "[[:alpha:]]+",
+    "inputs": ["abc", "ab1"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "[[:^alpha:]]",
+    "inputs": ["1", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "[[:digit:][:upper:]]",
+    "inputs": ["A", "1", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true, false]
+    }
+  },
+  {
+    "pattern": "[[:word:]]",
+    "inputs": ["_"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "[[:space:]]",
+    "inputs": ["\u000b"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "[[:punct:]]",
+    "inputs": ["!", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "[[:foo:]]",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `[:foo:]`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `[:foo:]`"
+    }
+  },
+  {
+    "pattern": "[[:alpha:]",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: missing closing ]: `[[:alpha:]`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: missing closing ]: `[[:alpha:]`"
+    }
+  },
+  {
+    "pattern": "[[:]",
+    "inputs": [":"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid character class range: `[:]`"
+    }
+  },
+  {
+    "pattern": "[[:a]",
+    "inputs": ["a", ":"],
+    "go": {
+      "valid": true,
+      "matches": [true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "[:alpha:]",
+    "inputs": ["a", ":"],
+    "go": {
+      "valid": true,
+      "matches": [true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "[\\s\\S]",
+    "inputs": ["x"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "[^\\S]",
+    "inputs": [" ", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "[^\\d\\s]",
+    "inputs": ["a", "1", " "],
+    "go": {
+      "valid": true,
+      "matches": [true, false, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false, false]
+    }
+  },
+  {
+    "pattern": "[\\W\\d]",
+    "inputs": ["1", "-", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true, false]
+    }
+  },
+  {
+    "pattern": "(?i)[a-c]",
+    "inputs": ["B"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?i)[^a]",
+    "inputs": ["A", "b"],
+    "go": {
+      "valid": true,
+      "matches": [false, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [false, true]
+    }
+  },
+  {
+    "pattern": "[\\Q]\\E]",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\Q`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid escape sequence: `\\Q`"
+    }
+  },
+  {
+    "pattern": "(a)(b)",
+    "inputs": ["ab"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?:ab)+",
+    "inputs": ["abab"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?P<name>a)",
+    "inputs": ["a"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?<name>a)",
+    "inputs": ["a"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?P<1a>a)",
+    "inputs": ["a"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?P<a-b>a)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid named capture: `(?P<a-b>`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid named capture: `(?P<a-b>`"
+    }
+  },
+  {
+    "pattern": "(?P<>a)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid named capture: `(?P<>`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid named capture: `(?P<>`"
+    }
+  },
+  {
+    "pattern": "(?P<a",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid named capture: `(?P<a`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid named capture: `(?P<a`"
+    }
+  },
+  {
+    "pattern": "(?P<a>x)(?P<a>y)",
+    "go": {
+      "valid": true
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: duplicate capture group name: `a`"
+    }
+  },
+  {
+    "pattern": "(?P=a)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?P`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?P`"
+    }
+  },
+  {
+    "pattern": "(?P>a)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?P`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?P`"
+    }
+  },
+  {
+    "pattern": "(?=a)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?=`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?=`"
+    }
+  },
+  {
+    "pattern": "(?!a)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?!`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?!`"
+    }
+  },
+  {
+    "pattern": "(?<=a)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid named capture: `(?<=a)`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid named capture: `(?<=a)`"
+    }
+  },
+  {
+    "pattern": "(?<!a)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid named capture: `(?<!a)`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid named capture: `(?<!a)`"
+    }
+  },
+  {
+    "pattern": "(?#comment)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?#`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?#`"
+    }
+  },
+  {
+    "pattern": "(?>a)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?>`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?>`"
+    }
+  },
+  {
+    "pattern": "(?|a)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?|`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?|`"
+    }
+  },
+  {
+    "pattern": "(a",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: missing closing ): `(a`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: missing closing ): `(a`"
+    }
+  },
+  {
+    "pattern": "a)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: unexpected ): `a)`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: regexp/syntax: internal error: `stack underflow`"
+    }
+  },
+  {
+    "pattern": ")",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: unexpected ): `)`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: regexp/syntax: internal error: `stack underflow`"
+    }
+  },
+  {
+    "pattern": "()",
+    "inputs": [""],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(|a)",
+    "inputs": ["", "a"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "(?:)",
+    "inputs": [""],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?)",
+    "inputs": [""],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?i)abc",
+    "inputs": ["ABC", "aBc"],
+    "go": {
+      "valid": true,
+      "matches": [true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "(?i:a)b",
+    "inputs": ["Ab", "AB"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "a(?i)b",
+    "inputs": ["aB", "AB"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "a(?i)b|c",
+    "inputs": ["aB", "C"],
+    "go": {
+      "valid": true,
+      "matches": [true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "(a(?i)b)c",
+    "inputs": ["aBc", "aBC"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "(?i)a(?-i)b",
+    "inputs": ["Ab", "AB"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "(?i)a(?-i:b)c",
+    "inputs": ["AbC", "ABC"],
+    "go": {
+      "valid": true,
+      "matches": [true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, false]
+    }
+  },
+  {
+    "pattern": "(?-i)a",
+    "inputs": ["a"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?i-s).",
+    "inputs": ["a"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?s-i).",
+    "inputs": ["\n"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?i-)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?i-)`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?i-)`"
+    }
+  },
+  {
+    "pattern": "(?-)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?-)`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?-)`"
+    }
+  },
+  {
+    "pattern": "(?--i)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?--`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?--`"
+    }
+  },
+  {
+    "pattern": "(?x)",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?x`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?x`"
+    }
+  },
+  {
+    "pattern": "(?i",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?i`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: invalid or unsupported Perl syntax: `(?i`"
+    }
+  },
+  {
+    "pattern": "(?U)a+",
+    "inputs": ["aaa"],
+    "go": {
+      "valid": true,
+      "matches": [false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?U)(a+)(a*)",
+    "inputs": ["aaa"],
+    "go": {
+      "valid": true,
+      "matches": [false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?U)a+?",
+    "inputs": ["aaa"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?ims)a",
+    "inputs": ["A"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?i)k",
+    "inputs": ["K", "K"],
+    "go": {
+      "valid": true,
+      "matches": [true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "(?i)s",
+    "inputs": ["ſ"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?i)\\w",
+    "inputs": ["K"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(a|ab)(c|bcd)(d*)",
+    "inputs": ["abcd"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "a*?",
+    "inputs": ["aaa"],
+    "go": {
+      "valid": true,
+      "matches": [false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?:a|b)*?b",
+    "inputs": ["aab"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "\\w+ world",
+    "inputs": ["hello world"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "^hello",
+    "inputs": ["hello world"],
+    "go": {
+      "valid": true,
+      "matches": [false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [false]
+    }
+  },
+  {
+    "pattern": "hello\\s\\w+",
+    "inputs": ["hello world"],
+    "go": {
+      "valid": true,
+      "matches": [true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true]
+    }
+  },
+  {
+    "pattern": "(?i)\\..\\*",
+    "inputs": [".x*", ".X*"],
+    "go": {
+      "valid": true,
+      "matches": [true, true]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true]
+    }
+  },
+  {
+    "pattern": "fo+d",
+    "inputs": ["food", "fod", "fd"],
+    "go": {
+      "valid": true,
+      "matches": [true, true, false]
+    },
+    "re2j": {
+      "valid": true,
+      "matches": [true, true, false]
+    }
+  },
+  {
+    "pattern": "foo(?:bar",
+    "go": {
+      "valid": false,
+      "error": "error parsing regexp: missing closing ): `foo(?:bar`"
+    },
+    "re2j": {
+      "valid": false,
+      "error": "error parsing regexp: missing closing ): `foo(?:bar`"
+    }
+  }
+]

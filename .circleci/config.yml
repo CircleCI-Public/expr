@@ -15,6 +15,11 @@ executors:
       - image: cimg/clojure:1.12.6-openjdk-21.0
     working_directory: ~/project/clj
 
+  ts:
+    docker:
+      - image: cimg/node:24.21.0
+    working_directory: ~/project/ts
+
 commands:
   setup:
     steps:
@@ -85,6 +90,43 @@ jobs:
           name: Publish to Clojars
           command: lein deploy releases
 
+  ts-test:
+    executor: ts
+    steps:
+      - checkout:
+          path: ~/project
+      - run:
+          name: Install pnpm
+          command: |
+            PNPM_VERSION=$(jq -r '.packageManager | sub("^pnpm@"; "")' package.json)
+            sudo npm install -g "pnpm@$PNPM_VERSION"
+            pnpm --version
+      - restore_cache:
+          keys:
+            - ts-pnpm-v1-{{ checksum "pnpm-lock.yaml" }}
+      - run: pnpm install --frozen-lockfile --store-dir ~/.pnpm-store
+      - save_cache:
+          key: ts-pnpm-v1-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - ~/.pnpm-store
+      - run:
+          name: Ensure generated files are up to date
+          command: |
+            pnpm generate
+            if git diff --exit-code; then
+              echo "Generated files up to date"
+            else
+              echo "Regenerate with 'cd ts && pnpm generate' and check in the changes"
+              exit 1
+            fi
+      - run: pnpm fmt:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test:ci
+      - store_test_results:
+          path: test-reports
+      - run: pnpm build
+
   go-check:
     executor: default
     steps:
@@ -115,6 +157,7 @@ workflows:
       - go-check
       - go-test
       - clj-test
+      - ts-test
       - ok-to-deploy:
           filters:
             branches:
@@ -123,6 +166,7 @@ workflows:
             - go-check
             - go-test
             - clj-test
+            - ts-test
       - clj-deploy:
           context: clojars-publish
           requires:
