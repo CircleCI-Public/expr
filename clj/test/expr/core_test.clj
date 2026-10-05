@@ -375,3 +375,11 @@
                     (.matches "c")))
         v (deref f 200 ::timedout)]
     (is (= v ::timedout) "re2j may have fixed https://github.com/google/re2j/issues/168")))
+
+(deftest deeply-nested-expressions
+  (let [expression (str (string/join (repeat 100000 "(")) "true" (string/join (repeat 100000 ")")))
+        expected {:errors ["Expression is too deeply nested"]}]
+    (is (= expected (expr/parse expression)))
+    (is (= expected (expr/analyse expression)))
+    (is (= expected (expr/interpret expression {})))
+    (is (= expected (expr/evaluate expression {})))))
