@@ -8,6 +8,14 @@
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.12.6"]
                                   [cheshire "6.2.0"]]
                    :aliases {"generate-corpus" ["run" "-m" "expr.generate-corpus"]}}
+             ;; lein with-profile +fuzz fuzz [libFuzzer options]
+             :fuzz {:dependencies [[com.code-intelligence/jazzer "0.30.0"]]
+                    :java-source-paths ["fuzz"]
+                    :aliases {"fuzz" ["run" "-m" "com.code_intelligence.jazzer.Jazzer"
+                                      "--target_class=com.circleci.expr.ExprFuzzer"
+                                      "--reproducer_path=target/fuzz-findings"
+                                      "-artifact_prefix=target/fuzz-findings/"
+                                      "target/fuzz-corpus"]}}
              :cljfmt {:plugins [[dev.weavejester/lein-cljfmt "0.16.5"]]
                       :cljfmt {:load-config-file? true}}}
   :deploy-repositories [["releases" {:url "https://repo.clojars.org"

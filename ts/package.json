@@ -34,10 +34,13 @@
     "fmt:check": "oxfmt --check",
     "generate": "node scripts/generate-pipeline-values.ts && oxfmt src/pipeline-values.generated.ts",
     "generate:re2-cases": "node scripts/re2-oracle/update.ts && oxfmt src/testdata/re2-cases.json",
+    "fuzz": "FUZZ_RUNS=${FUZZ_RUNS:-1000000} node --test src/fuzz.test.ts",
+    "fuzz:differential": "node scripts/fuzz/differential.ts",
     "prepack": "pnpm build"
   },
   "devDependencies": {
     "@types/node": "^24.19.1",
+    "fast-check": "^4.10.2",
     "oxfmt": "^0.71.0",
     "oxlint": "^1.86.0",
     "typescript": "^7.0.2",
