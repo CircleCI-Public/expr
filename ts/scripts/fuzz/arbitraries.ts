@@ -193,11 +193,14 @@ const regex: fc.Arbitrary<string> = fc.letrec<{ re: string }>((tie) => ({
 const patternLiteral = fc
   .oneof(
     { weight: 6, arbitrary: regex },
-    // Near the length limit, which is in bytes of UTF-8 in Go.
+    // Near the length limit, which is in characters, not bytes of UTF-8.
     {
       weight: 1,
       arbitrary: fc
-        .tuple(fc.integer({ min: 120, max: 260 }), fc.constantFrom('a', 'é'))
+        .tuple(
+          fc.integer({ min: 120, max: 260 }),
+          fc.constantFrom('a', 'é', 'aé'),
+        )
         .map(([n, c]) => c.repeat(n)),
     },
     { weight: 1, arbitrary: wellFormedString(10) },

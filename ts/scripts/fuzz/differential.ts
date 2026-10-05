@@ -260,18 +260,6 @@ const causes: { label: string; matches: (c: Case, o: Outcomes) => boolean }[] =
   [
     {
       label:
-        'java: the pattern length limit is in UTF-16 code units, not UTF-8 bytes',
-      matches: (_, o) =>
-        o.go.kind === 'E' &&
-        o.go.errorType === 'Scanner/PATTERN_TOO_LONG' &&
-        !(
-          o.java.kind === 'E' &&
-          o.java.errorType === 'Scanner/PATTERN_TOO_LONG' &&
-          o.java.pos === o.go.pos
-        ),
-    },
-    {
-      label:
         'java: matches checks the left operand is a string before the right is a pattern',
       matches: (_, o) =>
         o.java.kind === 'E' &&
