@@ -48,6 +48,23 @@ commands:
             sh "$CURL_HOME/install.sh" -d -b "$HOME/.local/bin"
             echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$BASH_ENV"
 
+  ts-install:
+    steps:
+      - run:
+          name: Install pnpm
+          command: |
+            PNPM_VERSION=$(jq -r '.packageManager | sub("^pnpm@"; "")' package.json)
+            sudo npm install -g "pnpm@$PNPM_VERSION"
+            pnpm --version
+      - restore_cache:
+          keys:
+            - ts-pnpm-v1-{{ checksum "pnpm-lock.yaml" }}
+      - run: pnpm install --frozen-lockfile --store-dir ~/.pnpm-store
+      - save_cache:
+          key: ts-pnpm-v1-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - ~/.pnpm-store
+
   store_results:
     steps:
       - store_test_results:
@@ -95,20 +112,7 @@ jobs:
     steps:
       - checkout:
           path: ~/project
-      - run:
-          name: Install pnpm
-          command: |
-            PNPM_VERSION=$(jq -r '.packageManager | sub("^pnpm@"; "")' package.json)
-            sudo npm install -g "pnpm@$PNPM_VERSION"
-            pnpm --version
-      - restore_cache:
-          keys:
-            - ts-pnpm-v1-{{ checksum "pnpm-lock.yaml" }}
-      - run: pnpm install --frozen-lockfile --store-dir ~/.pnpm-store
-      - save_cache:
-          key: ts-pnpm-v1-{{ checksum "pnpm-lock.yaml" }}
-          paths:
-            - ~/.pnpm-store
+      - ts-install
       - run:
           name: Ensure generated files are up to date
           command: |
@@ -126,6 +130,25 @@ jobs:
       - store_test_results:
           path: test-reports
       - run: pnpm build
+
+  ts-deploy:
+    executor: ts
+    steps:
+      - checkout:
+          path: ~/project
+      - ts-install
+      - run:
+          name: Set version
+          command: |
+            version="0.1.<<pipeline.number>>"
+            npm pkg set version="${version}"
+            echo $version
+      - run:
+          name: Publish to npm
+          # Scoped packages publish as restricted unless told otherwise.
+          command: |
+            echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+            pnpm publish --access public --no-git-checks
 
   go-check:
     executor: default
@@ -169,6 +192,10 @@ workflows:
             - ts-test
       - clj-deploy:
           context: clojars-publish
+          requires:
+            - ok-to-deploy
+      - ts-deploy:
+          context: cci-config-sdk-publishing
           requires:
             - ok-to-deploy
       - go-deploy:
