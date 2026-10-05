@@ -1,7 +1,6 @@
 package expr
 
 import (
-	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -43,10 +42,6 @@ func checkErrorMessage(t *testing.T, expression string, pos int, msg string) {
 	runes := []rune(expression)
 	if pos < len(runes) && runes[pos] == '\n' {
 		// An error on a newline shows the rest of the expression.
-		return
-	}
-	if os.Getenv("FUZZ_SKIP_KNOWN") != "" && strings.ContainsRune(expression, '\n') && len(runes) != len(expression) {
-		// KNOWN: errors.ErrorMessage slices by bytes with a rune position.
 		return
 	}
 	lineStart := pos

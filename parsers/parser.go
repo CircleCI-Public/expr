@@ -32,6 +32,7 @@ package parsers
 
 import (
 	"fmt"
+	"unicode/utf8"
 
 	"github.com/CircleCI-Public/expr/builtins"
 	"github.com/CircleCI-Public/expr/errors"
@@ -91,13 +92,13 @@ func (e Error) AsErrorMessage(expression string) string {
 		return errors.ErrorMessage(fmt.Sprintf("Unexpected additional input, found \"%s\", expected EOF:", errorString),
 			expression,
 			e.Token.CharPos,
-			len(errorString))
+			utf8.RuneCountInString(errorString))
 
 	case EXPECTED_EXPRESSION:
 		return errors.ErrorMessage(fmt.Sprintf("Expected expression, found \"%s\":", errorString),
 			expression,
 			e.Token.CharPos,
-			len(errorString))
+			utf8.RuneCountInString(errorString))
 
 	case EXPECTED_RIGHT_PAREN:
 		return errors.ErrorMessage("Expected ')' after expression:",
@@ -109,7 +110,7 @@ func (e Error) AsErrorMessage(expression string) string {
 		return errors.ErrorMessage("Unknown infix function:",
 			expression,
 			e.Token.CharPos,
-			len(errorString))
+			utf8.RuneCountInString(errorString))
 
 	default:
 		return fmt.Sprintf("Unknown error parsing expression: '%s'", expression)

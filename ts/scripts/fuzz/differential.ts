@@ -326,16 +326,6 @@ const causes: { label: string; matches: (c: Case, o: Outcomes) => boolean }[] =
         o.java.pos === o.go.pos &&
         (o.java.lexeme !== o.go.lexeme || o.go.message === o.ts.message),
     },
-    {
-      label:
-        'go: error messages slice the expression in bytes at a position in runes',
-      matches: (c, o) =>
-        /[\u{80}-\u{10ffff}]/u.test(c.expression) &&
-        o.go.kind === 'E' &&
-        o.ts.kind === 'E' &&
-        JSON.stringify({ ...o.go, message: '' }) ===
-          JSON.stringify({ ...o.ts, message: '' }),
-    },
   ];
 
 const UNEXPLAINED = 'UNEXPLAINED';

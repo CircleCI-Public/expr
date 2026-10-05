@@ -92,4 +92,23 @@ func TestErrorMessage(t *testing.T) {
 			"\n")
 		assert.Equal(t, expected, ErrorMessage("Preamble message:", "foo.bar.baz == (1 > 5", 21, 1))
 	})
+
+	t.Run("Positions are in runes", func(t *testing.T) {
+		t.Parallel()
+
+		expected := strings.Join(
+			[]string{
+				"Preamble message:",
+				"\"é\" or /ÿ/",
+				"       ^^^"},
+			"\n")
+		assert.Equal(t, expected, ErrorMessage(
+			"Preamble message:",
+			strings.Join([]string{
+				"\"日本語\" and",
+				"\"é\" or /ÿ/"},
+				"\n"),
+			17,
+			3))
+	})
 }
