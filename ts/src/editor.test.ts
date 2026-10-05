@@ -208,21 +208,61 @@ describe('complete', () => {
     assert.equal(result?.to, 15);
   });
 
+  const operators = [
+    '==',
+    '!=',
+    '<',
+    '<=',
+    '>',
+    '>=',
+    'and',
+    'or',
+    'contains',
+    'starts-with',
+    'matches',
+  ];
+
   it('offers operators after an operand', () => {
-    assert.deepEqual(labels('pipeline.git.branch st'), [
-      'and',
-      'or',
-      'contains',
-      'starts-with',
-      'matches',
-    ]);
-    assert.deepEqual(labels('(a == "b") an'), [
-      'and',
-      'or',
-      'contains',
-      'starts-with',
-      'matches',
-    ]);
+    assert.deepEqual(labels('pipeline.git.branch st'), operators);
+    assert.deepEqual(labels('(a == "b") an'), operators);
+  });
+
+  it('offers operators after an operand and a space without a word', () => {
+    for (const expression of ['a ', 'a == "b" ', '(a) ', 'a > 1\n']) {
+      assert.deepEqual(labels(expression), operators, expression);
+    }
+  });
+
+  it('completes a partly typed comparison operator', () => {
+    for (const [expression, typed] of [
+      ['a =', '='],
+      ['a ==', '=='],
+      ['a !', '!'],
+      ['a <', '<'],
+      ['a>=', '>='],
+    ] as const) {
+      const result = complete(expression, expression.length, { variables });
+      assert.deepEqual(
+        result?.options.map((o) => o.label),
+        operators,
+        expression,
+      );
+      assert.equal(result?.from, expression.length - typed.length, expression);
+      assert.ok(result?.validFor.test(typed), expression);
+    }
+  });
+
+  it('keeps operator completions valid while typing a word or an operator', () => {
+    const validFor = complete('a ', 2, { variables })?.validFor;
+    for (const typed of ['a', 'starts-', '=', '!=', '<=']) {
+      assert.ok(validFor?.test(typed), typed);
+    }
+    assert.ok(!validFor?.test('= '));
+  });
+
+  it('does not complete an operator where an operand is expected', () => {
+    assert.equal(complete('a == =', 6, { variables }), null);
+    assert.equal(complete('<', 1, { variables }), null);
   });
 
   it('offers operands after operators', () => {
@@ -238,16 +278,19 @@ describe('complete', () => {
   });
 
   it('completes at the cursor, not the end', () => {
-    assert.deepEqual(labels('a an b', 4)?.slice(0, 2), ['and', 'or']);
+    assert.deepEqual(labels('a an b', 4), operators);
   });
 
-  it('only completes without a word when explicit', () => {
+  it('only completes operands without a word when explicit', () => {
     assert.equal(complete('a and ', 6, { variables }), null);
+    assert.equal(complete('a == ', 5, { variables }), null);
+    assert.equal(complete('', 0, { variables }), null);
     assert.equal(complete('a and ', 6, { variables, explicit: true })?.from, 6);
   });
 
   it('does not complete inside strings or patterns', () => {
     assert.equal(complete('a == "pi', 8, { variables }), null);
+    assert.equal(complete('a == "main ', 11, { variables }), null);
     assert.equal(complete('a matches /pi', 13, { variables }), null);
   });
 

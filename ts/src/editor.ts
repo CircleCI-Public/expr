@@ -196,7 +196,8 @@ export interface CompleteOptions {
   readonly variables?: Iterable<Variable | string>;
   /**
    * Whether completion was explicitly requested. If not, completions are
-   * only offered when there's a partial word before the cursor.
+   * only offered when there's a partial word or operator before the cursor,
+   * or where an operator is expected after a space.
    */
   readonly explicit?: boolean;
 }
@@ -208,6 +209,12 @@ const operandKeywords: readonly Completion[] = [
 ];
 
 const operators: readonly Completion[] = [
+  { label: '==', type: 'keyword', detail: 'equal to' },
+  { label: '!=', type: 'keyword', detail: 'not equal to' },
+  { label: '<', type: 'keyword', detail: 'less than' },
+  { label: '<=', type: 'keyword', detail: 'less than or equal to' },
+  { label: '>', type: 'keyword', detail: 'greater than' },
+  { label: '>=', type: 'keyword', detail: 'greater than or equal to' },
   { label: 'and', type: 'keyword' },
   { label: 'or', type: 'keyword' },
   {
@@ -243,14 +250,19 @@ const operandFollows = new Set<string>([
 ]);
 
 const partialWord = /[A-Za-z][\w?-]*(?:\.[\w?-]*)*$/;
+const partialOperator = /[=!<>]=?$/;
+
+const validForOperand = /^[A-Za-z][\w?.-]*$/;
+const validForOperator = /^(?:[A-Za-z][\w?.-]*|[=!<>]=?)$/;
 
 /**
- * Complete the word before position `pos` in an expression.
+ * Complete the word or operator before position `pos` in an expression.
  *
- * Offers variables and literals where an operand is expected, and logical
- * operators and builtin functions after an operand. Returns null when there's
- * nothing to complete, e.g. inside a string, or the context can't be known
- * because of an error earlier in the expression.
+ * Offers variables and literals where an operand is expected, and comparison
+ * and logical operators and builtin functions after an operand, including
+ * after an operand and a space with nothing typed yet. Returns null when
+ * there's nothing to complete, e.g. inside a string, or the context can't be
+ * known because of an error earlier in the expression.
  */
 export function complete(
   expression: string,
@@ -259,10 +271,15 @@ export function complete(
 ): CompletionResult | null {
   const before = expression.slice(0, pos);
   const word = partialWord.exec(before);
-  if (word === null && options.explicit !== true) {
+  const operator = word === null ? partialOperator.exec(before) : null;
+  const typed = word?.[0] ?? operator?.[0] ?? '';
+  const explicit = options.explicit === true;
+  // After a space, an operator is likely next, so it's worth offering them
+  // unasked; an operand could be anything, e.g. a string.
+  if (typed === '' && !explicit && !/\s$/.test(before)) {
     return null;
   }
-  const from = pos - (word?.[0].length ?? 0);
+  const from = pos - typed.length;
 
   const { tokens, error } = scan(expression.slice(0, from));
   if (error !== undefined) {
@@ -270,19 +287,24 @@ export function complete(
   }
   const last = tokens.filter((t) => t.type !== TokenType.EOF).at(-1);
 
-  let completions: Completion[];
   if (last === undefined || operandFollows.has(last.type)) {
+    if (operator !== null || (typed === '' && !explicit)) {
+      return null;
+    }
     const variables = [...new Variables(options.variables ?? []).visible()];
-    completions = [...variables.map(variableCompletion), ...operandKeywords];
-  } else {
-    completions = [...operators];
+    return {
+      from,
+      to: pos,
+      options: [...variables.map(variableCompletion), ...operandKeywords],
+      validFor: validForOperand,
+    };
   }
 
   return {
     from,
     to: pos,
-    options: completions,
-    validFor: /^[A-Za-z][\w?.-]*$/,
+    options: [...operators],
+    validFor: validForOperator,
   };
 }
 
