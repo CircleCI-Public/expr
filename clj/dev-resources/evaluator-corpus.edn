@@ -633,6 +633,17 @@
           :lexeme "/"
           :charPos 0}]}
 
+{:name ["scan-errors" "characters-outside-the-bmp"]
+ :tests ["😀" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                 :lexeme "😀"
+                 :charPos 0}
+         "=😀" {} {:errorType "Scanner/INCOMPLETE_EQUALS"
+                  :lexeme "😀"
+                  :charPos 1}
+         "/😀/" {} {:errorType "Scanner/INVALID_PATTERN_CHARACTER"
+                   :lexeme "😀"
+                   :charPos 1}]}
+
 {:name ["scan-errors" "invalid-numbers"]
  :tests ["9223372036854775808" {} {:errorType "Scanner/INVALID_NUMERIC_LITERAL"
                                    :lexeme "9"

@@ -25,7 +25,7 @@
     {"result" (process expression environment)}
     (catch Scanner$ScanError e
       {"error" {"errorType" (str "Scanner/" (.-type e))
-                "lexeme" (str (.-errorChar e))
+                "lexeme" (Character/toString (.-errorCodePoint e))
                 "charPos" (.-errorPos e)}})
     (catch Parser$ParseError e
       (let [token (.-token e)]

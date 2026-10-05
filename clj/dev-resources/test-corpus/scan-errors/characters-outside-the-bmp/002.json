@@ -1,0 +1,13 @@
+{
+  "input" : {
+    "expression" : "=😀",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "errorType" : "Scanner/INCOMPLETE_EQUALS",
+      "lexeme" : "😀",
+      "charPos" : 1
+    }
+  }
+}

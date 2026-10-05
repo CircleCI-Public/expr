@@ -66,7 +66,7 @@ public class Oracle {
       if (v instanceof Pattern p) return "R\tp\t" + b64(p.pattern());
       return "X\t" + b64("unexpected value " + v.getClass());
     } catch (Scanner.ScanError e) {
-      return error("Scanner/" + e.type, "-", String.valueOf(e.errorChar), e.errorPos, e, expression);
+      return error("Scanner/" + e.type, "-", Character.toString(e.errorCodePoint), e.errorPos, e, expression);
     } catch (Parser.ParseError e) {
       return error("Parser/" + e.type, e.token, e, expression);
     } catch (Interpreter.Error e) {

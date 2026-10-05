@@ -293,18 +293,6 @@ const causes: { label: string; matches: (c: Case, o: Outcomes) => boolean }[] =
         o.java.kind === 'R' &&
         JSON.stringify(o.java) === JSON.stringify(o.ts),
     },
-    {
-      label:
-        'java: scan errors hold a UTF-16 code unit, and format it unescaped',
-      matches: (_, o) =>
-        o.java.kind === 'E' &&
-        o.go.kind === 'E' &&
-        o.ts.kind === 'E' &&
-        o.java.errorType.startsWith('Scanner/') &&
-        o.java.errorType === o.go.errorType &&
-        o.java.pos === o.go.pos &&
-        (o.java.lexeme !== o.go.lexeme || o.go.message === o.ts.message),
-    },
   ];
 
 const UNEXPLAINED = 'UNEXPLAINED';

@@ -77,11 +77,29 @@
                                 1))))
 
   (testing "Error is on a newline from interpreting"
-    (is (= {:errors [(string/join \newline ["Incomplete token, expected \"==\", found '\n':"
+    (is (= {:errors [(string/join \newline ["Incomplete token, expected \"==\", found '\\n':"
                                             "a ="
                                             "b"
                                             "   ^"])]}
            (expr/interpret "a =\nb" {})))))
+
+(deftest quote-code-point
+  (testing "Quotes characters as Go does"
+    (doseq [[c quoted] [[" " "' '"]
+                        ["\u00a0" "'\\u00a0'"]
+                        ["\u200b" "'\\u200b'"]
+                        ["\u0085" "'\\u0085'"]
+                        ["\u0000" "'\\x00'"]
+                        ["\u007f" "'\\x7f'"]
+                        ["\udb40\udc01" "'\\U000e0001'"]
+                        ["é" "'é'"]
+                        ["£" "'£'"]
+                        ["\u2028" "'\\u2028'"]
+                        ["\ufeff" "'\\ufeff'"]
+                        ["😀" "'😀'"]
+                        ["'" "'\\''"]
+                        ["\n" "'\\n'"]]]
+      (is (= quoted (Errors/quoteCodePoint (.codePointAt ^String c 0))) c))))
 
 (deftest pretty-scan-error
   (testing "Unexpected characters"
