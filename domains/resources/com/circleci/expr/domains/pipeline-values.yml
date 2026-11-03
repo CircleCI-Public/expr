@@ -89,6 +89,15 @@ fields:
   - name: "pipeline.event.context.github.sha"
     domain: git-shas
     defn: "Identifies the commit to which the notification about the pipeline outcome will be sent."
+  - name: "pipeline.event.context.stack.base.ref"
+    domain: git-branches
+    defn: "The name of the branch the pull request's stack targets."
+  - name: "pipeline.event.context.stack.position"
+    type: uint
+    defn: "The position of the pull request in its stack, counting from 1 at the bottom."
+  - name: "pipeline.event.context.stack.size"
+    type: uint
+    defn: "The number of pull requests in the stack."
   - name: "pipeline.event.github.after"
     defn: "The HEAD SHA of the branch after the push, from the GitHub push webhook payload's after field. Populated only for push events."
   - name: "pipeline.event.github.comment.body"
@@ -146,6 +155,9 @@ fields:
     defn: "Identifies the provider's user that triggered the pipeline."
     private: true
   - name: "pipeline.event.provider_login"
+  - name: "pipeline.event.pull_request.base.ref"
+    domain: git-branches
+    defn: "The name of the base branch of the pull request."
   - name: "pipeline.git.base_revision"
   - name: "pipeline.git.branch"
     domain: git-branches

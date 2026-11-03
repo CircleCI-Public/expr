@@ -115,6 +115,23 @@ export const pipelineValueFields: readonly PipelineValueField[] = [
       'Identifies the commit to which the notification about the pipeline outcome will be sent.',
   },
   {
+    name: 'pipeline.event.context.stack.base.ref',
+    type: 'string',
+    domain: 'git-branches',
+    description: "The name of the branch the pull request's stack targets.",
+  },
+  {
+    name: 'pipeline.event.context.stack.position',
+    type: 'uint',
+    description:
+      'The position of the pull request in its stack, counting from 1 at the bottom.',
+  },
+  {
+    name: 'pipeline.event.context.stack.size',
+    type: 'uint',
+    description: 'The number of pull requests in the stack.',
+  },
+  {
     name: 'pipeline.event.github.after',
     type: 'string',
     description:
@@ -254,6 +271,12 @@ export const pipelineValueFields: readonly PipelineValueField[] = [
   {
     name: 'pipeline.event.provider_login',
     type: 'string',
+  },
+  {
+    name: 'pipeline.event.pull_request.base.ref',
+    type: 'string',
+    domain: 'git-branches',
+    description: 'The name of the base branch of the pull request.',
   },
   {
     name: 'pipeline.git.base_revision',
