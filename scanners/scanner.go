@@ -152,16 +152,36 @@ var keywords = map[string]tokens.TokenType{
 	"FALSE": tokens.FALSE,
 }
 
+type config struct {
+	lists bool
+}
+
+// Option configures optional language features.
+type Option func(*config)
+
+// WithLists enables list literals and the `in` builtin. The parser must be
+// created with `parsers.WithLists` as well.
+func WithLists() Option {
+	return func(c *config) { c.lists = true }
+}
+
 type scanner struct {
 	source  []rune
 	start   int
 	current int
 	tokens  []tokens.Token
+	lists   bool
 }
 
-func New(source string) *scanner {
+func New(source string, opts ...Option) *scanner {
+	var c config
+	for _, opt := range opts {
+		opt(&c)
+	}
+
 	return &scanner{
 		source: []rune(source),
+		lists:  c.lists,
 	}
 }
 
@@ -202,6 +222,12 @@ func (s *scanner) scanToken() error {
 		s.addToken(tokens.LEFT_PAREN)
 	case ')':
 		s.addToken(tokens.RIGHT_PAREN)
+	case '[':
+		return s.listToken(tokens.LEFT_BRACKET)
+	case ']':
+		return s.listToken(tokens.RIGHT_BRACKET)
+	case ',':
+		return s.listToken(tokens.COMMA)
 	// operators
 	case '!':
 		if s.match('=') {
@@ -400,7 +426,12 @@ func (s *scanner) identifier() {
 
 	identifier := s.lexeme()
 
-	builtin := builtins.ForLexeme(identifier)
+	lookup := builtins.ForLexeme
+	if s.lists {
+		lookup = builtins.ForLexemeWithLists
+	}
+
+	builtin := lookup(identifier)
 	if builtin != builtins.NOT_FOUND {
 		s.addTokenLiteral(tokens.BUILTIN, identifier)
 	} else {
@@ -410,6 +441,15 @@ func (s *scanner) identifier() {
 		}
 		s.addTokenLiteral(tokenType, identifier)
 	}
+}
+
+// Add a token that is only valid when lists are enabled.
+func (s *scanner) listToken(t tokens.TokenType) error {
+	if !s.lists {
+		return Error{Type: UNEXPECTED_CHARACTER, Char: s.source[s.current-1], Pos: s.current - 1}
+	}
+	s.addToken(t)
+	return nil
 }
 
 // Add a token without a literal value to the `tokens` list.

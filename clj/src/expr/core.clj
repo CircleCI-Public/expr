@@ -22,6 +22,7 @@
                               Parser$ParseError
                               Interpreter
                               Interpreter$Error
+                              Options
                               VariableAnalyser)))
 
 (def ^:private too-deeply-nested
@@ -29,18 +30,29 @@
   ;; so a deeply nested expression overflows the stack.
   {:errors ["Expression is too deeply nested"]})
 
+(defn- ->options
+  ^Options [{:keys [lists?]}]
+  (Options. (boolean lists?)))
+
 (defn parse
-  [^String expression]
-  (try
-    (let [tokens (.scan (Scanner. expression))]
-      (.parse (Parser. tokens))
-      {:result true})
-    (catch Scanner$ScanError e
-      {:errors [(.asErrorMessage e expression)]})
-    (catch Parser$ParseError e
-      {:errors [(.asErrorMessage e expression)]})
-    (catch StackOverflowError _
-      too-deeply-nested)))
+  "Parse an expression.
+
+  `options` is a map. `{:lists? true}` enables list literals and the `in`
+  operator."
+  ([^String expression]
+   (parse expression {}))
+  ([^String expression options]
+   (let [options (->options options)]
+     (try
+       (let [tokens (.scan (Scanner. expression options))]
+         (.parse (Parser. tokens options))
+         {:result true})
+       (catch Scanner$ScanError e
+         {:errors [(.asErrorMessage e expression)]})
+       (catch Parser$ParseError e
+         {:errors [(.asErrorMessage e expression)]})
+       (catch StackOverflowError _
+         too-deeply-nested)))))
 
 (defn- variable-token->map
   [token]
@@ -57,19 +69,25 @@
      :pos 6}
 
   On error returns a map of the form:
-    {:errors <collection of error message strings>}"
-  [^String expression]
-  (try
-    (let [tokens (.scan (Scanner. expression))
-          expr (.parse (Parser. tokens))]
-      {:result true
-       :variables (map variable-token->map (.gatherVariables (VariableAnalyser.) expr))})
-    (catch Scanner$ScanError e
-      {:errors [(.asErrorMessage e expression)]})
-    (catch Parser$ParseError e
-      {:errors [(.asErrorMessage e expression)]})
-    (catch StackOverflowError _
-      too-deeply-nested)))
+    {:errors <collection of error message strings>}
+
+  `options` is a map. `{:lists? true}` enables list literals and the `in`
+  operator."
+  ([^String expression]
+   (analyse expression {}))
+  ([^String expression options]
+   (let [options (->options options)]
+     (try
+       (let [tokens (.scan (Scanner. expression options))
+             expr (.parse (Parser. tokens options))]
+         {:result true
+          :variables (map variable-token->map (.gatherVariables (VariableAnalyser.) expr))})
+       (catch Scanner$ScanError e
+         {:errors [(.asErrorMessage e expression)]})
+       (catch Parser$ParseError e
+         {:errors [(.asErrorMessage e expression)]})
+       (catch StackOverflowError _
+         too-deeply-nested)))))
 
 (defn interpret
   "Interpret an expression.
@@ -80,20 +98,26 @@
     {:result <boolean result of interpreting expression>}
 
   On error returns a map of the form:
-    {:errors <collection of error message strings>}"
-  [^String expression pipeline-values]
-  (try
-    (let [tokens (.scan (Scanner. expression))
-          expr (.parse (Parser. tokens))]
-      {:result (.interpret (Interpreter. pipeline-values) expr)})
-    (catch Scanner$ScanError e
-      {:errors [(.asErrorMessage e expression)]})
-    (catch Parser$ParseError e
-      {:errors [(.asErrorMessage e expression)]})
-    (catch Interpreter$Error e
-      {:errors [(.asErrorMessage e expression)]})
-    (catch StackOverflowError _
-      too-deeply-nested)))
+    {:errors <collection of error message strings>}
+
+  `options` is a map. `{:lists? true}` enables list literals and the `in`
+  operator."
+  ([^String expression pipeline-values]
+   (interpret expression pipeline-values {}))
+  ([^String expression pipeline-values options]
+   (let [options (->options options)]
+     (try
+       (let [tokens (.scan (Scanner. expression options))
+             expr (.parse (Parser. tokens options))]
+         {:result (.interpret (Interpreter. pipeline-values) expr)})
+       (catch Scanner$ScanError e
+         {:errors [(.asErrorMessage e expression)]})
+       (catch Parser$ParseError e
+         {:errors [(.asErrorMessage e expression)]})
+       (catch Interpreter$Error e
+         {:errors [(.asErrorMessage e expression)]})
+       (catch StackOverflowError _
+         too-deeply-nested)))))
 
 (defn evaluate
   "Evaluate an expression.
@@ -105,17 +129,23 @@
     {:result <result of evaluating expression>}
 
   On error returns a map of the form:
-    {:errors <collection of error message strings>}"
-  [^String expression pipeline-values]
-  (try
-    (let [tokens (.scan (Scanner. expression))
-          expr (.parse (Parser. tokens))]
-      {:result (.evaluate (Interpreter. pipeline-values) expr)})
-    (catch Scanner$ScanError e
-      {:errors [(.asErrorMessage e expression)]})
-    (catch Parser$ParseError e
-      {:errors [(.asErrorMessage e expression)]})
-    (catch Interpreter$Error e
-      {:errors [(.asErrorMessage e expression)]})
-    (catch StackOverflowError _
-      too-deeply-nested)))
+    {:errors <collection of error message strings>}
+
+  `options` is a map. `{:lists? true}` enables list literals and the `in`
+  operator."
+  ([^String expression pipeline-values]
+   (evaluate expression pipeline-values {}))
+  ([^String expression pipeline-values options]
+   (let [options (->options options)]
+     (try
+       (let [tokens (.scan (Scanner. expression options))
+             expr (.parse (Parser. tokens options))]
+         {:result (.evaluate (Interpreter. pipeline-values) expr)})
+       (catch Scanner$ScanError e
+         {:errors [(.asErrorMessage e expression)]})
+       (catch Parser$ParseError e
+         {:errors [(.asErrorMessage e expression)]})
+       (catch Interpreter$Error e
+         {:errors [(.asErrorMessage e expression)]})
+       (catch StackOverflowError _
+         too-deeply-nested)))))

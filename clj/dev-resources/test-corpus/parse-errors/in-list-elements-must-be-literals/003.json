@@ -1,0 +1,17 @@
+{
+  "input" : {
+    "expression" : "x in [/a/]",
+    "environment" : { },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "PATTERN",
+      "errorType" : "Parser/EXPECTED_LIST_ELEMENT",
+      "lexeme" : "/a/",
+      "charPos" : 6
+    }
+  }
+}

@@ -73,15 +73,16 @@ func FuzzExpr(f *testing.F) {
 			f.Fatal(err)
 		}
 		for _, tt := range tests {
-			f.Add(tt.Input.Expression)
+			f.Add(tt.Input.Expression, tt.Input.Options.Lists)
 		}
 	}
-	f.Add(`b and not f or s == "foo" and n > 1 and p matches /x/ and s contains e and u`)
-	f.Add(`s matches p or (n >= 1 and s starts-with "f")`)
+	f.Add(`b and not f or s == "foo" and n > 1 and p matches /x/ and s contains e and u`, false)
+	f.Add(`s matches p or (n >= 1 and s starts-with "f")`, false)
+	f.Add(`s in ["foo", "bar"] and not (n in [1, 2]) or u in [true]`, true)
 
 	env := fuzzEnv()
 
-	f.Fuzz(func(t *testing.T, expression string) {
+	f.Fuzz(func(t *testing.T, expression string, lists bool) {
 		if !utf8.ValidString(expression) {
 			// Expressions come from YAML config, which is always valid UTF-8.
 			t.Skip()
@@ -100,7 +101,14 @@ func FuzzExpr(f *testing.F) {
 			checkErrorMessage(t, expression, pos, e.AsErrorMessage(expression))
 		}
 
-		toks, err := scanners.New(expression).Scan()
+		var scanOpts []scanners.Option
+		var parseOpts []parsers.Option
+		if lists {
+			scanOpts = append(scanOpts, scanners.WithLists())
+			parseOpts = append(parseOpts, parsers.WithLists())
+		}
+
+		toks, err := scanners.New(expression, scanOpts...).Scan()
 		if err != nil {
 			e, ok := err.(scanners.Error)
 			if !ok {
@@ -110,7 +118,7 @@ func FuzzExpr(f *testing.F) {
 			return
 		}
 
-		e, err := parsers.New(toks).Parse()
+		e, err := parsers.New(toks, parseOpts...).Parse()
 		if err != nil {
 			pe, ok := err.(parsers.Error)
 			if !ok {

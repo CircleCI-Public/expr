@@ -108,6 +108,9 @@ export function evaluate(expr: Expr, env: Environment): Value {
         return binary(expr, left, right);
       }
       case 'infix': {
+        if (expr.builtin === Builtin.IN) {
+          return isIn(expr, visit(expr.left));
+        }
         const left = visit(expr.left);
         const right = visit(expr.right);
         if (left === undefined || right === undefined) {
@@ -119,6 +122,8 @@ export function evaluate(expr: Expr, env: Environment): Value {
         return !isTruthy(visit(expr.right));
       case 'literal':
         return expr.value;
+      case 'list':
+        throw new TypeError('list evaluated outside of an `in` expression');
       case 'identifier': {
         const { found, value } = lookup(expr.name.lexeme);
         if (!found) {
@@ -165,8 +170,20 @@ function binary(expr: BinaryExpr, left: Value, right: Value): Value {
   return undefined;
 }
 
+function isIn(expr: InfixExpr, left: Value): Value {
+  if (left === undefined) {
+    return undefined;
+  }
+  if (expr.right.kind !== 'list') {
+    throw new TypeError('the right operand of `in` is not a list');
+  }
+  return expr.right.elements.some((element) => equal(left, element.value));
+}
+
 function infix(expr: InfixExpr, left: Value, right: Value): Value {
   switch (expr.builtin) {
+    case Builtin.IN:
+      throw new TypeError('`in` is handled by isIn');
     case Builtin.CONTAINS:
     case Builtin.STARTS_WITH:
       if (typeof left !== 'string' || typeof right !== 'string') {

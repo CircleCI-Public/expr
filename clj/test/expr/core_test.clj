@@ -383,3 +383,35 @@
     (is (= expected (expr/analyse expression)))
     (is (= expected (expr/interpret expression {})))
     (is (= expected (expr/evaluate expression {})))))
+
+(deftest lists-option
+  (let [expression "x in [\"a\", \"b\"]"
+        lists {:lists? true}]
+    (testing "lists are disabled without the option"
+      (is (= {:errors [(string/join \newline ["Unexpected character '[':"
+                                              expression
+                                              "     ^"])]}
+             (expr/parse expression)
+             (expr/parse expression {})
+             (expr/parse expression {:lists? false}))))
+
+    (testing "parse"
+      (is (= {:result true} (expr/parse expression lists))))
+
+    (testing "analyse"
+      (is (= {:result true :variables [{:name "x" :pos 0}]}
+             (expr/analyse expression lists))))
+
+    (testing "interpret"
+      (is (= {:result true} (expr/interpret expression {"x" "a"} lists)))
+      (is (= {:result false} (expr/interpret expression {"x" "c"} lists))))
+
+    (testing "evaluate"
+      (is (= {:result true} (expr/evaluate expression {"x" "b"} lists)))
+      (is (= {:result nil} (expr/evaluate expression {"x" nil} lists))))
+
+    (testing "errors"
+      (is (= {:errors [(string/join \newline ["Unexpected list, a list can only follow \"in\":"
+                                              "x == [\"a\"]"
+                                              "     ^"])]}
+             (expr/parse "x == [\"a\"]" lists))))))

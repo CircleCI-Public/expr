@@ -1,0 +1,17 @@
+{
+  "input" : {
+    "expression" : "x in [1, 2, \"a\"]",
+    "environment" : { },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "STRING",
+      "errorType" : "Parser/MIXED_LIST_TYPES",
+      "lexeme" : "\"a\"",
+      "charPos" : 12
+    }
+  }
+}

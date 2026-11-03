@@ -1,0 +1,17 @@
+{
+  "input" : {
+    "expression" : "x in (\"a\")",
+    "environment" : { },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "LEFT_PAREN",
+      "errorType" : "Parser/EXPECTED_LIST",
+      "lexeme" : "(",
+      "charPos" : 5
+    }
+  }
+}

@@ -9,6 +9,7 @@ import { describe, it } from 'node:test';
 import {
   type Environment,
   InterpreterError,
+  type Options,
   ParseError,
   Pattern,
   ScanError,
@@ -28,7 +29,11 @@ interface ExpectedError {
 }
 
 interface Case {
-  input: { expression: string; environment: Record<string, unknown> };
+  input: {
+    expression: string;
+    environment: Record<string, unknown>;
+    options?: { lists?: boolean };
+  };
   expected: { error?: ExpectedError; result?: unknown };
 }
 
@@ -104,7 +109,7 @@ function expectedOutcome(expected: Case['expected']): unknown {
 
 function corpus(
   dir: string,
-  run: (expression: string, env: Environment) => Value,
+  run: (expression: string, env: Environment, options: Options) => Value,
 ): void {
   const root = join(resources, dir);
   const files = readdirSync(root, { recursive: true, encoding: 'utf8' })
@@ -122,7 +127,7 @@ function corpus(
           Object.entries(input.environment).map(([k, v]) => [k, fromJSON(v)]),
         );
         assert.deepEqual(
-          outcome(() => run(input.expression, env)),
+          outcome(() => run(input.expression, env, input.options ?? {})),
           expectedOutcome(expected),
         );
       });
@@ -130,7 +135,9 @@ function corpus(
   });
 }
 
-corpus('test-corpus', (expression, env) => interpret(compile(expression), env));
-corpus('evaluator-test-corpus', (expression, env) =>
-  evaluate(compile(expression), env),
+corpus('test-corpus', (expression, env, options) =>
+  interpret(compile(expression, options), env),
+);
+corpus('evaluator-test-corpus', (expression, env, options) =>
+  evaluate(compile(expression, options), env),
 );

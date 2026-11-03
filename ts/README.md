@@ -27,6 +27,27 @@ error. Parsing and evaluating recurse for each level of nesting, so `compile`,
 `parse`, `interpret` and `evaluate` throw a `RangeError` for an expression
 nested too deeply, from about 1,000 levels.
 
+### Lists
+
+The `in` builtin tests list membership, e.g. `branch in ["main", "develop"]`.
+Lists hold string, number or boolean literals of one type, and are only valid as
+the right operand of `in`. They are off by default: pass `{ lists: true }` (the
+`Options` type) to `scan`, `parse` or `compile`, and to `diagnose` and
+`complete`, which also offer `in` as a completion only then. The scanner and the
+parser must be given the same options. With lists off, `in` is an ordinary
+identifier and `[`, `]` and `,` are scan errors.
+
+Adding lists is a breaking change for code that switches exhaustively over
+`Expr['kind']`, `TokenType`, `Builtin` or `ParseErrorType`: each has new members
+(`list`, `LEFT_BRACKET`, `RIGHT_BRACKET` and `COMMA`, `IN`, and the list parse
+errors). `builtinForLexeme` is unchanged and doesn't know `in`; use
+`builtinForLexemeWithLists`.
+
+```ts
+const expr = compile('branch in ["main", "develop"]', { lists: true });
+interpret(expr, { branch: 'main' }); // true
+```
+
 ### In CodeMirror
 
 `diagnose` and `complete` return the shapes CodeMirror's lint and autocomplete

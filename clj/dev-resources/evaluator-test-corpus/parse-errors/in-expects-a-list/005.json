@@ -1,0 +1,17 @@
+{
+  "input" : {
+    "expression" : "x IN \"a\"",
+    "environment" : { },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "STRING",
+      "errorType" : "Parser/EXPECTED_LIST",
+      "lexeme" : "\"a\"",
+      "charPos" : 5
+    }
+  }
+}

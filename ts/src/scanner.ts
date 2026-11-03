@@ -1,7 +1,8 @@
 import { RE2JSSyntaxException } from 're2js';
 
-import { builtinForLexeme } from './builtin.ts';
+import { builtinForLexeme, builtinForLexemeWithLists } from './builtin.ts';
 import { ExprError, errorMessage, quoteRune } from './errors.ts';
+import type { Options } from './options.ts';
 import { type Literal, type Token, TokenType } from './token.ts';
 import { Pattern } from './val.ts';
 
@@ -99,18 +100,20 @@ const keywords: ReadonlyMap<string, TokenType> = new Map([
  * tokens scanned before it, which an editor can use to complete a
  * half-written expression.
  */
-export function scan(source: string): ScanResult {
-  return new Scanner(source).scan();
+export function scan(source: string, options?: Options): ScanResult {
+  return new Scanner(source, options?.lists === true).scan();
 }
 
 class Scanner {
   private readonly source: string;
+  private readonly lists: boolean;
   private start = 0;
   private current = 0;
   private readonly tokens: Token[] = [];
 
-  constructor(source: string) {
+  constructor(source: string, lists: boolean) {
     this.source = source;
+    this.lists = lists;
   }
 
   scan(): ScanResult {
@@ -142,6 +145,12 @@ class Scanner {
         return this.addToken(TokenType.LEFT_PAREN);
       case ')':
         return this.addToken(TokenType.RIGHT_PAREN);
+      case '[':
+        return this.listToken(c, TokenType.LEFT_BRACKET);
+      case ']':
+        return this.listToken(c, TokenType.RIGHT_BRACKET);
+      case ',':
+        return this.listToken(c, TokenType.COMMA);
       case '!':
         return this.addToken(
           this.match('=') ? TokenType.NOT_EQUAL : TokenType.NOT,
@@ -177,6 +186,14 @@ class Scanner {
       return this.identifier();
     }
     throw new ScanError(ScanErrorType.UNEXPECTED_CHARACTER, c, this.start);
+  }
+
+  /** Add a token that is only valid when lists are enabled. */
+  private listToken(c: string, type: TokenType): void {
+    if (!this.lists) {
+      throw new ScanError(ScanErrorType.UNEXPECTED_CHARACTER, c, this.start);
+    }
+    this.addToken(type);
   }
 
   /** Match an "==" token. */
@@ -300,7 +317,10 @@ class Scanner {
     }
 
     const identifier = this.lexeme();
-    if (builtinForLexeme(identifier) !== undefined) {
+    const builtin = this.lists
+      ? builtinForLexemeWithLists(identifier)
+      : builtinForLexeme(identifier);
+    if (builtin !== undefined) {
       this.addToken(TokenType.BUILTIN, identifier);
     } else {
       this.addToken(

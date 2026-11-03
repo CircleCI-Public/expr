@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "not x in [true]",
+    "environment" : {
+      "x" : false
+    },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "result" : true
+  }
+}

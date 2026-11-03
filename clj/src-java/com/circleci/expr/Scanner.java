@@ -159,7 +159,8 @@ public class Scanner {
     keywords.put("FALSE", FALSE);
   }
 
-  private String source;
+  private final String source;
+  private final Options options;
   // 'start' tracks the index of the start of the current lexeme in 'source'
   private int start = 0;
   // 'current' tracks the index of the current character in 'source'
@@ -168,7 +169,12 @@ public class Scanner {
   private List<Token> tokens = new ArrayList<>();
 
   public Scanner(String source) {
+    this(source, Options.DEFAULT);
+  }
+
+  public Scanner(String source, Options options) {
     this.source = source;
+    this.options = options;
   }
 
   /**
@@ -202,6 +208,9 @@ public class Scanner {
     switch (c) {
       case '(': addToken(LEFT_PAREN); break;
       case ')': addToken(RIGHT_PAREN); break;
+      case '[': listToken(LEFT_BRACKET); break;
+      case ']': listToken(RIGHT_BRACKET); break;
+      case ',': listToken(COMMA); break;
       case '!': addToken(match('=') ? NOT_EQUAL : NOT); break;
       case '=': equal(); break;
       case '>': addToken(match('=') ? GREATER_EQUAL : GREATER); break;
@@ -229,6 +238,18 @@ public class Scanner {
         }
         break;
     }
+  }
+
+  /**
+   * Add a token that is only valid when lists are enabled.
+   *
+   * @throws ScanError if lists are not enabled.
+   */
+  private void listToken(TokenType type) {
+    if (!options.lists) {
+      throw new ScanError(source.codePointAt(current - 1), current - 1, ScanError.Type.UNEXPECTED_CHARACTER);
+    }
+    addToken(type);
   }
 
   /**
@@ -392,7 +413,7 @@ public class Scanner {
 
     String identifier = lexeme();
 
-    var builtin = Builtin.forLexeme(identifier);
+    var builtin = options.lists ? Builtin.forLexemeWithLists(identifier) : Builtin.forLexeme(identifier);
     if (builtin != null) {
       addToken(BUILTIN, identifier);
     }

@@ -11,6 +11,7 @@ import fc from 'fast-check';
 
 import {
   expression,
+  listExpression,
   testCase,
   toEnvironment,
 } from '../scripts/fuzz/arbitraries.ts';
@@ -86,6 +87,35 @@ describe('fuzz', () => {
           return;
         }
         assert.equal(interpret(expr, env), isTruthy(value));
+      }),
+      { numRuns },
+    );
+  });
+
+  it('compiles and evaluates any expression with lists enabled', () => {
+    const options = { lists: true };
+    fc.assert(
+      fc.property(listExpression, (expression) => {
+        let expr;
+        try {
+          expr = compile(expression, options);
+        } catch (e) {
+          assert.ok(e instanceof ExprError, `unexpected ${String(e)}`);
+          checkError(expression, e);
+          return;
+        }
+        const env = new Map<string, unknown>(
+          gatherVariables(expr).map((v) => [v.lexeme, 'a']),
+        );
+        try {
+          interpret(expr, env);
+        } catch (e) {
+          assert.ok(e instanceof ExprError, `unexpected ${String(e)}`);
+        }
+        for (const d of diagnose(expression, options)) {
+          assert.ok(d.from >= 0 && d.from <= d.to && d.to <= expression.length);
+        }
+        complete(expression, expression.length, { ...options, explicit: true });
       }),
       { numRuns },
     );

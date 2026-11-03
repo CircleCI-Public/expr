@@ -25,11 +25,15 @@ package com.circleci.expr;
  * logic_or -> logic_and ( "or" logic_and )*;
  * logic_and -> equality ( "and" equality )*;
  * equality -> comparison ( ( "==" | "!=" | BUILTIN ) comparison )*;
+ *   (when lists are enabled, the right operand of `in` is a list)
+ * list -> "[" literal ( "," literal )* "]";
+ * literal -> NUMBER | STRING | "true" | "false";
  * comparison -> unary ( ( ">=" | ">" | "<=" | "<" ) unary)*;
  * unary -> "not" unary | primary;
  * primary -> "true" | "false" | NUMBER | STRING | IDENTIFIER | PATTERN | "(" expression ")"
  */
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.circleci.expr.Builtin;
@@ -48,7 +52,13 @@ public class Parser {
       UNEXPECTED_ADDITIONAL_INPUT("Unexpected additional input."),
       EXPECTED_EXPRESSION("Expected expression."),
       EXPECTED_RIGHT_PAREN("Expected ')' after expression."),
-      UNKNOWN_BUILTIN_FUNCTION("Unknown infix function.");
+      UNKNOWN_BUILTIN_FUNCTION("Unknown infix function."),
+      EXPECTED_LIST("Expected list."),
+      EMPTY_LIST("List must not be empty."),
+      EXPECTED_LIST_ELEMENT("Expected list element."),
+      EXPECTED_RIGHT_BRACKET("Expected ']' after list."),
+      MIXED_LIST_TYPES("List elements must have the same type."),
+      UNEXPECTED_LIST("Unexpected list.");
 
       public final String message;
       private Type(String message) {
@@ -108,6 +118,42 @@ public class Parser {
               expression,
               this.token.charPos,
               errorString.length());
+
+        case EXPECTED_LIST ->
+          Errors.errorMessage(String.format("Expected '[' after \"in\", found \"%s\":", errorString),
+              expression,
+              this.token.charPos,
+              errorString.length());
+
+        case EMPTY_LIST ->
+          Errors.errorMessage("List must not be empty:",
+              expression,
+              this.token.charPos,
+              1);
+
+        case EXPECTED_LIST_ELEMENT ->
+          Errors.errorMessage(String.format("Expected a string, number or boolean list element, found \"%s\":", errorString),
+              expression,
+              this.token.charPos,
+              errorString.length());
+
+        case EXPECTED_RIGHT_BRACKET ->
+          Errors.errorMessage(String.format("Expected ',' or ']' after list element, found \"%s\":", errorString),
+              expression,
+              this.token.charPos,
+              errorString.length());
+
+        case MIXED_LIST_TYPES ->
+          Errors.errorMessage("List elements must all have the same type:",
+              expression,
+              this.token.charPos,
+              errorString.length());
+
+        case UNEXPECTED_LIST ->
+          Errors.errorMessage("Unexpected list, a list can only follow \"in\":",
+              expression,
+              this.token.charPos,
+              1);
       };
     }
   }
@@ -116,12 +162,23 @@ public class Parser {
   private final List<Token> tokens;
   // Index of the current token in the `tokens` list
   private int current = 0;
+  private final Options options;
 
   /**
    * Create a parser to parse the given list of Tokens.
    */
   public Parser(List<Token> tokens) {
+    this(tokens, Options.DEFAULT);
+  }
+
+  /**
+   * Create a parser with the given options to parse the given list of Tokens.
+   *
+   * The options must match the options of the Scanner that produced the tokens.
+   */
+  public Parser(List<Token> tokens, Options options) {
     this.tokens = tokens;
+    this.options = options;
   }
 
   /**
@@ -226,9 +283,9 @@ public class Parser {
       Token operator = previous();
 
       if (operator.type == BUILTIN) {
-        var builtin = Builtin.forLexeme(operator.lexeme);
+        var builtin = Builtin.forLexemeWithLists(operator.lexeme);
 
-        Expr right = comparison();
+        Expr right = builtin == Builtin.IN ? list() : comparison();
         expr = new Expr.Infix(expr, operator, builtin, right);
       }
       else {
@@ -238,6 +295,42 @@ public class Parser {
     }
 
     return expr;
+  }
+
+  /**
+   * Match a 'list' production.
+   */
+  private Expr.ListExpr list() {
+    Token open = consume(LEFT_BRACKET, ParseError.Type.EXPECTED_LIST);
+
+    if (check(RIGHT_BRACKET)) {
+      throw new ParseError(peek(), ParseError.Type.EMPTY_LIST);
+    }
+
+    var elements = new ArrayList<Expr.Literal>();
+    do {
+      Token token = peek();
+      var element = listElement();
+      if (!elements.isEmpty() && element.value.getClass() != elements.get(0).value.getClass()) {
+        throw new ParseError(token, ParseError.Type.MIXED_LIST_TYPES);
+      }
+      elements.add(element);
+    } while (match(COMMA));
+
+    consume(RIGHT_BRACKET, ParseError.Type.EXPECTED_RIGHT_BRACKET);
+
+    return new Expr.ListExpr(open, elements);
+  }
+
+  /**
+   * Match a 'literal' production.
+   */
+  private Expr.Literal listElement() {
+    if (match(FALSE)) return new Expr.Literal(false);
+    if (match(TRUE)) return new Expr.Literal(true);
+    if (match(NUMBER, STRING)) return new Expr.Literal(previous().literal);
+
+    throw new ParseError(peek(), ParseError.Type.EXPECTED_LIST_ELEMENT);
   }
 
   /**
@@ -287,6 +380,10 @@ public class Parser {
       Expr expr = expression();
       consume(RIGHT_PAREN, ParseError.Type.EXPECTED_RIGHT_PAREN);
       return new Expr.Grouping(expr);
+    }
+
+    if (options.lists && check(LEFT_BRACKET)) {
+      throw new ParseError(peek(), ParseError.Type.UNEXPECTED_LIST);
     }
 
     throw new ParseError(peek(), ParseError.Type.EXPECTED_EXPRESSION);

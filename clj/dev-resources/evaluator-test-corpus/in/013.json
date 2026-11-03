@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "x IN [1, 2]",
+    "environment" : {
+      "x" : 3
+    },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "result" : false
+  }
+}

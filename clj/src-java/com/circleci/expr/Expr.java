@@ -20,11 +20,14 @@ IN THE SOFTWARE.
 
 package com.circleci.expr;
 
+import java.util.List;
+
 /* Expressions:
  * Logical
  * Binary
  * Unary
  * Literal
+ * ListExpr
  * Identifier
  * Grouping
  */
@@ -45,6 +48,7 @@ public abstract class Expr {
     T visitInfixExpr(Infix expr);
     T visitUnaryExpr(Unary expr);
     T visitLiteralExpr(Literal expr);
+    T visitListExpr(ListExpr expr);
     T visitIdentifierExpr(Identifier expr);
     T visitGroupingExpr(Grouping expr);
   }
@@ -144,6 +148,26 @@ public abstract class Expr {
     @Override
     public <T> T accept(Visitor<T> visitor) {
       return visitor.visitLiteralExpr(this);
+    }
+  }
+
+  /**
+   * A list of literals node in the AST.
+   *
+   * List nodes are only valid as the right operand of the `in` builtin.
+   */
+  public static class ListExpr extends Expr {
+    public final Token open;
+    public final List<Literal> elements;
+
+    public ListExpr(Token open, List<Literal> elements) {
+      this.open = open;
+      this.elements = elements;
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitListExpr(this);
     }
   }
 

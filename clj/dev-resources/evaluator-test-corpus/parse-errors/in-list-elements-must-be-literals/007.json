@@ -1,0 +1,17 @@
+{
+  "input" : {
+    "expression" : "x in [\"a\",",
+    "environment" : { },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "EOF",
+      "errorType" : "Parser/EXPECTED_LIST_ELEMENT",
+      "lexeme" : "",
+      "charPos" : 10
+    }
+  }
+}

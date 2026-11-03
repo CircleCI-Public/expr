@@ -297,6 +297,55 @@ const render = (tokens: fc.Arbitrary<string[]>): fc.Arbitrary<string> =>
       );
     });
 
+const listElement = fc.oneof(
+  numberLiteral,
+  stringLiteral,
+  fc.constantFrom('true', 'false', 'TRUE', 'FALSE'),
+  identifier,
+  patternLiteral,
+);
+
+/** `operand in [elements]`, as tokens. The list may be empty or malformed. */
+const inTokens = fc
+  .tuple(
+    primary,
+    fc.constantFrom('in', 'IN'),
+    fc.array(listElement, { maxLength: 4 }),
+    fc.boolean(),
+  )
+  .map(([operand, op, elements, trailingComma]) => [
+    operand,
+    op,
+    '[',
+    elements.join(' , ') + (trailingComma && elements.length > 0 ? ' ,' : ''),
+    ']',
+  ]);
+
+/** Expressions to fuzz with lists enabled, which may well be invalid. */
+export const listExpression: fc.Arbitrary<string> = fc.oneof(
+  { weight: 4, arbitrary: render(inTokens) },
+  {
+    weight: 2,
+    arbitrary: render(
+      fc
+        .tuple(inTokens, fc.constantFrom('and', 'or', '=='), inTokens)
+        .map(([l, op, r]) => [...l, op, ...r]),
+    ),
+  },
+  {
+    weight: 2,
+    arbitrary: render(
+      fc.array(
+        fc.oneof(
+          primary,
+          fc.constantFrom('in', 'IN', '[', ']', ',', 'not', '(', ')'),
+        ),
+        { maxLength: 10 },
+      ),
+    ),
+  },
+);
+
 const smallAlphabet = ['a', 'b', 'é', 'A', '\n'];
 
 /** A pattern over a small alphabet, which strings over it may match. */

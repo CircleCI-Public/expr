@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "x > 1 in [true]",
+    "environment" : {
+      "x" : 2
+    },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "result" : true
+  }
+}
