@@ -3,6 +3,7 @@
 
 import com.circleci.expr.Errors;
 import com.circleci.expr.Interpreter;
+import com.circleci.expr.Options;
 import com.circleci.expr.Parser;
 import com.circleci.expr.Scanner;
 import com.circleci.expr.Token;
@@ -18,11 +19,12 @@ public class Oracle {
   public static void main(String[] args) throws Exception {
     var in = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
     var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
+    var options = new Options(args.length > 0 && args[0].equals("--lists"));
     String line;
     while ((line = in.readLine()) != null) {
       String response;
       try {
-        response = run(line);
+        response = run(line, options);
       } catch (Throwable e) {
         response = "X\t" + b64(e.toString());
       }
@@ -38,7 +40,7 @@ public class Oracle {
     return new String(Base64.getDecoder().decode(s), StandardCharsets.UTF_8);
   }
 
-  static String run(String line) {
+  static String run(String line, Options options) {
     var fields = line.split("\t", -1);
     var expression = unb64(fields[0]);
     var env = new HashMap<String, Object>();
@@ -56,8 +58,8 @@ public class Oracle {
     }
 
     try {
-      var tokens = new Scanner(expression).scan();
-      var expr = new Parser(tokens).parse();
+      var tokens = new Scanner(expression, options).scan();
+      var expr = new Parser(tokens, options).parse();
       var v = new Interpreter(env).evaluate(expr);
       if (v == null) return "R\tu\t";
       if (v instanceof Boolean) return "R\tb\t" + b64(v.toString());

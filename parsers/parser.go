@@ -25,6 +25,9 @@ package parsers
  * logic_or -> logic_and ( "or" logic_and )*;
  * logic_and -> equality ( "and" equality )*;
  * equality -> comparison ( ( "==" | "!=" | BUILTIN ) comparison )*;
+ *   (when lists are enabled, the right operand of `in` is a list)
+ * list -> "[" literal ( "," literal )* "]";
+ * literal -> NUMBER | STRING | "true" | "false";
  * comparison -> unary ( ( ">=" | ">" | "<=" | "<" ) unary)*;
  * unary -> "not" unary | primary;
  * primary -> "true" | "false" | NUMBER | STRING | IDENTIFIER | PATTERN | "(" expression ")"
@@ -32,6 +35,7 @@ package parsers
 
 import (
 	"fmt"
+	"reflect"
 	"unicode/utf8"
 
 	"github.com/CircleCI-Public/expr/builtins"
@@ -46,6 +50,12 @@ const (
 	EXPECTED_EXPRESSION         errorType = "Expected expression."
 	EXPECTED_RIGHT_PAREN        errorType = "Expected ')' after expression."
 	UNKNOWN_BUILTIN_FUNCTION    errorType = "Unknown infix function."
+	EXPECTED_LIST               errorType = "Expected list."
+	EMPTY_LIST                  errorType = "List must not be empty."
+	EXPECTED_LIST_ELEMENT       errorType = "Expected list element."
+	EXPECTED_RIGHT_BRACKET      errorType = "Expected ']' after list."
+	MIXED_LIST_TYPES            errorType = "List elements must have the same type."
+	UNEXPECTED_LIST             errorType = "Unexpected list."
 )
 
 func (et errorType) Symbol() string {
@@ -58,6 +68,18 @@ func (et errorType) Symbol() string {
 		return "EXPECTED_RIGHT_PAREN"
 	case UNKNOWN_BUILTIN_FUNCTION:
 		return "UNKNOWN_BUILTIN_FUNCTION"
+	case EXPECTED_LIST:
+		return "EXPECTED_LIST"
+	case EMPTY_LIST:
+		return "EMPTY_LIST"
+	case EXPECTED_LIST_ELEMENT:
+		return "EXPECTED_LIST_ELEMENT"
+	case EXPECTED_RIGHT_BRACKET:
+		return "EXPECTED_RIGHT_BRACKET"
+	case MIXED_LIST_TYPES:
+		return "MIXED_LIST_TYPES"
+	case UNEXPECTED_LIST:
+		return "UNEXPECTED_LIST"
 	}
 
 	panic("Encountered unknown Parser errorType value")
@@ -112,21 +134,77 @@ func (e Error) AsErrorMessage(expression string) string {
 			e.Token.CharPos,
 			utf8.RuneCountInString(errorString))
 
+	case EXPECTED_LIST:
+		return errors.ErrorMessage(fmt.Sprintf("Expected '[' after \"in\", found \"%s\":", errorString),
+			expression,
+			e.Token.CharPos,
+			utf8.RuneCountInString(errorString))
+
+	case EMPTY_LIST:
+		return errors.ErrorMessage("List must not be empty:",
+			expression,
+			e.Token.CharPos,
+			1)
+
+	case EXPECTED_LIST_ELEMENT:
+		return errors.ErrorMessage(fmt.Sprintf("Expected a string, number or boolean list element, found \"%s\":", errorString),
+			expression,
+			e.Token.CharPos,
+			utf8.RuneCountInString(errorString))
+
+	case EXPECTED_RIGHT_BRACKET:
+		return errors.ErrorMessage(fmt.Sprintf("Expected ',' or ']' after list element, found \"%s\":", errorString),
+			expression,
+			e.Token.CharPos,
+			utf8.RuneCountInString(errorString))
+
+	case MIXED_LIST_TYPES:
+		return errors.ErrorMessage("List elements must all have the same type:",
+			expression,
+			e.Token.CharPos,
+			utf8.RuneCountInString(errorString))
+
+	case UNEXPECTED_LIST:
+		return errors.ErrorMessage("Unexpected list, a list can only follow \"in\":",
+			expression,
+			e.Token.CharPos,
+			1)
+
 	default:
 		return fmt.Sprintf("Unknown error parsing expression: '%s'", expression)
 	}
 }
 
+type config struct {
+	lists bool
+}
+
+// Option configures optional language features.
+type Option func(*config)
+
+// WithLists enables list literals and the `in` builtin. The tokens must come
+// from a scanner created with `scanners.WithLists`.
+func WithLists() Option {
+	return func(c *config) { c.lists = true }
+}
+
 type parser struct {
 	tokens  []tokens.Token
 	current int
+	lists   bool
 }
 
 // Create a parser to parse the given list of Tokens.
-func New(toks []tokens.Token) *parser {
+func New(toks []tokens.Token, opts ...Option) *parser {
+	var c config
+	for _, opt := range opts {
+		opt(&c)
+	}
+
 	return &parser{
 		tokens:  toks,
 		current: 0,
+		lists:   c.lists,
 	}
 }
 
@@ -241,8 +319,14 @@ func (p *parser) equality() (Expr, error) {
 		operator := p.previous()
 
 		if operator.Type == tokens.BUILTIN {
-			builtin := builtins.ForLexeme(operator.Lexeme)
-			right, err := p.comparison()
+			builtin := builtins.ForLexemeWithLists(operator.Lexeme)
+			var right Expr
+			var err error
+			if builtin == builtins.IN {
+				right, err = p.list()
+			} else {
+				right, err = p.comparison()
+			}
 			if err != nil {
 				return nil, err
 			}
@@ -257,6 +341,56 @@ func (p *parser) equality() (Expr, error) {
 	}
 
 	return expr, nil
+}
+
+// Match a 'list' production.
+func (p *parser) list() (Expr, error) {
+	open, err := p.consume(tokens.LEFT_BRACKET, EXPECTED_LIST)
+	if err != nil {
+		return nil, err
+	}
+
+	if p.check(tokens.RIGHT_BRACKET) {
+		return nil, Error{Type: EMPTY_LIST, Token: p.peek()}
+	}
+
+	var elements []Literal
+	for {
+		token := p.peek()
+		element, err := p.listElement()
+		if err != nil {
+			return nil, err
+		}
+		if len(elements) > 0 && reflect.TypeOf(element.Value) != reflect.TypeOf(elements[0].Value) {
+			return nil, Error{Type: MIXED_LIST_TYPES, Token: token}
+		}
+		elements = append(elements, element)
+
+		if !p.match(tokens.COMMA) {
+			break
+		}
+	}
+
+	if _, err := p.consume(tokens.RIGHT_BRACKET, EXPECTED_RIGHT_BRACKET); err != nil {
+		return nil, err
+	}
+
+	return List{Elements: elements, Open: open}, nil
+}
+
+// Match a 'literal' production.
+func (p *parser) listElement() (Literal, error) {
+	if p.match(tokens.FALSE) {
+		return Literal{Value: false}, nil
+	}
+	if p.match(tokens.TRUE) {
+		return Literal{Value: true}, nil
+	}
+	if p.match(tokens.NUMBER, tokens.STRING) {
+		return Literal{Value: p.previous().Literal}, nil
+	}
+
+	return Literal{}, Error{Type: EXPECTED_LIST_ELEMENT, Token: p.peek()}
 }
 
 // Match a 'comparison' production.
@@ -324,6 +458,10 @@ func (p *parser) primary() (Expr, error) {
 			return nil, err
 		}
 		return Grouping{Expression: expr}, nil
+	}
+
+	if p.lists && p.check(tokens.LEFT_BRACKET) {
+		return nil, Error{Type: UNEXPECTED_LIST, Token: p.peek()}
 	}
 
 	return nil, Error{Type: EXPECTED_EXPRESSION, Token: p.peek()}

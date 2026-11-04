@@ -24,13 +24,14 @@
            com.google.re2j.Pattern))
 
 (defn write-test-file
-  [dirs n expression environment expected]
+  [dirs n expression environment expected options]
   (let [file (apply io/file (concat ["dev-resources"]
                                     dirs
                                     [(format "%03d.json" n)]))]
     (.mkdirs (.getParentFile file))
-    (spit file (str (json/generate-string {:input {:expression expression
-                                                   :environment environment}
+    (spit file (str (json/generate-string {:input (cond-> {:expression expression
+                                                           :environment environment}
+                                                    options (assoc :options options))
                                            :expected expected}
                                           {:pretty true})
                     \newline))))
@@ -86,7 +87,8 @@
                                  (inc n)
                                  expression
                                  environment
-                                 (coerce-expected expected)))
+                                 (coerce-expected expected)
+                                 (:options data)))
               (recur (read-test rdr))))))
       (catch Exception e
         (println (format "unable to generate test corpus from resource %s" file))

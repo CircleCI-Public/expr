@@ -1,0 +1,16 @@
+{
+  "input" : {
+    "expression" : "x in [1, 9223372036854775808]",
+    "environment" : { },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "error" : {
+      "errorType" : "Scanner/INVALID_NUMERIC_LITERAL",
+      "lexeme" : "9",
+      "charPos" : 9
+    }
+  }
+}

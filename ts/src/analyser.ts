@@ -27,6 +27,7 @@ export function gatherVariables(expr: Expr): Token[] {
         variables.push(e.name);
         break;
       case 'literal':
+      case 'list':
         break;
     }
   }

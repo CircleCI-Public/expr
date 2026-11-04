@@ -17,11 +17,12 @@ import (
 )
 
 func main() {
+	lists := len(os.Args) > 1 && os.Args[1] == "--lists"
 	in := bufio.NewScanner(os.Stdin)
 	in.Buffer(make([]byte, 1<<20), 1<<20)
 	out := bufio.NewWriter(os.Stdout)
 	for in.Scan() {
-		fmt.Fprintln(out, run(in.Text()))
+		fmt.Fprintln(out, run(in.Text(), lists))
 		if err := out.Flush(); err != nil {
 			panic(err)
 		}
@@ -41,7 +42,7 @@ func unb64(s string) string {
 	return string(b)
 }
 
-func run(line string) (response string) {
+func run(line string, lists bool) (response string) {
 	defer func() {
 		if r := recover(); r != nil {
 			response = "X\t" + b64(fmt.Sprint("panic: ", r))
@@ -78,11 +79,18 @@ func run(line string) (response string) {
 		env[name] = boxed
 	}
 
-	toks, err := scanners.New(expression).Scan()
+	var scanOpts []scanners.Option
+	var parseOpts []parsers.Option
+	if lists {
+		scanOpts = append(scanOpts, scanners.WithLists())
+		parseOpts = append(parseOpts, parsers.WithLists())
+	}
+
+	toks, err := scanners.New(expression, scanOpts...).Scan()
 	if err != nil {
 		return failure(expression, err)
 	}
-	e, err := parsers.New(toks).Parse()
+	e, err := parsers.New(toks, parseOpts...).Parse()
 	if err != nil {
 		return failure(expression, err)
 	}

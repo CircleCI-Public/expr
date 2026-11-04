@@ -22,6 +22,9 @@
 ;; The :name key is used to create a subdirectory in the test corpus directory.
 ;; Each case in the :tests data is written to a uniquely named JSON file in
 ;; that subdirectory.
+;; A set can have an :options map, e.g. {:lists true}. It is written to
+;; `input.options` in each JSON file, and harnesses must pass it to the scanner
+;; and the parser. Sets without :options write no `options` key.
 ;;
 ;; The :tests data should be a vector in triples of expression, environment,
 ;; expected
@@ -775,3 +778,210 @@
                            :errorType "Parser/UNKNOWN_BUILTIN_FUNCTION"
                            :lexeme "invalid"
                            :charPos 2}]}
+
+{:name "in"
+ :options {:lists true}
+ :tests [;; strings
+         "x in [\"a\", \"b\"]" {"x" "a"} true
+         "x in [\"a\", \"b\"]" {"x" "b"} true
+         "x in [\"a\", \"b\"]" {"x" "c"} false
+         "x in [\"a\"]" {"x" "A"} false
+         ;; numbers
+         "x in [1, 2, 3]" {"x" 2} true
+         "x in [1, 2, 3]" {"x" 4} false
+         "x in [0]" {"x" 0} true
+         ;; booleans
+         "x in [true]" {"x" true} true
+         "x in [true]" {"x" false} false
+         "x in [false]" {"x" false} true
+         "x in [true, false]" {"x" false} true
+         ;; upper-case IN
+         "x IN [\"a\", \"b\"]" {"x" "b"} true
+         "x IN [1, 2]" {"x" 3} false
+         ;; literal left operand
+         "\"a\" in [\"a\", \"b\"]" {} true
+         "\"c\" in [\"a\", \"b\"]" {} false
+         "2 in [1, 2]" {} true
+         "true in [true]" {} true
+         ;; operand types that differ from the element type never match
+         "x in [1, 2]" {"x" "1"} false
+         "x in [\"1\"]" {"x" 1} false
+         "x in [true]" {"x" "true"} false
+         ;; undefined left operand
+         "x in [\"a\"]" {"x" nil} nil
+         "x in [1]" {"x" nil} nil
+         "x in [true]" {"x" nil} nil
+         ;; negation
+         "not (x in [\"a\"])" {"x" "a"} false
+         "not (x in [\"a\"])" {"x" "b"} true
+         "not (x in [\"a\"])" {"x" nil} true
+         ;; logical operators
+         "x in [\"a\"] and y in [1, 2]" {"x" "a", "y" 2} true
+         "x in [\"a\"] and y in [1, 2]" {"x" "a", "y" 3} false
+         "x in [\"a\"] or y in [1, 2]" {"x" "b", "y" 3} false
+         "x in [\"a\"] or y in [1, 2]" {"x" "b", "y" 1} true
+         "x == 1 and y in [\"a\"]" {"x" 1, "y" "a"} true
+         ;; comparison as the left operand
+         "x > 1 in [true]" {"x" 2} true
+         "x > 1 in [true]" {"x" 0} false
+         ;; duplicates
+         "x in [\"a\", \"a\"]" {"x" "a"} true
+         "x in [1, 1, 1]" {"x" 2} false
+         ;; `in` is left associative and binds as loosely as `==`
+         "x in [\"a\"] == true" {"x" "a"} true
+         "x in [\"a\"] == true" {"x" "b"} false
+         "x == 1 in [true]" {"x" 1} true
+         "x == 1 in [true]" {"x" 2} false
+         "x in [\"a\"] in [true]" {"x" "a"} true
+         "x in [\"a\"] in [true]" {"x" "b"} false
+         ;; `not` binds tighter than `in`: (not x) in [true]
+         "not x in [true]" {"x" false} true
+         "not x in [true]" {"x" true} false]}
+
+{:name "in-is-an-identifier-by-default"
+ :tests ["in == 1" {"in" 1} true
+         "in == 1" {"in" 2} false
+         "IN == 1" {"IN" 1} true]}
+
+{:name ["scan-errors" "lists-are-disabled-by-default"]
+ :tests ["x in [\"a\"]" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                            :lexeme "["
+                            :charPos 5}
+         "x]" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                  :lexeme "]"
+                  :charPos 1}
+         "x, y" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                    :lexeme ","
+                    :charPos 1}
+         "x IN [\"a\"]" {} {:errorType "Scanner/UNEXPECTED_CHARACTER"
+                             :lexeme "["
+                             :charPos 5}]}
+
+{:name ["parse-errors" "in-is-an-unknown-function-by-default"]
+ :tests ["x in \"a\"" {} {:tokenType "IDENTIFIER"
+                          :errorType "Parser/UNKNOWN_BUILTIN_FUNCTION"
+                          :lexeme "in"
+                          :charPos 2}]}
+
+{:name ["parse-errors" "in-expects-a-list"]
+ :options {:lists true}
+ :tests ["x in \"a\"" {} {:tokenType "STRING"
+                          :errorType "Parser/EXPECTED_LIST"
+                          :lexeme "\"a\""
+                          :charPos 5}
+         "x in y" {} {:tokenType "IDENTIFIER"
+                      :errorType "Parser/EXPECTED_LIST"
+                      :lexeme "y"
+                      :charPos 5}
+         "x in (\"a\")" {} {:tokenType "LEFT_PAREN"
+                            :errorType "Parser/EXPECTED_LIST"
+                            :lexeme "("
+                            :charPos 5}
+         "x in" {} {:tokenType "EOF"
+                    :errorType "Parser/EXPECTED_LIST"
+                    :lexeme ""
+                    :charPos 4}
+         "x IN \"a\"" {} {:tokenType "STRING"
+                          :errorType "Parser/EXPECTED_LIST"
+                          :lexeme "\"a\""
+                          :charPos 5}]}
+
+{:name ["parse-errors" "in-lists-must-not-be-empty"]
+ :options {:lists true}
+ :tests ["x in []" {} {:tokenType "RIGHT_BRACKET"
+                       :errorType "Parser/EMPTY_LIST"
+                       :lexeme "]"
+                       :charPos 6}]}
+
+{:name ["parse-errors" "in-list-elements-must-be-literals"]
+ :options {:lists true}
+ :tests ["x in [\"a\",]" {} {:tokenType "RIGHT_BRACKET"
+                             :errorType "Parser/EXPECTED_LIST_ELEMENT"
+                             :lexeme "]"
+                             :charPos 10}
+         "x in [y]" {} {:tokenType "IDENTIFIER"
+                        :errorType "Parser/EXPECTED_LIST_ELEMENT"
+                        :lexeme "y"
+                        :charPos 6}
+         "x in [/a/]" {} {:tokenType "PATTERN"
+                          :errorType "Parser/EXPECTED_LIST_ELEMENT"
+                          :lexeme "/a/"
+                          :charPos 6}
+         "x in [[\"a\"]]" {} {:tokenType "LEFT_BRACKET"
+                              :errorType "Parser/EXPECTED_LIST_ELEMENT"
+                              :lexeme "["
+                              :charPos 6}
+         "x in [,\"a\"]" {} {:tokenType "COMMA"
+                             :errorType "Parser/EXPECTED_LIST_ELEMENT"
+                             :lexeme ","
+                             :charPos 6}
+         "x in [" {} {:tokenType "EOF"
+                      :errorType "Parser/EXPECTED_LIST_ELEMENT"
+                      :lexeme ""
+                      :charPos 6}
+         "x in [\"a\"," {} {:tokenType "EOF"
+                            :errorType "Parser/EXPECTED_LIST_ELEMENT"
+                            :lexeme ""
+                            :charPos 10}]}
+
+{:name ["parse-errors" "in-lists-must-be-closed"]
+ :options {:lists true}
+ :tests ["x in [\"a\" \"b\"]" {} {:tokenType "STRING"
+                                  :errorType "Parser/EXPECTED_RIGHT_BRACKET"
+                                  :lexeme "\"b\""
+                                  :charPos 10}
+         "x in [\"a\"" {} {:tokenType "EOF"
+                           :errorType "Parser/EXPECTED_RIGHT_BRACKET"
+                           :lexeme ""
+                           :charPos 9}
+         "x in [1 2]" {} {:tokenType "NUMBER"
+                          :errorType "Parser/EXPECTED_RIGHT_BRACKET"
+                          :lexeme "2"
+                          :charPos 8}]}
+
+{:name ["parse-errors" "in-list-elements-must-have-the-same-type"]
+ :options {:lists true}
+ :tests ["x in [\"a\", 1]" {} {:tokenType "NUMBER"
+                               :errorType "Parser/MIXED_LIST_TYPES"
+                               :lexeme "1"
+                               :charPos 11}
+         "x in [1, true]" {} {:tokenType "TRUE"
+                              :errorType "Parser/MIXED_LIST_TYPES"
+                              :lexeme "true"
+                              :charPos 9}
+         "x in [true, \"a\"]" {} {:tokenType "STRING"
+                                  :errorType "Parser/MIXED_LIST_TYPES"
+                                  :lexeme "\"a\""
+                                  :charPos 12}
+         "x in [1, 2, \"a\"]" {} {:tokenType "STRING"
+                                  :errorType "Parser/MIXED_LIST_TYPES"
+                                  :lexeme "\"a\""
+                                  :charPos 12}]}
+
+{:name ["parse-errors" "lists-are-only-valid-after-in"]
+ :options {:lists true}
+ :tests ["[\"a\"]" {} {:tokenType "LEFT_BRACKET"
+                       :errorType "Parser/UNEXPECTED_LIST"
+                       :lexeme "["
+                       :charPos 0}
+         "x == [\"a\"]" {} {:tokenType "LEFT_BRACKET"
+                            :errorType "Parser/UNEXPECTED_LIST"
+                            :lexeme "["
+                            :charPos 5}
+         "x in [\"a\"] and [\"b\"]" {} {:tokenType "LEFT_BRACKET"
+                                        :errorType "Parser/UNEXPECTED_LIST"
+                                        :lexeme "["
+                                        :charPos 15}
+         "[\"a\"] in [\"a\"]" {} {:tokenType "LEFT_BRACKET"
+                                  :errorType "Parser/UNEXPECTED_LIST"
+                                  :lexeme "["
+                                  :charPos 0}]}
+
+{:name ["scan-errors" "in-list-numbers-must-be-in-range"]
+ :options {:lists true}
+ :tests ["x in [9223372036854775808]" {} {:errorType "Scanner/INVALID_NUMERIC_LITERAL"
+                                          :lexeme "9"
+                                          :charPos 6}
+         "x in [1, 9223372036854775808]" {} {:errorType "Scanner/INVALID_NUMERIC_LITERAL"
+                                             :lexeme "9"
+                                             :charPos 9}]}

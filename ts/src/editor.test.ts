@@ -21,6 +21,23 @@ describe('diagnose', () => {
     ]);
   });
 
+  it('reports list errors only when lists are enabled', () => {
+    assert.equal(
+      diagnose('a in ["x"]')[0]?.message,
+      "Unexpected character '['",
+    );
+    assert.deepEqual(diagnose('a in ["x"]', { lists: true }), []);
+    assert.deepEqual(diagnose('a in []', { lists: true }), [
+      {
+        from: 6,
+        to: 7,
+        severity: 'error',
+        message: 'List must not be empty',
+        source: 'expr',
+      },
+    ]);
+  });
+
   it('reports parse errors', () => {
     assert.deepEqual(diagnose('foo and ) bar'), [
       {
@@ -296,6 +313,30 @@ describe('complete', () => {
 
   it('does not complete after a scan error', () => {
     assert.equal(complete('foo & ba', 8, { variables }), null);
+  });
+
+  it('offers `in` after an operand only when lists are enabled', () => {
+    const names = (options?: { lists?: boolean }): string[] =>
+      complete('a i', 3, options)?.options.map((o) => o.label) ?? [];
+    assert.ok(!names().includes('in'));
+    assert.ok(names({ lists: true }).includes('in'));
+    assert.deepEqual(
+      names({ lists: true }).filter((l) => l !== 'in'),
+      names(),
+    );
+  });
+
+  it('offers nothing where a list or list element is expected', () => {
+    for (const expression of ['a in ', 'a in [', 'a in [1, ']) {
+      assert.equal(
+        complete(expression, expression.length, {
+          explicit: true,
+          lists: true,
+        }),
+        null,
+        expression,
+      );
+    }
   });
 
   it('ranks deprecated variables last and marks them', () => {

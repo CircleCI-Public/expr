@@ -21,11 +21,13 @@
                               Expr$Infix
                               Expr$Grouping
                               Expr$Identifier
+                              Expr$ListExpr
                               Expr$Literal
                               Expr$Logical
                               Expr$Unary
                               Expr$Visitor
                               Interpreter
+                              Options
                               Parser
                               Scanner
                               VariableAnalyser)))
@@ -55,6 +57,9 @@
     (visitLiteralExpr [_this ^Expr$Literal literal]
       (list 'literal (.-value literal)))
 
+    (visitListExpr [_this ^Expr$ListExpr list]
+      (list 'list (mapv #(.-value ^Expr$Literal %) (.-elements list))))
+
     (visitIdentifierExpr [_this ^Expr$Identifier identifier]
       (let [ident (.-name identifier)]
         (list 'identifier (.-lexeme ident))))
@@ -67,8 +72,10 @@
   (.accept expr (s-expression-visitor)))
 
 (defn parse
-  [tokens]
-  (.parse (Parser. tokens)))
+  ([tokens]
+   (.parse (Parser. tokens)))
+  ([tokens ^Options options]
+   (.parse (Parser. tokens options))))
 
 (defn token->map
   [token]
@@ -79,8 +86,10 @@
            {:literal literal})))
 
 (defn scan
-  [^String expression]
-  (.scan (Scanner. expression)))
+  ([^String expression]
+   (.scan (Scanner. expression)))
+  ([^String expression ^Options options]
+   (.scan (Scanner. expression options))))
 
 (defn analyse
   [^Expr expr]

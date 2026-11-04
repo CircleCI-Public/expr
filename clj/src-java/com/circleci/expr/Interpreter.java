@@ -187,6 +187,10 @@ public class Interpreter implements Expr.Visitor<Object> {
 
   @Override
   public Object visitInfixExpr(Expr.Infix expr) {
+    if (expr.builtin == IN) {
+      return isIn(expr);
+    }
+
     // eval left and right, apply the function, return it
     Object left = eval(expr.left);
     Object right = eval(expr.right);
@@ -221,6 +225,11 @@ public class Interpreter implements Expr.Visitor<Object> {
   }
 
   @Override
+  public Object visitListExpr(Expr.ListExpr expr) {
+    throw new IllegalStateException("List evaluated outside of an `in` expression");
+  }
+
+  @Override
   public Object visitIdentifierExpr(Expr.Identifier expr) {
     if (!environment.containsKey(expr.name.lexeme)) {
       throw new Error(expr.name, Error.Type.UNKNOWN_VARIABLE);
@@ -250,6 +259,21 @@ public class Interpreter implements Expr.Visitor<Object> {
   @Override
   public Object visitGroupingExpr(Expr.Grouping expr) {
     return eval(expr.expression);
+  }
+
+  private Boolean isIn(Expr.Infix expr) {
+    Object left = eval(expr.left);
+    if (left == null) {
+      return null;
+    }
+
+    for (var element : ((Expr.ListExpr) expr.right).elements) {
+      if (isEqual(left, element.value)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private Object eval(Expr expr) {
@@ -292,6 +316,7 @@ public class Interpreter implements Expr.Visitor<Object> {
   private static BiFunction<Object, Object, Object> implFor(Expr.Infix expr) {
     return switch (expr.builtin) {
       case CONTAINS -> new ContainsFn(expr);
+      case IN -> throw new IllegalStateException("`in` is handled by isIn");
       case MATCHES -> new MatchesFn(expr);
       case STARTS_WITH ->  new StartsWithFn(expr);
     };

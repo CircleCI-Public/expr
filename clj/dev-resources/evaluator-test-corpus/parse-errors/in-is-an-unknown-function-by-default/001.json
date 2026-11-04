@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "x in \"a\"",
+    "environment" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "IDENTIFIER",
+      "errorType" : "Parser/UNKNOWN_BUILTIN_FUNCTION",
+      "lexeme" : "in",
+      "charPos" : 2
+    }
+  }
+}

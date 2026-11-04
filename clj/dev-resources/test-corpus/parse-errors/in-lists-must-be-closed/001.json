@@ -1,0 +1,17 @@
+{
+  "input" : {
+    "expression" : "x in [\"a\" \"b\"]",
+    "environment" : { },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "STRING",
+      "errorType" : "Parser/EXPECTED_RIGHT_BRACKET",
+      "lexeme" : "\"b\"",
+      "charPos" : 10
+    }
+  }
+}

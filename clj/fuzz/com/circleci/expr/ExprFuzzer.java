@@ -31,9 +31,14 @@ public class ExprFuzzer {
   public static void fuzzerTestOneInput(byte[] data) {
     var expression = new String(data, StandardCharsets.UTF_8);
 
+    fuzz(expression, Options.DEFAULT);
+    fuzz(expression, new Options(true));
+  }
+
+  private static void fuzz(String expression, Options options) {
     List<Token> tokens;
     try {
-      tokens = new Scanner(expression).scan();
+      tokens = new Scanner(expression, options).scan();
     }
     catch (Scanner.ScanError e) {
       checkError(expression, e.errorPos, e);
@@ -42,7 +47,7 @@ public class ExprFuzzer {
 
     Expr expr;
     try {
-      expr = new Parser(tokens).parse();
+      expr = new Parser(tokens, options).parse();
     }
     catch (Parser.ParseError e) {
       checkError(expression, e.token.charPos, e);

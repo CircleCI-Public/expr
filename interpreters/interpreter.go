@@ -237,6 +237,10 @@ func (i Interpreter) VisitBinaryExpr(expr parsers.Binary) (Val, error) {
 }
 
 func (i Interpreter) VisitInfixExpr(expr parsers.Infix) (Val, error) {
+	if expr.Builtin == builtins.IN {
+		return i.in(expr)
+	}
+
 	// Evaluate left and right, apply the function, return it
 	left, err := i.Evaluate(expr.Left)
 	if err != nil {
@@ -259,6 +263,29 @@ func (i Interpreter) VisitInfixExpr(expr parsers.Infix) (Val, error) {
 	return fn(left, right)
 }
 
+func (i Interpreter) in(expr parsers.Infix) (Val, error) {
+	left, err := i.Evaluate(expr.Left)
+	if err != nil {
+		return UndefinedVal(), err
+	}
+
+	if left.Undefined() {
+		return UndefinedVal(), nil
+	}
+
+	for _, element := range expr.Right.(parsers.List).Elements {
+		boxed, err := BoxVal(element.Value)
+		if err != nil {
+			return UndefinedVal(), err
+		}
+		if left.Equal(boxed) {
+			return BoxBool(true), nil
+		}
+	}
+
+	return BoxBool(false), nil
+}
+
 func (i Interpreter) VisitUnaryExpr(expr parsers.Unary) (Val, error) {
 	v, err := i.Evaluate(expr.Right)
 	if err != nil {
@@ -272,6 +299,10 @@ func (i Interpreter) VisitUnaryExpr(expr parsers.Unary) (Val, error) {
 
 func (i Interpreter) VisitLiteralExpr(expr parsers.Literal) (Val, error) {
 	return BoxVal(expr.Value)
+}
+
+func (i Interpreter) VisitListExpr(_ parsers.List) (Val, error) {
+	panic("list evaluated outside of an `in` expression")
 }
 
 func (i Interpreter) VisitIdentifierExpr(expr parsers.Identifier) (Val, error) {
@@ -302,6 +333,8 @@ func implFor(expr parsers.Infix) infixFunction {
 	switch expr.Builtin {
 	case builtins.CONTAINS:
 		return contains(expr)
+	case builtins.IN:
+		panic("`in` is handled by Interpreter.in")
 	case builtins.MATCHES:
 		return matches(expr)
 	case builtins.STARTS_WITH:

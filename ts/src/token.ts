@@ -28,6 +28,10 @@ export const TokenType = {
   FALSE: 'FALSE',
 
   EOF: 'EOF',
+
+  LEFT_BRACKET: 'LEFT_BRACKET',
+  RIGHT_BRACKET: 'RIGHT_BRACKET',
+  COMMA: 'COMMA',
 } as const;
 
 export type TokenType = (typeof TokenType)[keyof typeof TokenType];

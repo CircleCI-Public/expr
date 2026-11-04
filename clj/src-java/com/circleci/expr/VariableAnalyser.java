@@ -70,6 +70,11 @@ public class VariableAnalyser implements Expr.Visitor<List<Token>> {
   }
 
   @Override
+  public List<Token> visitListExpr(Expr.ListExpr expr) {
+    return new ArrayList<Token>(0);
+  }
+
+  @Override
   public List<Token> visitIdentifierExpr(Expr.Identifier expr) {
     var l = new ArrayList<Token>(1);
     l.add(expr.name);

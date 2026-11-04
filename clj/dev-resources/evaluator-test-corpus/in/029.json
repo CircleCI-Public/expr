@@ -1,0 +1,15 @@
+{
+  "input" : {
+    "expression" : "x in [\"a\"] or y in [1, 2]",
+    "environment" : {
+      "x" : "b",
+      "y" : 3
+    },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "result" : false
+  }
+}

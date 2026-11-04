@@ -93,6 +93,15 @@ func (v sExpVisitor) VisitLiteralExpr(expr Literal) (string, error) {
 	return fmt.Sprintf("(literal %v)", expr.Value), nil
 }
 
+func (v sExpVisitor) VisitListExpr(expr List) (string, error) {
+	elements := make([]string, len(expr.Elements))
+	for i, e := range expr.Elements {
+		elements[i], _ = v.VisitLiteralExpr(e)
+	}
+
+	return fmt.Sprintf("(list %s)", strings.Join(elements, " ")), nil
+}
+
 func (v sExpVisitor) VisitIdentifierExpr(expr Identifier) (string, error) {
 	return fmt.Sprintf("(identifier %s)", expr.Name.Lexeme), nil
 }

@@ -1,0 +1,17 @@
+{
+  "input" : {
+    "expression" : "x in [1 2]",
+    "environment" : { },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "NUMBER",
+      "errorType" : "Parser/EXPECTED_RIGHT_BRACKET",
+      "lexeme" : "2",
+      "charPos" : 8
+    }
+  }
+}

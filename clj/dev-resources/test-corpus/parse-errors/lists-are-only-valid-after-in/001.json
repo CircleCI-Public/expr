@@ -1,0 +1,17 @@
+{
+  "input" : {
+    "expression" : "[\"a\"]",
+    "environment" : { },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "LEFT_BRACKET",
+      "errorType" : "Parser/UNEXPECTED_LIST",
+      "lexeme" : "[",
+      "charPos" : 0
+    }
+  }
+}

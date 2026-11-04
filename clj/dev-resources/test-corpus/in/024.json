@@ -1,0 +1,14 @@
+{
+  "input" : {
+    "expression" : "not (x in [\"a\"])",
+    "environment" : {
+      "x" : "a"
+    },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "result" : false
+  }
+}

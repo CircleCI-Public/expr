@@ -1,0 +1,17 @@
+{
+  "input" : {
+    "expression" : "x in y",
+    "environment" : { },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "IDENTIFIER",
+      "errorType" : "Parser/EXPECTED_LIST",
+      "lexeme" : "y",
+      "charPos" : 5
+    }
+  }
+}

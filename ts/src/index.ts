@@ -1,6 +1,10 @@
 export { gatherVariables } from './analyser.ts';
 export type * from './expr.ts';
-export { Builtin, builtinForLexeme } from './builtin.ts';
+export {
+  Builtin,
+  builtinForLexeme,
+  builtinForLexemeWithLists,
+} from './builtin.ts';
 export { compile } from './compile.ts';
 export {
   type CompleteOptions,
@@ -13,6 +17,7 @@ export {
   diagnose,
 } from './editor.ts';
 export { ExprError, errorMessage } from './errors.ts';
+export type { Options } from './options.ts';
 export {
   InterpreterError,
   InterpreterErrorType,

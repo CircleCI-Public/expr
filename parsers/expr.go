@@ -31,6 +31,7 @@ type Visitor[T any] interface {
 	VisitInfixExpr(expr Infix) (T, error)
 	VisitUnaryExpr(expr Unary) (T, error)
 	VisitLiteralExpr(expr Literal) (T, error)
+	VisitListExpr(expr List) (T, error)
 	VisitIdentifierExpr(expr Identifier) (T, error)
 	VisitGroupingExpr(expr Grouping) (T, error)
 }
@@ -63,6 +64,8 @@ func (v *Visitable[T]) Accept(visitor Visitor[T]) (T, error) {
 		return visitor.VisitUnaryExpr(expr)
 	case Literal:
 		return visitor.VisitLiteralExpr(expr)
+	case List:
+		return visitor.VisitListExpr(expr)
 	case Identifier:
 		return visitor.VisitIdentifierExpr(expr)
 	case Grouping:
@@ -116,6 +119,16 @@ type Literal struct {
 }
 
 func (l Literal) isExpr() {}
+
+// A list of literals node in the AST.
+//
+// List nodes are only valid as the right operand of the `in` builtin.
+type List struct {
+	Elements []Literal
+	Open     tokens.Token
+}
+
+func (l List) isExpr() {}
 
 // An identifier node in the AST.
 //

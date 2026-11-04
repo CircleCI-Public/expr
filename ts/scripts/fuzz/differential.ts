@@ -2,7 +2,10 @@
 // TypeScript implementations and reports where they disagree, grouped by the
 // kind of disagreement, with a minimised example of each.
 //
-// Usage: node scripts/fuzz/differential.ts [--cases N] [--seconds N] [--seed N]
+// Usage: node scripts/fuzz/differential.ts [--cases N] [--seconds N] [--seed N] [--lists]
+//
+// With --lists, the implementations run with lists enabled and the expressions
+// include lists and the `in` builtin.
 //
 // Needs Go, and Java with the Java implementation compiled (`lein javac` in
 // clj/) and re2j 1.8 in the local Maven repository.
@@ -33,16 +36,26 @@ import {
   compile,
   evaluate,
 } from '../../src/index.ts';
-import { type Case, testCase, toEnvironment } from './arbitraries.ts';
+import {
+  type Case,
+  environment,
+  listExpression,
+  testCase,
+  toEnvironment,
+} from './arbitraries.ts';
 
 const { values: args } = parseArgs({
   options: {
     cases: { type: 'string', default: '100000' },
     seconds: { type: 'string' },
     seed: { type: 'string' },
+    lists: { type: 'boolean', default: false },
     out: { type: 'string', default: join(tmpdir(), 'expr-differential.json') },
   },
 });
+
+const options = { lists: args.lists };
+const oracleFlags = args.lists ? ['--lists'] : [];
 
 const here = new URL('.', import.meta.url).pathname;
 const repo = join(here, '../../..');
@@ -130,7 +143,10 @@ class Oracle {
 
 function runTS({ expression, environment }: Case): Outcome {
   try {
-    const v = evaluate(compile(expression), toEnvironment(environment));
+    const v = evaluate(
+      compile(expression, options),
+      toEnvironment(environment),
+    );
     if (v === undefined) return { kind: 'R', type: 'u', value: '' };
     if (typeof v === 'boolean')
       return { kind: 'R', type: 'b', value: String(v) };
@@ -308,13 +324,14 @@ execFileSync('go', ['build', '-o', goBinary, '.'], {
   cwd: join(here, 'oracle'),
   stdio: 'inherit',
 });
-const go = new Oracle(goBinary, [], here);
+const go = new Oracle(goBinary, oracleFlags, here);
 const java = new Oracle(
   'java',
   [
     '-cp',
     `${join(repo, 'clj/target/classes')}:${re2j}`,
     join(here, 'oracle/Oracle.java'),
+    ...oracleFlags,
   ],
   here,
 );
@@ -369,11 +386,14 @@ const deadline =
     : Date.now() + Number(args.seconds) * 1000;
 const seed = args.seed === undefined ? Date.now() : Number(args.seed);
 const batchSize = 1000;
+const arbitrary = args.lists
+  ? fc.record({ expression: listExpression, environment })
+  : testCase;
 let total = 0;
 
 console.error(`seed ${seed}`);
 for (let batch = 0; total < maxCases && Date.now() < deadline; batch++) {
-  const cases = fc.sample(testCase, {
+  const cases = fc.sample(arbitrary, {
     numRuns: Math.min(batchSize, maxCases - total),
     seed: seed + batch,
   });

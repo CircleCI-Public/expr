@@ -25,7 +25,8 @@ import java.util.Set;
 public enum Builtin {
   CONTAINS,
   MATCHES,
-  STARTS_WITH;
+  STARTS_WITH,
+  IN;
 
   public static Builtin forLexeme(String lexeme) {
     return switch (lexeme) {
@@ -36,6 +37,14 @@ public enum Builtin {
       case "starts-with" -> STARTS_WITH;
       case "STARTS-WITH" -> STARTS_WITH;
       default -> null;
+    };
+  }
+
+  public static Builtin forLexemeWithLists(String lexeme) {
+    return switch (lexeme) {
+      case "in" -> IN;
+      case "IN" -> IN;
+      default -> forLexeme(lexeme);
     };
   }
 }

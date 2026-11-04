@@ -28,12 +28,15 @@ const (
 	CONTAINS
 	MATCHES
 	STARTS_WITH
+	IN
 )
 
 func (bt Type) String() string {
 	switch bt {
 	case CONTAINS:
 		return "CONTAINS"
+	case IN:
+		return "IN"
 	case MATCHES:
 		return "MATCHES"
 	case STARTS_WITH:
@@ -61,5 +64,16 @@ func ForLexeme(lexeme string) Type {
 		return STARTS_WITH
 	default:
 		return NOT_FOUND
+	}
+}
+
+// Like ForLexeme, but also recognises the `in` builtin, which is only valid
+// when lists are enabled.
+func ForLexemeWithLists(lexeme string) Type {
+	switch lexeme {
+	case "in", "IN":
+		return IN
+	default:
+		return ForLexeme(lexeme)
 	}
 }

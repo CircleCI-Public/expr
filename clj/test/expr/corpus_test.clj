@@ -5,6 +5,7 @@
             [cheshire.core :as json]
             [expr.util :as util])
   (:import (com.circleci.expr Interpreter$Error
+                              Options
                               Parser$ParseError
                               Scanner$ScanError)
            com.google.re2j.Pattern))
@@ -19,10 +20,14 @@
               (assoc (json/parse-string (slurp f))
                      :test-name (.getPath f))))))
 
+(defn- ->options
+  ^Options [options]
+  (Options. (boolean (get options "lists"))))
+
 (defn- run-test
-  [process expression environment]
+  [process expression environment options]
   (try
-    {"result" (process expression environment)}
+    {"result" (process expression environment (->options options))}
     (catch Scanner$ScanError e
       {"error" {"errorType" (str "Scanner/" (.-type e))
                 "lexeme" (Character/toString (.-errorCodePoint e))
@@ -52,27 +57,27 @@
     v))
 
 (deftest run-interpreter-test-corpus
-  (let [run-interpreter-test (partial run-test (fn [expression environment]
-                                                 (-> (util/scan expression)
-                                                     (util/parse)
+  (let [run-interpreter-test (partial run-test (fn [expression environment options]
+                                                 (-> (util/scan expression options)
+                                                     (util/parse options)
                                                      (util/interpret environment))))]
     (doseq [{:strs [input expected]
              :keys [test-name]} (test-files "dev-resources/test-corpus")
-            :let [{:strs [expression environment]} input
+            :let [{:strs [expression environment options]} input
                   expected (coerce-expected expected)]]
       (is (= expected
-             (run-interpreter-test expression environment))
+             (run-interpreter-test expression environment options))
           (format "%s: %s" test-name expression)))))
 
 (deftest run-evaluator-test-corpus
-  (let [run-evaluator-test (partial run-test (fn [expression environment]
-                                               (-> (util/scan expression)
-                                                   (util/parse)
+  (let [run-evaluator-test (partial run-test (fn [expression environment options]
+                                               (-> (util/scan expression options)
+                                                   (util/parse options)
                                                    (util/evaluate environment))))]
     (doseq [{:strs [input expected]
              :keys [test-name]} (test-files "dev-resources/evaluator-test-corpus")
-            :let [{:strs [expression environment]} input
+            :let [{:strs [expression environment options]} input
                   expected (coerce-expected expected)]]
       (is (= expected
-             (run-evaluator-test expression environment))
+             (run-evaluator-test expression environment options))
           (format "%s: %s" test-name expression)))))

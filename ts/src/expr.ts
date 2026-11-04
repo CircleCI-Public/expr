@@ -8,6 +8,7 @@ export type Expr =
   | InfixExpr
   | UnaryExpr
   | LiteralExpr
+  | ListExpr
   | IdentifierExpr
   | GroupingExpr;
 
@@ -47,6 +48,14 @@ export interface UnaryExpr {
 export interface LiteralExpr {
   readonly kind: 'literal';
   readonly value: boolean | Literal;
+}
+
+/** A list of literals, valid only as the right operand of `in`. */
+export interface ListExpr {
+  readonly kind: 'list';
+  /** The `[` token. */
+  readonly open: Token;
+  readonly elements: readonly LiteralExpr[];
 }
 
 /** A variable reference, a leaf node. */

@@ -1,0 +1,12 @@
+{
+  "input" : {
+    "expression" : "2 in [1, 2]",
+    "environment" : { },
+    "options" : {
+      "lists" : true
+    }
+  },
+  "expected" : {
+    "result" : true
+  }
+}

@@ -82,6 +82,10 @@ func (a analyser) VisitLiteralExpr(_ parsers.Literal) ([]string, error) {
 	return nil, nil
 }
 
+func (a analyser) VisitListExpr(_ parsers.List) ([]string, error) {
+	return nil, nil
+}
+
 func (a analyser) VisitIdentifierExpr(expr parsers.Identifier) ([]string, error) {
 	return []string{expr.Name.Lexeme}, nil
 }

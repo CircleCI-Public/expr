@@ -47,5 +47,10 @@ public enum TokenType {
   TRUE,
   FALSE,
 
-  EOF
+  EOF,
+
+  // Lists
+  LEFT_BRACKET,
+  RIGHT_BRACKET,
+  COMMA
 }

@@ -7,9 +7,11 @@
  */
 
 import { gatherVariables } from './analyser.ts';
+import { Builtin, builtinForLexemeWithLists } from './builtin.ts';
 import type { Expr } from './expr.ts';
 import { compile } from './compile.ts';
 import { ExprError } from './errors.ts';
+import type { Options } from './options.ts';
 import { ParseError } from './parser.ts';
 import { ScanError, ScanErrorType, scan } from './scanner.ts';
 import { TokenType } from './token.ts';
@@ -47,7 +49,7 @@ export interface Diagnostic {
   readonly source: 'expr';
 }
 
-export interface DiagnoseOptions {
+export interface DiagnoseOptions extends Options {
   /**
    * The variables the expression can refer to. If given, references to any
    * other variable are errors. Names can also be strings.
@@ -72,7 +74,7 @@ export function diagnose(
 ): Diagnostic[] {
   let expr: Expr;
   try {
-    expr = compile(expression);
+    expr = compile(expression, options);
   } catch (error) {
     if (error instanceof ExprError) {
       return [errorDiagnostic(error, expression)];
@@ -191,7 +193,7 @@ export interface CompletionResult {
   readonly validFor: RegExp;
 }
 
-export interface CompleteOptions {
+export interface CompleteOptions extends Options {
   /** The variables to offer where an operand is expected. */
   readonly variables?: Iterable<Variable | string>;
   /**
@@ -233,6 +235,12 @@ const operators: readonly Completion[] = [
     detail: 'string matches /pattern/',
   },
 ];
+
+const inOperator: Completion = {
+  label: 'in',
+  type: 'function',
+  detail: 'value is in a list, e.g. [1, 2]',
+};
 
 // Tokens after which an operand is expected.
 const operandFollows = new Set<string>([
@@ -281,11 +289,22 @@ export function complete(
   }
   const from = pos - typed.length;
 
-  const { tokens, error } = scan(expression.slice(0, from));
+  const { tokens, error } = scan(expression.slice(0, from), options);
   if (error !== undefined) {
     return null;
   }
   const last = tokens.filter((t) => t.type !== TokenType.EOF).at(-1);
+
+  // A list is made of literals, which aren't completed.
+  if (
+    last !== undefined &&
+    (last.type === TokenType.LEFT_BRACKET ||
+      last.type === TokenType.COMMA ||
+      (last.type === TokenType.BUILTIN &&
+        builtinForLexemeWithLists(last.lexeme) === Builtin.IN))
+  ) {
+    return null;
+  }
 
   if (last === undefined || operandFollows.has(last.type)) {
     if (operator !== null || (typed === '' && !explicit)) {
@@ -303,7 +322,8 @@ export function complete(
   return {
     from,
     to: pos,
-    options: [...operators],
+    options:
+      options.lists === true ? [...operators, inOperator] : [...operators],
     validFor: validForOperator,
   };
 }

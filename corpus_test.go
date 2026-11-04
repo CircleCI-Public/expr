@@ -43,6 +43,11 @@ type rawInput struct {
 type input struct {
 	Expression  string                      `json:"expression"`
 	Environment map[string]interpreters.Val `json:"environment"`
+	Options     options                     `json:"options"`
+}
+
+type options struct {
+	Lists bool `json:"lists"`
 }
 
 func (i *input) UnmarshallJSON(input []byte) error {
@@ -128,13 +133,20 @@ func loadTestData(dir string) (map[string]test, error) {
 	return tests, nil
 }
 
-func scanAndParse(expression string) (parsers.Expr, error) {
-	s := scanners.New(expression)
+func scanAndParse(expression string, opts options) (parsers.Expr, error) {
+	var scanOpts []scanners.Option
+	var parseOpts []parsers.Option
+	if opts.Lists {
+		scanOpts = append(scanOpts, scanners.WithLists())
+		parseOpts = append(parseOpts, parsers.WithLists())
+	}
+
+	s := scanners.New(expression, scanOpts...)
 	tokens, err := s.Scan()
 	if err != nil {
 		return nil, err
 	}
-	p := parsers.New(tokens)
+	p := parsers.New(tokens, parseOpts...)
 	e, err := p.Parse()
 	if err != nil {
 		return nil, err
@@ -199,7 +211,7 @@ func TestCorpus(t *testing.T) {
 			t.Parallel()
 
 			var got interpreters.Val
-			e, err := scanAndParse(tt.Input.Expression)
+			e, err := scanAndParse(tt.Input.Expression, tt.Input.Options)
 			if err == nil {
 				var result bool
 				result, err = interpreters.New(tt.Input.Environment).Interpret(e)
@@ -224,7 +236,7 @@ func TestEvaluatorCorpus(t *testing.T) {
 			t.Parallel()
 
 			var got interpreters.Val
-			e, err := scanAndParse(tt.Input.Expression)
+			e, err := scanAndParse(tt.Input.Expression, tt.Input.Options)
 			if err == nil {
 				got, err = interpreters.New(tt.Input.Environment).Evaluate(e)
 			}
