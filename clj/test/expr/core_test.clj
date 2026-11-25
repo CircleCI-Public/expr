@@ -354,6 +354,29 @@
                                             "       ^^^"])]}
            (expr/evaluate "foo >= bar" {"foo" 3})))))
 
+(deftest type-check-can-type-check
+  (testing "no errors"
+    (is (= {:result true}
+           (expr/type-check "foo > 1" {"foo" "number"}))))
+
+  (testing "parser error"
+    (is (= {:errors [(string/join \newline ["Expected expression, found \"\":"
+                                            "foo >"
+                                            "     "])]}
+           (expr/type-check "foo >" {}))))
+
+  (testing "variable with no known type"
+    (is (= {:errors [(string/join \newline ["Referred to a variable \"foo\" that has no known type:"
+                                            "foo > 1"
+                                            "^^^"])]}
+           (expr/type-check "foo > 1" {}))))
+
+  (testing "type that is not a string"
+    (is (= {:errors [(string/join \newline ["Referred to a variable \"foo\" that has no known type:"
+                                            "foo == 1"
+                                            "^^^"])]}
+           (expr/type-check "foo == 1" {"foo" :string})))))
+
 (deftest pushing-boundaries
   (testing "many nots"
     (let [expression (str (string/join (repeat 1000 "not "))
@@ -382,4 +405,5 @@
     (is (= expected (expr/parse expression)))
     (is (= expected (expr/analyse expression)))
     (is (= expected (expr/interpret expression {})))
-    (is (= expected (expr/evaluate expression {})))))
+    (is (= expected (expr/evaluate expression {})))
+    (is (= expected (expr/type-check expression {})))))
