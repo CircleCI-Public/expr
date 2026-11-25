@@ -22,10 +22,16 @@ interpret(expr, { 'pipeline.git.branch': 'feat-x' }); // true; throws Interprete
 with `from`/`to` offsets and `asErrorMessage(expression)` for the same
 multi-line messages as the Go and Clojure implementations.
 
+`checkTypes(expr, types)` checks the operand types of every operator, given each
+variable's type, and throws a `TypeCheckError` for the first operand of the
+wrong type, or the first variable with no known type, in evaluation order; the
+error's `from` and `to` cover the operator, or the identifier for an unknown
+variable. The [top-level README](../README.md#type-checking) has the rules.
+
 `scan` never throws: on error it returns the tokens scanned so far with the
-error. Parsing and evaluating recurse for each level of nesting, so `compile`,
-`parse`, `interpret` and `evaluate` throw a `RangeError` for an expression
-nested too deeply, from about 1,000 levels.
+error. Parsing, checking and evaluating recurse for each level of nesting, so
+`compile`, `parse`, `checkTypes`, `interpret` and `evaluate` throw a
+`RangeError` for an expression nested too deeply, from about 1,000 levels.
 
 ### In CodeMirror
 
