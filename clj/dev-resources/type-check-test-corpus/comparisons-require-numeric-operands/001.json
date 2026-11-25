@@ -1,0 +1,9 @@
+{
+  "input" : {
+    "expression" : "1 > 2",
+    "types" : { }
+  },
+  "expected" : {
+    "result" : null
+  }
+}

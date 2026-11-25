@@ -1,0 +1,17 @@
+{
+  "input" : {
+    "expression" : "(foo) > 1",
+    "types" : {
+      "foo" : "string"
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "GREATER",
+      "errorType" : "TypeChecker/EXPECTED_NUMERIC_OPERAND",
+      "lexeme" : ">",
+      "charPos" : 6,
+      "message" : "\">\" needs numbers, but the left operand is a string:\n(foo) > 1\n      ^"
+    }
+  }
+}

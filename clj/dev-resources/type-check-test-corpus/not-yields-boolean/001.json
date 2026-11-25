@@ -1,0 +1,11 @@
+{
+  "input" : {
+    "expression" : "!foo == true",
+    "types" : {
+      "foo" : "string"
+    }
+  },
+  "expected" : {
+    "result" : null
+  }
+}

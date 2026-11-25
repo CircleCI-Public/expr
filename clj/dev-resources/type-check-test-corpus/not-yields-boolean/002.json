@@ -1,0 +1,15 @@
+{
+  "input" : {
+    "expression" : "!5 > 1",
+    "types" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "GREATER",
+      "errorType" : "TypeChecker/EXPECTED_NUMERIC_OPERAND",
+      "lexeme" : ">",
+      "charPos" : 3,
+      "message" : "\">\" needs numbers, but the left operand is a boolean:\n!5 > 1\n   ^"
+    }
+  }
+}

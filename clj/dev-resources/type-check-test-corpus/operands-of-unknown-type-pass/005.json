@@ -1,0 +1,17 @@
+{
+  "input" : {
+    "expression" : "(foo or \"x\") contains 5",
+    "types" : {
+      "foo" : "boolean"
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "BUILTIN",
+      "errorType" : "TypeChecker/EXPECTED_STRING_OPERAND",
+      "lexeme" : "contains",
+      "charPos" : 13,
+      "message" : "\"contains\" needs strings, but the right operand is a number:\n(foo or \"x\") contains 5\n             ^^^^^^^^"
+    }
+  }
+}

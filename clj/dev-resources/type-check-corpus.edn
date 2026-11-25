@@ -1,0 +1,183 @@
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to
+; deal in the Software without restriction, including without limitation the
+; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+; sell copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in
+; all copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+; IN THE SOFTWARE.
+
+;; Format
+;;
+;; Each set of tests is a map with a :name key and a :tests key, as in
+;; evaluator-corpus.edn. The :tests data is a vector of triples of expression,
+;; types, expected
+;; - expression is a string expression that parses without error
+;; - types is a map of variable name to the type of value the environment will
+;;   hold for that variable: "string", "boolean", "number" or "pattern"
+;; - expected is nil when the type check passes, or a map describing the first
+;;   error in evaluation order, with the keys
+;;   - :errorType, one of the "TypeChecker/" errors - see "Type checker
+;;     errors" in README.md for the error types and the rules that raise them.
+;;   - :tokenType, :lexeme and :charPos, the operator token the error is
+;;     reported on, or the identifier token for UNKNOWN_VARIABLE.
+;;   - :message, the full error message.
+
+{:name "comparisons-require-numeric-operands"
+ :tests ["1 > 2" {} nil
+         "foo >= bar" {"foo" "number", "bar" "number"} nil
+         "foo > 5" {"foo" "string"}
+         {:tokenType "GREATER" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">" :charPos 4
+          :message "\">\" needs numbers, but foo is a string:\nfoo > 5\n    ^"}
+         "\"a\" < 1" {}
+         {:tokenType "LESS" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme "<" :charPos 4
+          :message "\"<\" needs numbers, but the left operand is a string:\n\"a\" < 1\n    ^"}
+         "1 <= foo" {"foo" "boolean"}
+         {:tokenType "LESS_EQUAL" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme "<=" :charPos 2
+          :message "\"<=\" needs numbers, but foo is a boolean:\n1 <= foo\n  ^^"}
+         "/p/ >= 1" {}
+         {:tokenType "GREATER_EQUAL" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">=" :charPos 4
+          :message "\">=\" needs numbers, but the left operand is a pattern:\n/p/ >= 1\n    ^^"}
+         "true > 1" {}
+         {:tokenType "GREATER" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">" :charPos 5
+          :message "\">\" needs numbers, but the left operand is a boolean:\ntrue > 1\n     ^"}
+         "(foo > 1) > 2" {"foo" "number"}
+         {:tokenType "GREATER" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">" :charPos 10
+          :message "\">\" needs numbers, but the left operand is a boolean:\n(foo > 1) > 2\n          ^"}
+         "(\"a\" contains \"b\") > 1" {}
+         {:tokenType "GREATER" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">" :charPos 19
+          :message "\">\" needs numbers, but the left operand is a boolean:\n(\"a\" contains \"b\") > 1\n                   ^"}
+         ;; Both operands are wrong: the left one is reported
+         "\"a\" > true" {}
+         {:tokenType "GREATER" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">" :charPos 4
+          :message "\">\" needs numbers, but the left operand is a string:\n\"a\" > true\n    ^"}
+         ;; Positions count characters, not bytes
+         "\"é\" > 1" {}
+         {:tokenType "GREATER" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">" :charPos 4
+          :message "\">\" needs numbers, but the left operand is a string:\n\"é\" > 1\n    ^"}
+         ;; Only a bare identifier is named; a grouped one is not
+         "(foo) > 1" {"foo" "string"}
+         {:tokenType "GREATER" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">" :charPos 6
+          :message "\">\" needs numbers, but the left operand is a string:\n(foo) > 1\n      ^"}]}
+
+{:name "contains-and-starts-with-require-string-operands"
+ :tests ["foo contains \"x\"" {"foo" "string"} nil
+         "ident? starts-with foo" {"ident?" "string", "foo" "string"} nil
+         "foo contains 5" {"foo" "string"}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_STRING_OPERAND" :lexeme "contains" :charPos 4
+          :message "\"contains\" needs strings, but the right operand is a number:\nfoo contains 5\n    ^^^^^^^^"}
+         "5 starts-with \"a\"" {}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_STRING_OPERAND" :lexeme "starts-with" :charPos 2
+          :message "\"starts-with\" needs strings, but the left operand is a number:\n5 starts-with \"a\"\n  ^^^^^^^^^^^"}
+         "foo starts-with bar" {"foo" "string", "bar" "pattern"}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_STRING_OPERAND" :lexeme "starts-with" :charPos 4
+          :message "\"starts-with\" needs strings, but bar is a pattern:\nfoo starts-with bar\n    ^^^^^^^^^^^"}
+         "foo contains \"x\"" {"foo" "number"}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_STRING_OPERAND" :lexeme "contains" :charPos 4
+          :message "\"contains\" needs strings, but foo is a number:\nfoo contains \"x\"\n    ^^^^^^^^"}
+         ;; Both operands are wrong: the left one is reported
+         "5 contains 6" {}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_STRING_OPERAND" :lexeme "contains" :charPos 2
+          :message "\"contains\" needs strings, but the left operand is a number:\n5 contains 6\n  ^^^^^^^^"}
+         "1 > 2 contains \"a\"" {}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_STRING_OPERAND" :lexeme "contains" :charPos 6
+          :message "\"contains\" needs strings, but the left operand is a boolean:\n1 > 2 contains \"a\"\n      ^^^^^^^^"}
+         "\"a\" contains \"b\" contains \"c\"" {}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_STRING_OPERAND" :lexeme "contains" :charPos 17
+          :message "\"contains\" needs strings, but the left operand is a boolean:\n\"a\" contains \"b\" contains \"c\"\n                 ^^^^^^^^"}
+         "\"é\" contains 5" {}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_STRING_OPERAND" :lexeme "contains" :charPos 4
+          :message "\"contains\" needs strings, but the right operand is a number:\n\"é\" contains 5\n    ^^^^^^^^"}]}
+
+{:name "matches-requires-string-and-pattern-operands"
+ :tests ["foo matches /a.*/" {"foo" "string"} nil
+         "foo matches bar" {"foo" "string", "bar" "pattern"} nil
+         "5 matches /p/" {}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_STRING_OPERAND" :lexeme "matches" :charPos 2
+          :message "\"matches\" needs a string on the left, but the left operand is a number:\n5 matches /p/\n  ^^^^^^^"}
+         "\"s\" matches foo" {"foo" "string"}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_PATTERN_OPERAND" :lexeme "matches" :charPos 4
+          :message "\"matches\" needs a pattern on the right, but foo is a string:\n\"s\" matches foo\n    ^^^^^^^"}
+         ;; The pattern side is checked first
+         "5 matches 6" {}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_PATTERN_OPERAND" :lexeme "matches" :charPos 2
+          :message "\"matches\" needs a pattern on the right, but the right operand is a number:\n5 matches 6\n  ^^^^^^^"}]}
+
+{:name "equality-accepts-any-operand-types"
+ :tests ["foo == 5" {"foo" "string"} nil
+         "foo != bar" {"foo" "boolean", "bar" "pattern"} nil
+         "(foo == 1) contains \"a\"" {"foo" "number"}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_STRING_OPERAND" :lexeme "contains" :charPos 11
+          :message "\"contains\" needs strings, but the left operand is a boolean:\n(foo == 1) contains \"a\"\n           ^^^^^^^^"}]}
+
+{:name "operands-of-unknown-type-pass"
+ :tests ["(foo or \"x\") contains \"y\"" {"foo" "string"} nil
+         "(foo or \"x\") > 5" {"foo" "boolean"} nil
+         "(foo and 5) > 1" {"foo" "boolean"} nil
+         "(foo or bar) > 1" {"foo" "string", "bar" "string"}
+         {:tokenType "GREATER" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">" :charPos 13
+          :message "\">\" needs numbers, but the left operand is a string:\n(foo or bar) > 1\n             ^"}
+         ;; A known wrong-typed operand fails whatever the other side holds.
+         ;; For matches the pattern side is still checked first, so an unknown
+         ;; pattern side leaves a known non-string left as STRING
+         "(foo or \"x\") contains 5" {"foo" "boolean"}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_STRING_OPERAND" :lexeme "contains" :charPos 13
+          :message "\"contains\" needs strings, but the right operand is a number:\n(foo or \"x\") contains 5\n             ^^^^^^^^"}
+         "5 matches (foo or bar)" {"foo" "boolean", "bar" "pattern"}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_STRING_OPERAND" :lexeme "matches" :charPos 2
+          :message "\"matches\" needs a string on the left, but the left operand is a number:\n5 matches (foo or bar)\n  ^^^^^^^"}
+         "(foo or bar) matches 6" {"foo" "boolean", "bar" "string"}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_PATTERN_OPERAND" :lexeme "matches" :charPos 13
+          :message "\"matches\" needs a pattern on the right, but the right operand is a number:\n(foo or bar) matches 6\n             ^^^^^^^"}]}
+
+{:name "not-yields-boolean"
+ :tests ["!foo == true" {"foo" "string"} nil
+         "!5 > 1" {}
+         {:tokenType "GREATER" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">" :charPos 3
+          :message "\">\" needs numbers, but the left operand is a boolean:\n!5 > 1\n   ^"}
+         ;; The operand of ! is checked
+         "!(1 > \"a\")" {}
+         {:tokenType "GREATER" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">" :charPos 4
+          :message "\">\" needs numbers, but the right operand is a string:\n!(1 > \"a\")\n    ^"}]}
+
+{:name "short-circuit-does-not-hide-errors"
+ :tests ["false and foo > \"a\"" {"foo" "number"}
+         {:tokenType "GREATER" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">" :charPos 14
+          :message "\">\" needs numbers, but the right operand is a string:\nfalse and foo > \"a\"\n              ^"}
+         "true or 1 contains \"a\"" {}
+         {:tokenType "BUILTIN" :errorType "TypeChecker/EXPECTED_STRING_OPERAND" :lexeme "contains" :charPos 10
+          :message "\"contains\" needs strings, but the left operand is a number:\ntrue or 1 contains \"a\"\n          ^^^^^^^^"}
+         "2 > 1 or bar" {}
+         {:tokenType "IDENTIFIER" :errorType "TypeChecker/UNKNOWN_VARIABLE" :lexeme "bar" :charPos 9
+          :message "Referred to a variable \"bar\" that has no known type:\n2 > 1 or bar\n         ^^^"}]}
+
+{:name "first-error-in-evaluation-order"
+ :tests ["\"a\" > 1 and 2 contains 3" {}
+         {:tokenType "GREATER" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">" :charPos 4
+          :message "\">\" needs numbers, but the left operand is a string:\n\"a\" > 1 and 2 contains 3\n    ^"}
+         "(1 > \"b\") contains 3" {}
+         {:tokenType "GREATER" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">" :charPos 3
+          :message "\">\" needs numbers, but the right operand is a string:\n(1 > \"b\") contains 3\n   ^"}
+         "\"a\" > 1 or bar" {}
+         {:tokenType "GREATER" :errorType "TypeChecker/EXPECTED_NUMERIC_OPERAND" :lexeme ">" :charPos 4
+          :message "\">\" needs numbers, but the left operand is a string:\n\"a\" > 1 or bar\n    ^"}
+         "bar > \"a\"" {}
+         {:tokenType "IDENTIFIER" :errorType "TypeChecker/UNKNOWN_VARIABLE" :lexeme "bar" :charPos 0
+          :message "Referred to a variable \"bar\" that has no known type:\nbar > \"a\"\n^^^"}]}
+
+{:name "variables-need-a-known-type"
+ :tests ["foo > 1" {}
+         {:tokenType "IDENTIFIER" :errorType "TypeChecker/UNKNOWN_VARIABLE" :lexeme "foo" :charPos 0
+          :message "Referred to a variable \"foo\" that has no known type:\nfoo > 1\n^^^"}
+         "foo == 1" {"foo" "uint"}
+         {:tokenType "IDENTIFIER" :errorType "TypeChecker/UNKNOWN_VARIABLE" :lexeme "foo" :charPos 0
+          :message "Referred to a variable \"foo\" that has no known type:\nfoo == 1\n^^^"}]}

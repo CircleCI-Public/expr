@@ -1,0 +1,15 @@
+{
+  "input" : {
+    "expression" : "1 > 2 contains \"a\"",
+    "types" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "BUILTIN",
+      "errorType" : "TypeChecker/EXPECTED_STRING_OPERAND",
+      "lexeme" : "contains",
+      "charPos" : 6,
+      "message" : "\"contains\" needs strings, but the left operand is a boolean:\n1 > 2 contains \"a\"\n      ^^^^^^^^"
+    }
+  }
+}

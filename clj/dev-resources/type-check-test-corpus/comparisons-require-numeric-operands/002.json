@@ -1,0 +1,12 @@
+{
+  "input" : {
+    "expression" : "foo >= bar",
+    "types" : {
+      "foo" : "number",
+      "bar" : "number"
+    }
+  },
+  "expected" : {
+    "result" : null
+  }
+}

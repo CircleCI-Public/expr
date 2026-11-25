@@ -1,0 +1,15 @@
+{
+  "input" : {
+    "expression" : "(1 > \"b\") contains 3",
+    "types" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "GREATER",
+      "errorType" : "TypeChecker/EXPECTED_NUMERIC_OPERAND",
+      "lexeme" : ">",
+      "charPos" : 3,
+      "message" : "\">\" needs numbers, but the right operand is a string:\n(1 > \"b\") contains 3\n   ^"
+    }
+  }
+}

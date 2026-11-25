@@ -1,0 +1,15 @@
+{
+  "input" : {
+    "expression" : "(\"a\" contains \"b\") > 1",
+    "types" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "GREATER",
+      "errorType" : "TypeChecker/EXPECTED_NUMERIC_OPERAND",
+      "lexeme" : ">",
+      "charPos" : 19,
+      "message" : "\">\" needs numbers, but the left operand is a boolean:\n(\"a\" contains \"b\") > 1\n                   ^"
+    }
+  }
+}

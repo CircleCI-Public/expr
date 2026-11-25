@@ -1,0 +1,12 @@
+{
+  "input" : {
+    "expression" : "ident? starts-with foo",
+    "types" : {
+      "ident?" : "string",
+      "foo" : "string"
+    }
+  },
+  "expected" : {
+    "result" : null
+  }
+}

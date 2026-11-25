@@ -24,13 +24,13 @@
            com.google.re2j.Pattern))
 
 (defn write-test-file
-  [dirs n expression environment expected]
+  [dirs n input-key expression input expected]
   (let [file (apply io/file (concat ["dev-resources"]
                                     dirs
                                     [(format "%03d.json" n)]))]
     (.mkdirs (.getParentFile file))
     (spit file (str (json/generate-string {:input {:expression expression
-                                                   :environment environment}
+                                                   input-key input}
                                            :expected expected}
                                           {:pretty true})
                     \newline))))
@@ -63,11 +63,14 @@
   [{:file "test-corpus.edn"
     :dir "test-corpus"}
    {:file "evaluator-corpus.edn"
-    :dir "evaluator-test-corpus"}])
+    :dir "evaluator-test-corpus"}
+   {:file "type-check-corpus.edn"
+    :dir "type-check-test-corpus"
+    :input-key :types}])
 
 (defn -main
   []
-  (doseq [{:keys [file dir]} test-corpus-data]
+  (doseq [{:keys [file dir input-key] :or {input-key :environment}} test-corpus-data]
     (try
       (with-open [r (io/reader (io/resource file))
                   rdr (PushbackReader. r)]
@@ -81,11 +84,12 @@
                   testname (if (vector? (:name data))
                              (:name data)
                              [(:name data)])]
-              (doseq [[n [expression environment expected]] (map-indexed vector cases)]
+              (doseq [[n [expression input expected]] (map-indexed vector cases)]
                 (write-test-file (concat [dir] testname)
                                  (inc n)
+                                 input-key
                                  expression
-                                 environment
+                                 input
                                  (coerce-expected expected)))
               (recur (read-test rdr))))))
       (catch Exception e

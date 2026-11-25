@@ -1,0 +1,18 @@
+{
+  "input" : {
+    "expression" : "(foo or bar) matches 6",
+    "types" : {
+      "foo" : "boolean",
+      "bar" : "string"
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "BUILTIN",
+      "errorType" : "TypeChecker/EXPECTED_PATTERN_OPERAND",
+      "lexeme" : "matches",
+      "charPos" : 13,
+      "message" : "\"matches\" needs a pattern on the right, but the right operand is a number:\n(foo or bar) matches 6\n             ^^^^^^^"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "input" : {
+    "expression" : "5 starts-with \"a\"",
+    "types" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "BUILTIN",
+      "errorType" : "TypeChecker/EXPECTED_STRING_OPERAND",
+      "lexeme" : "starts-with",
+      "charPos" : 2,
+      "message" : "\"starts-with\" needs strings, but the left operand is a number:\n5 starts-with \"a\"\n  ^^^^^^^^^^^"
+    }
+  }
+}

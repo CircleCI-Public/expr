@@ -1,0 +1,15 @@
+{
+  "input" : {
+    "expression" : "\"a\" < 1",
+    "types" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "LESS",
+      "errorType" : "TypeChecker/EXPECTED_NUMERIC_OPERAND",
+      "lexeme" : "<",
+      "charPos" : 4,
+      "message" : "\"<\" needs numbers, but the left operand is a string:\n\"a\" < 1\n    ^"
+    }
+  }
+}
