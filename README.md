@@ -300,6 +300,8 @@ Errors with interpreting have the following keys:
     * `"Interpreter/EXPECTED_STRING_OPERAND"` - The operator being interpreted
       needs string operands, but at least one of the operands is not a string.
       For these errors the operator token is reported.
+    * `"Interpreter/EXPECTED_PATTERN_OPERAND"` - The right operand of `matches`
+      is not a pattern. For these errors the operator token is reported.
     * `"Interpreter/UNKNOWN_VARIABLE"` - A variable is referenced in the
       expression which is not available in the environment.
 * `tokenType` - The type of the token associated with the AST node where the
@@ -317,3 +319,51 @@ E.g. for the expression `"foo starts-with \"hello\""` with environment `{"foo": 
   "charPos": 4
 }
 ```
+
+## Type checking
+The type-check corpus is in `clj/dev-resources/type-check-test-corpus`.
+
+A variable's type is one of `"string"`, `"boolean"`, `"number"` or
+`"pattern"`.
+
+### Type checker errors
+Each type checker error has the same keys as an interpreter error, and
+`message`, the full error message. `errorType` is one of:
+* `"TypeChecker/EXPECTED_NUMERIC_OPERAND"`,
+  `"TypeChecker/EXPECTED_STRING_OPERAND"` and
+  `"TypeChecker/EXPECTED_PATTERN_OPERAND"`: an operand has a type the operator
+  does not accept. The error code is the interpreter's for that operator. The
+  error is reported on the operator, and the message names the operand and its
+  type:
+  ```
+  ">" needs numbers, but event.branch is a string:
+  event.branch > "a"
+               ^
+  ```
+* `"TypeChecker/UNKNOWN_VARIABLE"`, reported on the identifier, when the
+  variable has no type or a type other than the four above.
+
+### Rules
+* `>`, `>=`, `<` and `<=` need number operands.
+* `contains` and `starts-with` need string operands.
+* `matches` needs a string left operand and a pattern right operand. The right
+  operand is checked first, so `5 matches 6` is `EXPECTED_PATTERN_OPERAND`.
+* `==` and `!=` accept operands of any type.
+* `not` (also written `!`) accepts an operand of any type. `not`, the
+  comparisons, `==`, `!=` and the builtins all yield booleans.
+* An operand of unknown type passes. `and` and `or` yield one of their
+  operands, so the type of an `and` or `or` expression is known only when both
+  operands have the same type.
+* A known wrong-typed operand fails even when the other operand's type is
+  unknown.
+* When both operands have the wrong type the left is reported, except for
+  `matches`, whose right operand is checked first.
+* Short-circuiting hides nothing: `false and foo > "a"` fails although the
+  interpreter never reaches `>`.
+* Only the first error is reported, in evaluation order.
+
+### Type check test cases
+Each case has `input.expression` and `input.types`, a JSON object mapping each
+variable name to the variable's type. A case that passes the type check expects
+`{"result": null}`; a failing case expects `error` with `tokenType`,
+`errorType`, `lexeme`, `charPos` and `message`.

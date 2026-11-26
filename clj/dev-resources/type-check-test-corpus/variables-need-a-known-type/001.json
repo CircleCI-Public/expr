@@ -1,0 +1,15 @@
+{
+  "input" : {
+    "expression" : "foo > 1",
+    "types" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "IDENTIFIER",
+      "errorType" : "TypeChecker/UNKNOWN_VARIABLE",
+      "lexeme" : "foo",
+      "charPos" : 0,
+      "message" : "Referred to a variable \"foo\" that has no known type:\nfoo > 1\n^^^"
+    }
+  }
+}

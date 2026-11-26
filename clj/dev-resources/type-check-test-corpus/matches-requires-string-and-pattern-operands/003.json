@@ -1,0 +1,15 @@
+{
+  "input" : {
+    "expression" : "5 matches /p/",
+    "types" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "BUILTIN",
+      "errorType" : "TypeChecker/EXPECTED_STRING_OPERAND",
+      "lexeme" : "matches",
+      "charPos" : 2,
+      "message" : "\"matches\" needs a string on the left, but the left operand is a number:\n5 matches /p/\n  ^^^^^^^"
+    }
+  }
+}

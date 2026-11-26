@@ -1,0 +1,18 @@
+{
+  "input" : {
+    "expression" : "foo starts-with bar",
+    "types" : {
+      "foo" : "string",
+      "bar" : "pattern"
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "BUILTIN",
+      "errorType" : "TypeChecker/EXPECTED_STRING_OPERAND",
+      "lexeme" : "starts-with",
+      "charPos" : 4,
+      "message" : "\"starts-with\" needs strings, but bar is a pattern:\nfoo starts-with bar\n    ^^^^^^^^^^^"
+    }
+  }
+}

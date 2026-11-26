@@ -1,0 +1,17 @@
+{
+  "input" : {
+    "expression" : "\"s\" matches foo",
+    "types" : {
+      "foo" : "string"
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "BUILTIN",
+      "errorType" : "TypeChecker/EXPECTED_PATTERN_OPERAND",
+      "lexeme" : "matches",
+      "charPos" : 4,
+      "message" : "\"matches\" needs a pattern on the right, but foo is a string:\n\"s\" matches foo\n    ^^^^^^^"
+    }
+  }
+}

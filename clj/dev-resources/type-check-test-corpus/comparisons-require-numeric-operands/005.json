@@ -1,0 +1,17 @@
+{
+  "input" : {
+    "expression" : "1 <= foo",
+    "types" : {
+      "foo" : "boolean"
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "LESS_EQUAL",
+      "errorType" : "TypeChecker/EXPECTED_NUMERIC_OPERAND",
+      "lexeme" : "<=",
+      "charPos" : 2,
+      "message" : "\"<=\" needs numbers, but foo is a boolean:\n1 <= foo\n  ^^"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "input" : {
+    "expression" : "/p/ >= 1",
+    "types" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "GREATER_EQUAL",
+      "errorType" : "TypeChecker/EXPECTED_NUMERIC_OPERAND",
+      "lexeme" : ">=",
+      "charPos" : 4,
+      "message" : "\">=\" needs numbers, but the left operand is a pattern:\n/p/ >= 1\n    ^^"
+    }
+  }
+}

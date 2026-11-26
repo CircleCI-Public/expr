@@ -1,0 +1,15 @@
+{
+  "input" : {
+    "expression" : "2 > 1 or bar",
+    "types" : { }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "IDENTIFIER",
+      "errorType" : "TypeChecker/UNKNOWN_VARIABLE",
+      "lexeme" : "bar",
+      "charPos" : 9,
+      "message" : "Referred to a variable \"bar\" that has no known type:\n2 > 1 or bar\n         ^^^"
+    }
+  }
+}

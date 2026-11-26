@@ -1,0 +1,17 @@
+{
+  "input" : {
+    "expression" : "foo contains 5",
+    "types" : {
+      "foo" : "string"
+    }
+  },
+  "expected" : {
+    "error" : {
+      "tokenType" : "BUILTIN",
+      "errorType" : "TypeChecker/EXPECTED_STRING_OPERAND",
+      "lexeme" : "contains",
+      "charPos" : 4,
+      "message" : "\"contains\" needs strings, but the right operand is a number:\nfoo contains 5\n    ^^^^^^^^"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "input" : {
+    "expression" : "(foo or \"x\") > 5",
+    "types" : {
+      "foo" : "boolean"
+    }
+  },
+  "expected" : {
+    "result" : null
+  }
+}

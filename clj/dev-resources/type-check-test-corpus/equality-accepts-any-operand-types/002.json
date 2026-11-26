@@ -1,0 +1,12 @@
+{
+  "input" : {
+    "expression" : "foo != bar",
+    "types" : {
+      "foo" : "boolean",
+      "bar" : "pattern"
+    }
+  },
+  "expected" : {
+    "result" : null
+  }
+}

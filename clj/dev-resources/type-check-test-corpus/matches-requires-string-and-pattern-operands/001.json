@@ -1,0 +1,11 @@
+{
+  "input" : {
+    "expression" : "foo matches /a.*/",
+    "types" : {
+      "foo" : "string"
+    }
+  },
+  "expected" : {
+    "result" : null
+  }
+}

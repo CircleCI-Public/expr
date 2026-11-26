@@ -1,0 +1,11 @@
+{
+  "input" : {
+    "expression" : "foo contains \"x\"",
+    "types" : {
+      "foo" : "string"
+    }
+  },
+  "expected" : {
+    "result" : null
+  }
+}

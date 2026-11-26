@@ -1,0 +1,12 @@
+{
+  "input" : {
+    "expression" : "foo matches bar",
+    "types" : {
+      "foo" : "string",
+      "bar" : "pattern"
+    }
+  },
+  "expected" : {
+    "result" : null
+  }
+}
