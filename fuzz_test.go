@@ -8,9 +8,11 @@ import (
 
 	"github.com/CircleCI-Public/expr/errors"
 	"github.com/CircleCI-Public/expr/interpreters"
+	"github.com/CircleCI-Public/expr/interpreters/typechecker"
 	"github.com/CircleCI-Public/expr/interpreters/variableanalyser"
 	"github.com/CircleCI-Public/expr/parsers"
 	"github.com/CircleCI-Public/expr/scanners"
+	"github.com/CircleCI-Public/expr/tokens"
 )
 
 // fuzzEnv has a variable of each kind of value, so fuzzed expressions that
@@ -32,6 +34,50 @@ func fuzzEnv() map[string]interpreters.Val {
 		"p": box(regexp.MustCompile("fo+")),
 		"u": interpreters.UndefinedVal(),
 	}
+}
+
+// fuzzTypes are fuzzEnv's types; u, being undefined, has none. Change it with
+// fuzzEnv, or FuzzExpr reports type checks that the interpreter contradicts.
+var fuzzTypes = map[string]string{
+	"b": typechecker.Boolean,
+	"f": typechecker.Boolean,
+	"n": typechecker.Number,
+	"s": typechecker.String,
+	"e": typechecker.String,
+	"p": typechecker.Pattern,
+}
+
+func ungroup(e parsers.Expr) parsers.Expr {
+	if g, ok := e.(parsers.Grouping); ok {
+		return ungroup(g.Expression)
+	}
+	return e
+}
+
+func isLogical(e parsers.Expr) bool {
+	_, ok := ungroup(e).(parsers.Logical)
+	return ok
+}
+
+// hasLogicalOperand reports whether a type-constrained operator takes an
+// and/or directly, as in (b or 0) >= n. The checker can't tell which side the
+// or yields, so it passes these, and interpreting them can still fail.
+func hasLogicalOperand(e parsers.Expr) bool {
+	switch e := e.(type) {
+	case parsers.Binary:
+		constrained := e.Operator.Type != tokens.EQUAL && e.Operator.Type != tokens.NOT_EQUAL
+		return (constrained && (isLogical(e.Left) || isLogical(e.Right))) ||
+			hasLogicalOperand(e.Left) || hasLogicalOperand(e.Right)
+	case parsers.Infix:
+		return isLogical(e.Left) || isLogical(e.Right) || hasLogicalOperand(e.Left) || hasLogicalOperand(e.Right)
+	case parsers.Logical:
+		return hasLogicalOperand(e.Left) || hasLogicalOperand(e.Right)
+	case parsers.Unary:
+		return hasLogicalOperand(e.Right)
+	case parsers.Grouping:
+		return hasLogicalOperand(e.Expression)
+	}
+	return false
 }
 
 // checkErrorMessage checks that an error message shows the line of the
@@ -61,13 +107,18 @@ func checkErrorMessage(t *testing.T, expression string, pos int, msg string) {
 	}
 }
 
-// FuzzExpr checks that scanning, parsing, analysing and interpreting any
-// expression either succeeds or returns one of expr's errors, and that the
-// error's message can be formatted.
+// FuzzExpr checks that scanning, parsing, analysing, type checking and
+// interpreting any expression either succeeds or returns one of expr's errors,
+// that the error's message can be formatted, and that an expression whose
+// types check interprets without error.
 //
 // Run with: task fuzz
 func FuzzExpr(f *testing.F) {
-	for _, dir := range []string{"clj/dev-resources/test-corpus", "clj/dev-resources/evaluator-test-corpus"} {
+	for _, dir := range []string{
+		"clj/dev-resources/test-corpus",
+		"clj/dev-resources/evaluator-test-corpus",
+		"clj/dev-resources/type-check-test-corpus",
+	} {
 		tests, err := loadTestData(dir)
 		if err != nil {
 			f.Fatal(err)
@@ -78,6 +129,7 @@ func FuzzExpr(f *testing.F) {
 	}
 	f.Add(`b and not f or s == "foo" and n > 1 and p matches /x/ and s contains e and u`)
 	f.Add(`s matches p or (n >= 1 and s starts-with "f")`)
+	f.Add(`(b or 0) >= n`)
 
 	env := fuzzEnv()
 
@@ -140,6 +192,16 @@ func FuzzExpr(f *testing.F) {
 		}
 		if err == nil && truthy != got.IsTruthy() {
 			t.Fatalf("Interpret returned %v but Evaluate returned %v", truthy, got.Unbox())
+		}
+
+		if terr := typechecker.New(fuzzTypes).CheckTypes(e); terr != nil {
+			te, ok := terr.(typechecker.Error)
+			if !ok {
+				t.Fatalf("unexpected type checker error type %T: %v", terr, terr)
+			}
+			checkError(te, te.Token.CharPos)
+		} else if err != nil && !hasLogicalOperand(e) {
+			t.Fatalf("types check but Evaluate returned %v", err)
 		}
 	})
 }

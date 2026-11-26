@@ -31,6 +31,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"github.com/CircleCI-Public/expr/interpreters"
+	"github.com/CircleCI-Public/expr/interpreters/typechecker"
 	"github.com/CircleCI-Public/expr/parsers"
 	"github.com/CircleCI-Public/expr/scanners"
 )
@@ -43,6 +44,7 @@ type rawInput struct {
 type input struct {
 	Expression  string                      `json:"expression"`
 	Environment map[string]interpreters.Val `json:"environment"`
+	Types       map[string]string           `json:"types"`
 }
 
 func (i *input) UnmarshallJSON(input []byte) error {
@@ -70,6 +72,7 @@ type expectedError struct {
 	ErrorType string `json:"errorType"`
 	Lexeme    string `json:"lexeme"`
 	CharPos   int    `json:"charPos"`
+	Message   string `json:"message"`
 }
 
 type expected struct {
@@ -142,7 +145,7 @@ func scanAndParse(expression string) (parsers.Expr, error) {
 	return e, nil
 }
 
-func mapExpected(res *interpreters.Val, err error) (expected, error) {
+func mapExpected(expression string, res *interpreters.Val, err error) (expected, error) {
 	if e, ok := err.(scanners.Error); ok {
 		return expected{
 			Error: &expectedError{
@@ -171,6 +174,18 @@ func mapExpected(res *interpreters.Val, err error) (expected, error) {
 				TokenType: e.Token.Type.String(),
 				Lexeme:    e.Token.Lexeme,
 				CharPos:   e.Token.CharPos,
+			},
+		}, nil
+	}
+
+	if e, ok := err.(typechecker.Error); ok {
+		return expected{
+			Error: &expectedError{
+				ErrorType: fmt.Sprintf("TypeChecker/%s", e.Type.Symbol()),
+				TokenType: e.Token.Type.String(),
+				Lexeme:    e.Token.Lexeme,
+				CharPos:   e.Token.CharPos,
+				Message:   e.AsErrorMessage(expression),
 			},
 		}, nil
 	}
@@ -206,7 +221,7 @@ func TestCorpus(t *testing.T) {
 				got = interpreters.BoxBool(result)
 			}
 
-			res, err := mapExpected(&got, err)
+			res, err := mapExpected(tt.Input.Expression, &got, err)
 			assert.NilError(t, err)
 			assert.DeepEqual(t, tt.Expected, res)
 		})
@@ -229,7 +244,30 @@ func TestEvaluatorCorpus(t *testing.T) {
 				got, err = interpreters.New(tt.Input.Environment).Evaluate(e)
 			}
 
-			res, err := mapExpected(&got, err)
+			res, err := mapExpected(tt.Input.Expression, &got, err)
+			assert.NilError(t, err)
+			assert.DeepEqual(t, tt.Expected, res)
+		})
+	}
+}
+
+func TestTypeCheckCorpus(t *testing.T) {
+	t.Parallel()
+
+	tests, err := loadTestData("clj/dev-resources/type-check-test-corpus")
+	assert.NilError(t, err, "Unable to load type-check test corpus")
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			e, err := scanAndParse(tt.Input.Expression)
+			assert.NilError(t, err)
+
+			err = typechecker.New(tt.Input.Types).CheckTypes(e)
+
+			undefined := interpreters.UndefinedVal()
+			res, err := mapExpected(tt.Input.Expression, &undefined, err)
 			assert.NilError(t, err)
 			assert.DeepEqual(t, tt.Expected, res)
 		})
