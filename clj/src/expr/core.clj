@@ -22,11 +22,13 @@
                               Parser$ParseError
                               Interpreter
                               Interpreter$Error
+                              TypeChecker
+                              TypeChecker$Error
                               VariableAnalyser)))
 
 (def ^:private too-deeply-nested
-  ;; Parsing, analysing and interpreting recurse for each level of nesting,
-  ;; so a deeply nested expression overflows the stack.
+  ;; Parsing, analysing, type checking and interpreting recurse for each level
+  ;; of nesting, so a deeply nested expression overflows the stack.
   {:errors ["Expression is too deeply nested"]})
 
 (defn parse
@@ -67,6 +69,32 @@
     (catch Scanner$ScanError e
       {:errors [(.asErrorMessage e expression)]})
     (catch Parser$ParseError e
+      {:errors [(.asErrorMessage e expression)]})
+    (catch StackOverflowError _
+      too-deeply-nested)))
+
+(defn type-check
+  "Type check an expression.
+
+  `types` maps each variable name to \"string\", \"boolean\", \"number\"
+  or \"pattern\".
+
+  On success returns a map of the form:
+    {:result true}
+
+  On error returns a map of the form:
+    {:errors <collection of error message strings>}"
+  [^String expression types]
+  (try
+    (let [tokens (.scan (Scanner. expression))
+          expr (.parse (Parser. tokens))]
+      (.checkTypes (TypeChecker. types) expr)
+      {:result true})
+    (catch Scanner$ScanError e
+      {:errors [(.asErrorMessage e expression)]})
+    (catch Parser$ParseError e
+      {:errors [(.asErrorMessage e expression)]})
+    (catch TypeChecker$Error e
       {:errors [(.asErrorMessage e expression)]})
     (catch StackOverflowError _
       too-deeply-nested)))

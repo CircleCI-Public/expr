@@ -6,7 +6,9 @@
             [expr.util :as util])
   (:import (com.circleci.expr Interpreter$Error
                               Parser$ParseError
-                              Scanner$ScanError)
+                              Scanner$ScanError
+                              TypeChecker
+                              TypeChecker$Error)
            com.google.re2j.Pattern))
 
 (defn- test-files
@@ -38,7 +40,14 @@
         {"error" {"errorType" (str "Interpreter/" (.-type e))
                   "tokenType" (str (.-type token))
                   "lexeme" (.-lexeme token)
-                  "charPos" (.-charPos token)}}))))
+                  "charPos" (.-charPos token)}}))
+    (catch TypeChecker$Error e
+      (let [token (.-token e)]
+        {"error" {"errorType" (str "TypeChecker/" (.-type e))
+                  "tokenType" (str (.-type token))
+                  "lexeme" (.-lexeme token)
+                  "charPos" (.-charPos token)
+                  "message" (.asErrorMessage e expression)}}))))
 
 (defn- coerce-expected
   "Coerce prefixed string results into concrete types.
@@ -75,4 +84,15 @@
                   expected (coerce-expected expected)]]
       (is (= expected
              (run-evaluator-test expression environment))
+          (format "%s: %s" test-name expression)))))
+
+(deftest run-type-check-test-corpus
+  (let [run-type-check-test (partial run-test (fn [expression types]
+                                                (.checkTypes (TypeChecker. types)
+                                                             (util/parse (util/scan expression)))))]
+    (doseq [{:strs [input expected]
+             :keys [test-name]} (test-files "dev-resources/type-check-test-corpus")
+            :let [{:strs [expression types]} input]]
+      (is (= expected
+             (run-type-check-test expression types))
           (format "%s: %s" test-name expression)))))
