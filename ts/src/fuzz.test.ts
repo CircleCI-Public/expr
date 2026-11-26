@@ -13,9 +13,14 @@ import {
   expression,
   testCase,
   toEnvironment,
+  typedTestCase,
 } from '../scripts/fuzz/arbitraries.ts';
 import {
+  type Expr,
   ExprError,
+  TokenType,
+  TypeCheckError,
+  checkTypes,
   compile,
   complete,
   diagnose,
@@ -55,6 +60,42 @@ function checkError(expression: string, error: ExprError): void {
     message.replace(/\^+$/, '').endsWith(want),
     `message:\n${message}\nwant it to end with:\n${want}`,
   );
+}
+
+function ungroup(e: Expr): Expr {
+  return e.kind === 'grouping' ? ungroup(e.expression) : e;
+}
+
+/**
+ * Whether a type-constrained operator takes an `and`/`or` directly, as in
+ * `(b or 0) >= n`. The checker can't tell which side the `or` yields, so it
+ * passes these, and interpreting them can still fail.
+ */
+function hasLogicalOperand(e: Expr): boolean {
+  switch (e.kind) {
+    case 'binary':
+    case 'infix': {
+      const constrained =
+        e.kind === 'infix' ||
+        (e.operator.type !== TokenType.EQUAL &&
+          e.operator.type !== TokenType.NOT_EQUAL);
+      return (
+        (constrained &&
+          (ungroup(e.left).kind === 'logical' ||
+            ungroup(e.right).kind === 'logical')) ||
+        hasLogicalOperand(e.left) ||
+        hasLogicalOperand(e.right)
+      );
+    }
+    case 'logical':
+      return hasLogicalOperand(e.left) || hasLogicalOperand(e.right);
+    case 'unary':
+      return hasLogicalOperand(e.right);
+    case 'grouping':
+      return hasLogicalOperand(e.expression);
+    default:
+      return false;
+  }
 }
 
 describe('fuzz', () => {
@@ -121,6 +162,30 @@ describe('fuzz', () => {
           }
         },
       ),
+      { numRuns },
+    );
+  });
+
+  it('interprets any expression whose types check', () => {
+    fc.assert(
+      fc.property(typedTestCase, ({ expression, types, environment }) => {
+        let expr;
+        try {
+          expr = compile(expression);
+        } catch {
+          return;
+        }
+        try {
+          checkTypes(expr, types);
+        } catch (e) {
+          assert.ok(e instanceof TypeCheckError, `unexpected ${String(e)}`);
+          checkError(expression, e);
+          return;
+        }
+        if (!hasLogicalOperand(expr)) {
+          interpret(expr, toEnvironment(environment));
+        }
+      }),
       { numRuns },
     );
   });

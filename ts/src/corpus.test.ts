@@ -1,5 +1,5 @@
-// Runs the test corpus shared with the Go and Clojure implementations. See
-// clj/dev-resources/test-corpus.edn for the format.
+// Runs the test corpora shared with the Go and Clojure implementations. See
+// the .edn files in clj/dev-resources/ for each corpus's format.
 
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -12,7 +12,9 @@ import {
   ParseError,
   Pattern,
   ScanError,
+  TypeCheckError,
   type Value,
+  checkTypes,
   compile,
   evaluate,
   interpret,
@@ -27,9 +29,13 @@ interface ExpectedError {
   charPos: number;
 }
 
-interface Case {
-  input: { expression: string; environment: Record<string, unknown> };
+interface Case<Input> {
+  input: Input & { expression: string };
   expected: { error?: ExpectedError; result?: unknown };
+}
+
+interface EvaluationInput {
+  environment: Record<string, unknown>;
 }
 
 const REGEXP_PREFIX = 'corpus/regexp:';
@@ -60,8 +66,14 @@ function fromJSON(v: unknown): unknown {
   return v;
 }
 
+function toEnvironment(json: Record<string, unknown>): Environment {
+  return Object.fromEntries(
+    Object.entries(json).map(([k, v]) => [k, fromJSON(v)]),
+  );
+}
+
 /** A comparable representation of a result. */
-function outcome(run: () => Value): unknown {
+function outcome(expression: string, run: () => Value): unknown {
   let error: unknown;
   try {
     const result = run();
@@ -81,6 +93,17 @@ function outcome(run: () => Value): unknown {
       },
     };
   }
+  if (error instanceof TypeCheckError) {
+    return {
+      error: {
+        tokenType: error.token.type,
+        errorType: `TypeChecker/${error.type}`,
+        lexeme: error.token.lexeme,
+        charPos: error.token.charPos,
+        message: error.asErrorMessage(expression),
+      },
+    };
+  }
   if (error instanceof ParseError || error instanceof InterpreterError) {
     const subsystem = error instanceof ParseError ? 'Parser' : 'Interpreter';
     return {
@@ -95,16 +118,16 @@ function outcome(run: () => Value): unknown {
   throw error;
 }
 
-function expectedOutcome(expected: Case['expected']): unknown {
+function expectedOutcome(expected: Case<unknown>['expected']): unknown {
   if (expected.error !== undefined) {
     return { error: expected.error };
   }
   return { result: expected.result ?? undefined };
 }
 
-function corpus(
+function corpus<Input>(
   dir: string,
-  run: (expression: string, env: Environment) => Value,
+  run: (input: Case<Input>['input']) => Value,
 ): void {
   const root = join(resources, dir);
   const files = readdirSync(root, { recursive: true, encoding: 'utf8' })
@@ -116,13 +139,10 @@ function corpus(
     for (const file of files) {
       const { input, expected } = parseCorpus(
         readFileSync(join(root, file), 'utf8'),
-      ) as Case;
+      ) as Case<Input>;
       it(`${file}: ${input.expression}`, () => {
-        const env = Object.fromEntries(
-          Object.entries(input.environment).map(([k, v]) => [k, fromJSON(v)]),
-        );
         assert.deepEqual(
-          outcome(() => run(input.expression, env)),
+          outcome(input.expression, () => run(input)),
           expectedOutcome(expected),
         );
       });
@@ -130,7 +150,18 @@ function corpus(
   });
 }
 
-corpus('test-corpus', (expression, env) => interpret(compile(expression), env));
-corpus('evaluator-test-corpus', (expression, env) =>
-  evaluate(compile(expression), env),
+corpus<EvaluationInput>('test-corpus', ({ expression, environment }) =>
+  interpret(compile(expression), toEnvironment(environment)),
+);
+corpus<EvaluationInput>(
+  'evaluator-test-corpus',
+  ({ expression, environment }) =>
+    evaluate(compile(expression), toEnvironment(environment)),
+);
+corpus<{ types: Record<string, string> }>(
+  'type-check-test-corpus',
+  ({ expression, types }) => {
+    checkTypes(compile(expression), new Map(Object.entries(types)));
+    return undefined;
+  },
 );

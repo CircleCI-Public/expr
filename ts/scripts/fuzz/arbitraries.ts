@@ -367,16 +367,24 @@ const envPattern = fc.constantFrom(
   'é+',
 );
 
-const envValue: fc.Arbitrary<EnvValue> = fc.oneof(
-  fc.boolean().map((value) => ({ kind: 'bool' as const, value })),
-  wellFormedString(8).map((value) => ({ kind: 'string' as const, value })),
-  fc
+/** Environment values of each type the type checker knows. */
+const envValueOfType: Record<string, fc.Arbitrary<EnvValue>> = {
+  boolean: fc.boolean().map((value) => ({ kind: 'bool' as const, value })),
+  string: wellFormedString(8).map((value) => ({
+    kind: 'string' as const,
+    value,
+  })),
+  number: fc
     .oneof(
       fc.bigInt({ min: MIN_INT64, max: MAX_INT64 }),
       fc.constantFrom(0n, 1n, -1n, 42n, MAX_INT64, MIN_INT64),
     )
     .map((value) => ({ kind: 'number' as const, value })),
-  envPattern.map((value) => ({ kind: 'pattern' as const, value })),
+  pattern: envPattern.map((value) => ({ kind: 'pattern' as const, value })),
+};
+
+const envValue: fc.Arbitrary<EnvValue> = fc.oneof(
+  ...Object.values(envValueOfType),
   fc.constant({ kind: 'undefined' as const }),
 );
 
@@ -390,6 +398,35 @@ export const testCase: fc.Arbitrary<Case> = fc.record({
   expression,
   environment,
 });
+
+export interface TypedCase extends Case {
+  types: Record<string, string>;
+}
+
+const variableTypes = fc.record(
+  Object.fromEntries(
+    variableNames.map((name) => [
+      name,
+      fc.constantFrom(...Object.keys(envValueOfType)),
+    ]),
+  ),
+);
+
+/** A type for every variable, and an environment holding a value of each type. */
+export const typedTestCase: fc.Arbitrary<TypedCase> = fc
+  .record({ expression, types: variableTypes })
+  .chain(({ expression, types }) =>
+    fc
+      .record(
+        Object.fromEntries(
+          Object.entries(types).map(([name, type]) => [
+            name,
+            envValueOfType[type]!,
+          ]),
+        ),
+      )
+      .map((environment) => ({ expression, types, environment })),
+  );
 
 /** Convert an environment to the values the TypeScript implementation takes. */
 export function toEnvironment(

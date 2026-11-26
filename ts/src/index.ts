@@ -27,6 +27,12 @@ export {
   type ScanResult,
   scan,
 } from './scanner.ts';
+export {
+  TypeCheckError,
+  TypeCheckErrorType,
+  type VariableTypes,
+  checkTypes,
+} from './typechecker.ts';
 export { type Literal, type Token, TokenType } from './token.ts';
 export {
   type Environment,
